@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "control")(type "KiCad")(uri "${KIPRJMOD}/control.pretty")(options "")(descr "Project-local footprints: PEC11R, C&K THB001P (provisional)"))
+)

@@ -1,0 +1,201 @@
+== /tmp/claude-0/-home-claude/5a0d7541-e780-5a86-9cd8-cf406aa18742/scratchpad/case-revB/bead_case.scad
+[1] bracket balance: OK
+[2] parse: OK (346 top-level assignments, 40 modules, 1 functions)
+[3] scope/identifier check: OK (13 warnings)
+     warn  top-level variable 'j8_pin_Z1' is never used
+     warn  top-level variable 'j7_y' is never used
+     warn  top-level variable 'cp_stub' is never used
+     warn  top-level variable 'cp_top_keep' is never used
+     warn  top-level variable 'enc_washer_id' is never used
+     warn  top-level variable 'knob_setscrew_from_top' is never used
+     warn  top-level variable 'enc_flat_len' is never used
+     warn  top-level variable 'va_x0' is never used
+     warn  top-level variable 'va_x1' is never used
+     warn  top-level variable 'va_y0' is never used
+     warn  top-level variable 'bay_y0' is never used
+     warn  top-level variable 'top_boss_len' is never used
+     warn  top-level variable 'dp_max_deg' is never used
+
+######## ctrl = "J"
+[4] evaluation: 348 values, 0 undef 
+[5] top-level assert(): 35/35 pass
+[6] key clearances (mm)
+    Total depth (front face .. back wall outer)                22.95  <= 23        ok   target <= 23
+    Glass front Z set by the Waveshare bosses                   0.00  [-0.001..0.001] ok   boss face Z 6.0 - 6.0 (drawing)
+    Glass front Z set by the pocket ledge                       0.00  [-0.001..0.001] ok   0.9 - gasket 0.2 - lens 0.7
+    Glass to pocket wall (per side)                             0.15  >= 0.1       ok   parameter lens_clr
+    Glass resting on the ledge (min side)                       0.71  >= 1         WARN adhesive land; left side notched at USB/part
+    Ledge window over VA (min)                                  3.04  >= 0.3       ok   ledge window clears the viewing area
+    Left-edge part inside the pocket at insertion tilt          0.47  >= 0.2       ok   part 0.79 past the glass; tilt 12.0 deg (TBV part)
+    Waveshare boss/bridge to IDC socket (Z)                     0.30  >= 0.3       ok   
+    Waveshare boss to J8 header plastic (XY)                    1.91  >= 0.3       ok   
+    Waveshare PCB to control PCB (Y gap)                        3.65  >= 1         ok   
+    Side / bottom wall                                          1.20  >= 1         ok   
+    Top wall                                                    2.00  >= 1         ok   
+    Front panel                                                 2.00  >= 1         ok   
+    Ledge behind the glass (panel - pocket)                     1.10  >= 1         ok   
+    Back wall                                                   1.20  >= 1         ok   
+    Skin outside the glass pocket (min X/Y)                     3.87  >= 1         ok   
+    Key-plate rail ledge                                        1.00  >= 1         ok   
+    USB frame / duct walls                                      1.00  >= 1         ok   
+    Top insert boss wall                                        1.00  >= 1         ok   
+    Top insert hole to outer skin                               1.00  >= 0.999     ok   
+    Control-PCB insert boss wall                                1.20  >= 1         ok   
+    Back-shell screw column wall                                1.00  >= 1         ok   
+    Right wall behind the SIDE flange                           1.00  >= 0.999     ok   
+    Panel behind control-PCB insert pilot                       1.50  >= 0.5       ok   pilot ends inside the boss, panel intact
+    MENU hole to glass pocket (skin)                            6.47  >= 1         ok   
+    Knob protrusion above the front face                       16.40  [14..18]     ok   brief ~16
+    Knob shaft engagement (<= bore 13)                         12.50  [10..13]     ok   
+    Bushing thread beyond washer + nut                          0.50  >= 0.3       ok   
+    Nut top to counterbore ceiling (Z)                          2.00  >= 0.3       ok   
+    Bushing tip to counterbore ceiling (Z)                      1.50  >= 0.3       ok   
+    Nut corners to counterbore wall (radial)                    1.72  >= 0.3       ok   
+    Washer to counterbore wall (radial)                         1.50  >= 0.3       ok   
+    Knob to case right face (X)                                 4.23  >= 2         ok   
+    Knob to case bottom face (Y)                                6.48  >= 2         ok   
+    Knob to MENU hole edge                                      7.65  >= 3         ok   
+    MENU hole to encoder hole (panel web)                      13.47  >= 1         ok   
+    Set screw above the shaft tip (on the flat?)                3.80  [0.5..6.5]   ok   TBV flat length
+    MENU cap axis offset from the B3F-1000 plunger              1.50  <= 2         ok   cap moved +Y so its flange clears the H3 boss; nub stays on the plunger
+    MENU nub length (flange rear .. plunger - gap)              1.10  [0.3..3]     ok   plunger top Z 4.20 (4.3 above the PCB)
+    MENU flange flat to H3 insert boss                          0.30  >= 0.3       ok   
+    MENU flange retention beyond the hole (min, flat side)      0.60  >= 0.5       ok   
+    MENU hole cut to H3 insert boss (XY)                        0.90  >= 0.3       ok   boss starts behind the panel; the cut runs to Z 3.0, so it must not nick the boss
+    MENU flange to switch body (travel room)                    2.00  >= 0.8       ok   
+    SIDE flange thickness                                       0.80  >= 0.6       ok   tip X 43.20; 0.8 needs tip <= 43.20
+    SIDE pre-travel gap                                         0.25  [0.2..0.3]   ok   
+    SIDE flange to panel / control PCB                          0.20  >= 0.1       ok   
+    Key pin inner extension                                     1.50  >= 0.5       ok   
+    USB duct to panel inner face (Z)                            1.40  >= 0.5       ok   
+    USB duct to parting plane (Z)                               0.80  >= 0.5       ok   
+    USB frame/duct to left-edge part                            0.50  >= 0.5       ok   
+    USB shell in the 9.5 x 3.6 cut (Y / Z, min)                 0.17  >= 0.15      ok   +-0.3 TBV on usb_Z
+    Control PCB to cavity wall (min)                            0.80  >= 0.5       ok   
+    Shrouded header to cavity wall (X)                          0.40  >= 0.2       ok   overhangs the PCB by 0.65
+    Mount hole 1 (-4,-20) boss to parts                         0.74  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 1 to control PCB edge                            2.50  >= 2         ok   
+    Mount hole 1 back column to header                          1.95  >= 0.3       ok   
+    Mount hole 2 (40,-44.5) boss to parts                       1.64  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 2 to control PCB edge                            3.00  >= 2         ok   
+    Mount hole 2 back column to header                         26.45  >= 0.3       ok   
+    Mount hole 3 (18.25,-25) boss to parts                      1.10  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 3 to control PCB edge                           18.00  >= 2         ok   
+    Shell screw head recess below back face                     1.95  >= 0         ok   
+    Top screw thread engagement                                 4.05  [2.5..5]     ok   
+    Third control screw engagement                              4.40  [2.5..5]     ok   
+    Top boss to Waveshare PCB / keys (Y)                        0.00  >= 0         ok   window line = PCB/keys + 0.3
+    Top boss to key plate (X)                                   7.00  >= 0.5       ok   
+    Cell front to Waveshare rear parts (Z)                      0.30  >= 0.2       ok   0.3 foam tape
+    Battery bay to IDC socket (X)                               6.75  >= 2         ok   
+    Battery bay to Waveshare bosses (XY)                        1.75  >= 0.3       ok   
+    Battery bay to control header (Y)                           5.80  >= 1         ok   
+    Ribbon stack top to back wall inner (Z)                     0.00  >= 0         ok   2.0 x 0.9 behind the cell
+    IDC fold to back wall inner (Z)                             2.25  >= 0.3       ok   
+    Control socket + ribbon to back wall (Z)                    1.75  >= 0.3       ok   
+    Ribbon width vs control header length                       7.62  >= 0         ok   ribbon 43.2 fits the header span
+    J: panel opening Dia (computed)                            14.15  [13.75..16]  ok   fallback 16.0
+    J: shaft envelope at 26 deg to opening (radial)             4.12  >= 0.3       ok   
+    J: dome to opening (radial)                                 0.50  >= 0.3       ok   
+    J: THB frame top to panel inner face                        0.50  >= 0.2       ok   frame height TBV
+    J: stick top above the front face                          10.95  <= 18        ok   info: no cap; <= 18 allowed
+    J: opening to left case face (skin)                         6.67  >= 1         ok   
+    J: MENU hole to stick opening (panel web)                  10.10  >= 1         ok   
+    J: tilted stick tip to knob edge (X)                        9.39  >= 3         ok   
+== ctrl J: PASS: 0 error(s), 0 clearance fail(s), 1 warning(s)
+
+######## ctrl = "D"
+[4] evaluation: 348 values, 0 undef 
+[5] top-level assert(): 35/35 pass
+[6] key clearances (mm)
+    Total depth (front face .. back wall outer)                       22.95  <= 23        ok   target <= 23
+    Glass front Z set by the Waveshare bosses                          0.00  [-0.001..0.001] ok   boss face Z 6.0 - 6.0 (drawing)
+    Glass front Z set by the pocket ledge                              0.00  [-0.001..0.001] ok   0.9 - gasket 0.2 - lens 0.7
+    Glass to pocket wall (per side)                                    0.15  >= 0.1       ok   parameter lens_clr
+    Glass resting on the ledge (min side)                              0.71  >= 1         WARN adhesive land; left side notched at USB/part
+    Ledge window over VA (min)                                         3.04  >= 0.3       ok   ledge window clears the viewing area
+    Left-edge part inside the pocket at insertion tilt                 0.47  >= 0.2       ok   part 0.79 past the glass; tilt 12.0 deg (TBV part)
+    Waveshare boss/bridge to IDC socket (Z)                            0.30  >= 0.3       ok   
+    Waveshare boss to J8 header plastic (XY)                           1.91  >= 0.3       ok   
+    Waveshare PCB to control PCB (Y gap)                               3.65  >= 1         ok   
+    Side / bottom wall                                                 1.20  >= 1         ok   
+    Top wall                                                           2.00  >= 1         ok   
+    Front panel                                                        2.00  >= 1         ok   
+    Ledge behind the glass (panel - pocket)                            1.10  >= 1         ok   
+    Back wall                                                          1.20  >= 1         ok   
+    Skin outside the glass pocket (min X/Y)                            3.87  >= 1         ok   
+    Key-plate rail ledge                                               1.00  >= 1         ok   
+    USB frame / duct walls                                             1.00  >= 1         ok   
+    Top insert boss wall                                               1.00  >= 1         ok   
+    Top insert hole to outer skin                                      1.00  >= 0.999     ok   
+    Control-PCB insert boss wall                                       1.20  >= 1         ok   
+    Back-shell screw column wall                                       1.00  >= 1         ok   
+    Right wall behind the SIDE flange                                  1.00  >= 0.999     ok   
+    Panel behind control-PCB insert pilot                              1.50  >= 0.5       ok   pilot ends inside the boss, panel intact
+    MENU hole to glass pocket (skin)                                   6.47  >= 1         ok   
+    Knob protrusion above the front face                              16.40  [14..18]     ok   brief ~16
+    Knob shaft engagement (<= bore 13)                                12.50  [10..13]     ok   
+    Bushing thread beyond washer + nut                                 0.50  >= 0.3       ok   
+    Nut top to counterbore ceiling (Z)                                 2.00  >= 0.3       ok   
+    Bushing tip to counterbore ceiling (Z)                             1.50  >= 0.3       ok   
+    Nut corners to counterbore wall (radial)                           1.72  >= 0.3       ok   
+    Washer to counterbore wall (radial)                                1.50  >= 0.3       ok   
+    Knob to case right face (X)                                        4.23  >= 2         ok   
+    Knob to case bottom face (Y)                                       6.48  >= 2         ok   
+    Knob to MENU hole edge                                             7.65  >= 3         ok   
+    MENU hole to encoder hole (panel web)                             13.47  >= 1         ok   
+    Set screw above the shaft tip (on the flat?)                       3.80  [0.5..6.5]   ok   TBV flat length
+    MENU cap axis offset from the B3F-1000 plunger                     1.50  <= 2         ok   cap moved +Y so its flange clears the H3 boss; nub stays on the plunger
+    MENU nub length (flange rear .. plunger - gap)                     1.10  [0.3..3]     ok   plunger top Z 4.20 (4.3 above the PCB)
+    MENU flange flat to H3 insert boss                                 0.30  >= 0.3       ok   
+    MENU flange retention beyond the hole (min, flat side)             0.60  >= 0.5       ok   
+    MENU hole cut to H3 insert boss (XY)                               0.90  >= 0.3       ok   boss starts behind the panel; the cut runs to Z 3.0, so it must not nick the boss
+    MENU flange to switch body (travel room)                           2.00  >= 0.8       ok   
+    SIDE flange thickness                                              0.80  >= 0.6       ok   tip X 43.20; 0.8 needs tip <= 43.20
+    SIDE pre-travel gap                                                0.25  [0.2..0.3]   ok   
+    SIDE flange to panel / control PCB                                 0.20  >= 0.1       ok   
+    Key pin inner extension                                            1.50  >= 0.5       ok   
+    USB duct to panel inner face (Z)                                   1.40  >= 0.5       ok   
+    USB duct to parting plane (Z)                                      0.80  >= 0.5       ok   
+    USB frame/duct to left-edge part                                   0.50  >= 0.5       ok   
+    USB shell in the 9.5 x 3.6 cut (Y / Z, min)                        0.17  >= 0.15      ok   +-0.3 TBV on usb_Z
+    Control PCB to cavity wall (min)                                   0.80  >= 0.5       ok   
+    Shrouded header to cavity wall (X)                                 0.40  >= 0.2       ok   overhangs the PCB by 0.65
+    Mount hole 1 (-4,-20) boss to parts                                1.08  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 1 to control PCB edge                                   2.50  >= 2         ok   
+    Mount hole 1 back column to header                                 1.95  >= 0.3       ok   
+    Mount hole 2 (40,-44.5) boss to parts                              1.64  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 2 to control PCB edge                                   3.00  >= 2         ok   
+    Mount hole 2 back column to header                                26.45  >= 0.3       ok   
+    Mount hole 3 (18.25,-25) boss to parts                             1.00  >= 0.3       ok   encoder/MENU/SIDE/cursor envelopes
+    Mount hole 3 to control PCB edge                                  18.00  >= 2         ok   
+    Shell screw head recess below back face                            1.95  >= 0         ok   
+    Top screw thread engagement                                        4.05  [2.5..5]     ok   
+    Third control screw engagement                                     4.40  [2.5..5]     ok   
+    Top boss to Waveshare PCB / keys (Y)                               0.00  >= 0         ok   window line = PCB/keys + 0.3
+    Top boss to key plate (X)                                          7.00  >= 0.5       ok   
+    Cell front to Waveshare rear parts (Z)                             0.30  >= 0.2       ok   0.3 foam tape
+    Battery bay to IDC socket (X)                                      6.75  >= 2         ok   
+    Battery bay to Waveshare bosses (XY)                               1.75  >= 0.3       ok   
+    Battery bay to control header (Y)                                  5.80  >= 1         ok   
+    Ribbon stack top to back wall inner (Z)                            0.00  >= 0         ok   2.0 x 0.9 behind the cell
+    IDC fold to back wall inner (Z)                                    2.25  >= 0.3       ok   
+    Control socket + ribbon to back wall (Z)                           1.75  >= 0.3       ok   
+    Ribbon width vs control header length                              7.62  >= 0         ok   ribbon 43.2 fits the header span
+    D: actuation tilt (deg)                                            7.85               ok   atan(0.4 / 2.9), pivot 2.9 below the stem top (TBV)
+    D: flange gap - rise at actuation                                  0.15  [0.1..0.3]   ok   flange is the over-travel stop
+    D: flange stops tilt before +2 deg overtravel                      0.28  >= 0         ok   
+    D: flange gap vs centre push travel                                1.71  >= 0.2       ok   
+    D: cross side shift at front face vs clearance                    -0.55  >= 0         WARN shift 0.85 at actuation vs dp_clr 0.3 (TBV pivot)
+    D: cap rear (r 7.07, body corners) to switch body at max tilt      0.14  >= 0.05      ok   
+    D: socket boss rear to switch body at max tilt                     0.15  >= 0.05      ok   
+    D: socket depth over the stem                                      1.40  >= 1         ok   stem joint TBV
+    D: top-side part height limit under the flange                     1.50               ok   keep-out height for the control PCB under the cross + lip
+    D: cross opening to left case face (skin)                          1.45  >= 1         ok   
+    D: MENU hole to cross opening (panel web)                          5.60  >= 1         ok   
+    D: flange lip left (clipped at the wall)                           0.25  >= 0.2       ok   
+    D: pressed arm tip behind the front face                           0.14               ok   info: tip sinks this far at actuation
+    D: cap length (top .. socket rear)                                 6.20               ok   
+== ctrl D: PASS: 0 error(s), 0 clearance fail(s), 2 warning(s)
+
+== OVERALL PASS: 0 error(s) across 2 variant(s)
