@@ -13,6 +13,8 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include <string.h>
 
 static const char *TAG = "board_freenove";
@@ -21,6 +23,35 @@ static adc_oneshot_unit_handle_t s_adc;
 
 #define LINE_PX 2400                    // DMA chunk: 10 rows of 240
 static uint16_t *s_line;                // DMA-capable scratch buffer
+
+// esp_lcd_panel_draw_bitmap() only QUEUES the SPI DMA transfer and returns at once
+// (up to trans_queue_depth in flight). The pixel buffer must not change until the
+// transfer has gone out, or later fills overwrite colours still being sent (seen on
+// hardware as half-drawn cells and a highlight frame showing only its top rows).
+// Each finished colour transfer gives s_done; wait_idle() drains them all.
+static SemaphoreHandle_t s_done;
+static int s_inflight;                  // queued colour transfers not yet finished
+
+static bool on_color_done(esp_lcd_panel_io_handle_t io, esp_lcd_panel_io_event_data_t *ev, void *ctx)
+{
+    (void)io; (void)ev; (void)ctx;
+    BaseType_t hp = pdFALSE;
+    xSemaphoreGiveFromISR(s_done, &hp);
+    return hp == pdTRUE;
+}
+
+static void wait_idle(void)
+{
+    while (s_inflight > 0) {
+        xSemaphoreTake(s_done, portMAX_DELAY);
+        s_inflight--;
+    }
+}
+
+static void queue_bitmap(int x0, int y0, int x1, int y1, const void *px)
+{
+    if (esp_lcd_panel_draw_bitmap(s_panel, x0, y0, x1, y1, px) == ESP_OK) s_inflight++;
+}
 
 void board_early_init(void)
 {
@@ -51,11 +82,13 @@ static void dsp_init(void)
     };
     ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &bus, SPI_DMA_CH_AUTO));
 
+    s_done = xSemaphoreCreateCounting(64, 0); // > max chunks per fill (32)
     esp_lcd_panel_io_handle_t io;
     esp_lcd_panel_io_spi_config_t io_cfg = {
         .dc_gpio_num = LCD_DC, .cs_gpio_num = LCD_CS,
         .pclk_hz = 40 * 1000 * 1000, .spi_mode = 0, .trans_queue_depth = 4,
         .lcd_cmd_bits = 8, .lcd_param_bits = 8,
+        .on_color_trans_done = on_color_done,
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)SPI2_HOST, &io_cfg, &io));
 
@@ -83,16 +116,19 @@ static void dsp_fill(int x, int y, int w, int h, uint16_t c)
     if (y + h > DISPLAY_H) h = DISPLAY_H - y;
     uint16_t sw = (uint16_t)((c >> 8) | (c << 8)); // panel expects big-endian RGB565
     int rows = LINE_PX / w; if (rows < 1) rows = 1;
+    wait_idle();                        // previous fill may still be reading s_line
     for (int i = 0; i < rows * w; i++) s_line[i] = sw;
-    for (int yy = y; yy < y + h; yy += rows) {
+    for (int yy = y; yy < y + h; yy += rows) {  // chunks share one colour: queue freely
         int n = (y + h - yy < rows) ? (y + h - yy) : rows;
-        esp_lcd_panel_draw_bitmap(s_panel, x, yy, x + w, yy + n, s_line);
+        queue_bitmap(x, yy, x + w, yy + n, s_line);
     }
 }
 
 static void dsp_blit(int x, int y, int w, int h, const uint16_t *p)
 {
-    esp_lcd_panel_draw_bitmap(s_panel, x, y, x + w, y + h, p); // caller supplies big-endian
+    wait_idle();
+    queue_bitmap(x, y, x + w, y + h, p); // caller supplies big-endian
+    wait_idle();                         // caller may reuse its buffer on return
 }
 
 static void dsp_bright(uint8_t pct) { gpio_set_level(LCD_BL, pct ? 1 : 0); } // P1: LEDC PWM

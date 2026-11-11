@@ -9,7 +9,6 @@
 #include <stdio.h>
 
 static nvs_handle_t s_nvs;
-static int64_t s_dirty_us;
 
 void store_init(void)
 {
@@ -41,9 +40,20 @@ bool store_load_slot(int slot)
 
 void store_load_autosave(void) { load_key("auto"); }
 
-void store_autosave_lazy(void)
+#define AUTOSAVE_IDLE_US 1500000   // save 1.5 s after the last edit
+
+static bool s_dirty;
+static int64_t s_edit_us;
+
+void store_mark_dirty(void) { s_dirty = true; s_edit_us = esp_timer_get_time(); }
+bool store_pending(void)    { return s_dirty; }
+
+void store_flush(void)
 {
-    // P1 TODO: debounce properly (save 2 s after last edit via esp_timer).
-    int64_t now = esp_timer_get_time();
-    if (now - s_dirty_us > 2000000) { save_key("auto"); s_dirty_us = now; }
+    if (s_dirty && save_key("auto")) s_dirty = false;
+}
+
+void store_autosave_if_idle(void)
+{
+    if (s_dirty && esp_timer_get_time() - s_edit_us >= AUTOSAVE_IDLE_US) store_flush();
 }

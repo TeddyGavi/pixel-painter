@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "sdkconfig.h"   // CONFIG_IDF_TARGET_* used below
 
 #if CONFIG_IDF_TARGET_ESP32S3
 // ---- Waveshare 2.41 V2, header J8 ----

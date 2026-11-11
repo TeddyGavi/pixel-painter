@@ -1,0 +1,4 @@
+# Colour test bars (key t): red, green, blue, white, black from top to bottom.
+0   adc 34 1.95
+2.0 uart0 t
+3.0 stop

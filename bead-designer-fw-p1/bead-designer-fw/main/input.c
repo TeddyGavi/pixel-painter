@@ -11,6 +11,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "esp_timer.h"
+#include "esp_log.h"
+#include "sdkconfig.h"
+#if CONFIG_BEAD_SERIAL_KEYS
+#include "driver/uart.h"
+static void serial_task(void *arg);
+#endif
 
 #define COUNTS_PER_DETENT 4
 #define DEBOUNCE_US       15000
@@ -105,7 +111,50 @@ void input_init(void)
         gpio_isr_handler_add(s_btns[i].pin, btn_isr, &s_btns[i]);
     }
     xTaskCreate(poll_task, "enc_poll", 2048, NULL, 10, NULL);
+#if CONFIG_BEAD_SERIAL_KEYS
+    // UART0 is also the log console; the driver only takes over its RX side here.
+    if (uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0) == ESP_OK)
+        xTaskCreate(serial_task, "keys", 2560, NULL, 5, NULL);
+#endif
 }
+
+void input_inject(event_t ev)
+{
+    xQueueSend(s_q, &ev, 0);
+}
+
+#if CONFIG_BEAD_SERIAL_KEYS
+// Bench input: single keys typed into `idf.py monitor` become UI events, so the
+// whole UI can be driven with no encoders or buttons wired. CR/LF are ignored.
+static const char *KEY_HELP =
+    "a/d=knob L ccw/cw  w/s=knob R ccw/cw  space|p=place  x=erase  "
+    "m=menu  o=settings  t=colour bars  ?=help";
+
+static void serial_task(void *arg)
+{
+    (void)arg;
+    ESP_LOGI("keys", "%s", KEY_HELP);
+    for (;;) {
+        uint8_t c;
+        if (uart_read_bytes(UART_NUM_0, &c, 1, portMAX_DELAY) != 1) continue;
+        event_t ev;
+        switch (c) {
+        case 'd': ev = EV_ENC_L_CW;  break;
+        case 'a': ev = EV_ENC_L_CCW; break;
+        case 's': ev = EV_ENC_R_CW;  break;
+        case 'w': ev = EV_ENC_R_CCW; break;
+        case ' ': case 'p': ev = EV_PUSH_R; break;
+        case 'x': ev = EV_PUSH_L;    break;
+        case 'm': ev = EV_BTN_MENU;  break;
+        case 'o': ev = EV_BTN_SIDE;  break;
+        case 't': ev = EV_TEST_BARS; break;
+        case '?': ESP_LOGI("keys", "%s", KEY_HELP); continue;
+        default: continue;           // CR, LF and unmapped keys
+        }
+        input_inject(ev);
+    }
+}
+#endif
 
 int input_wait(event_t *ev, uint32_t timeout_ms)
 {

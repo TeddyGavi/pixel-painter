@@ -7,8 +7,10 @@ idf_component_register(
         "palettes.c"
         "store.c"
         "export.c"
+        "text.c"
+        "font_chicago.c"
         "board/board_freenove.c"
         "board/board_ws241.c"
     INCLUDE_DIRS "." "board"
-    PRIV_REQUIRES driver esp_driver_gpio esp_driver_spi esp_lcd esp_adc nvs_flash esp_wifi esp_http_server esp_timer
+    PRIV_REQUIRES driver esp_driver_gpio esp_driver_uart esp_driver_spi esp_lcd esp_adc nvs_flash esp_wifi esp_http_server esp_timer
 )

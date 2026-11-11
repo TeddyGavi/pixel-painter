@@ -12,8 +12,8 @@ typedef struct {
     int palette;                    // index into PALETTES[]
     int color;                      // selected colour index in current palette
     ui_mode_t mode;
-    // palette-picker highlight
-    int pick_x, pick_y;
+    // colour picker (strip): chip under the frame while picking
+    int pick;
     // settings
     int sel;                        // menu selection
 } ui_state_t;

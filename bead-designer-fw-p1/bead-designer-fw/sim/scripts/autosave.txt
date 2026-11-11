@@ -1,0 +1,10 @@
+# Autosave survives a reset. Place a bead at (7,4); the save is lazy (>2 s since the
+# last one, on the next Draw event), so nudge the knob at t=5 to trigger it, then
+# software-reset the chip (RTC_CNTL SW_SYS_RST; there is no `reset` script command).
+# Expected after reboot: bead at (7,4) restored from NVS, cursor back at (4,4).
+0   adc 34 1.95
+2.0 knob cw 3
+2.5 press boot 150
+5.0 knob cw 1
+6.0 poke 3ff48000 80000000
+9.0 stop

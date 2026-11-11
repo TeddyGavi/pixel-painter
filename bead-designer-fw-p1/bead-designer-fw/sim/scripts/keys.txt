@@ -1,0 +1,20 @@
+# Keyboard (UART0) control, as typed into `idf.py monitor`. Each `uart0` line also sends
+# a newline, which the firmware ignores. `p` = place (space can't be sent from a script).
+# Pick Magenta on the strip (m, then d x4 from White, p confirms), place three beads in a
+# row from the centre, then step back one cell and erase it (x).
+# Expected: Magenta at (4,4) and (6,4), (5,4) empty with the cursor; strip "Magenta 2".
+0   adc 34 1.95
+2.0 uart0 m
+2.2 uart0 d
+2.4 uart0 d
+2.6 uart0 d
+2.8 uart0 d
+3.0 uart0 p
+3.2 uart0 p
+3.4 uart0 d
+3.6 uart0 p
+3.8 uart0 d
+4.0 uart0 p
+4.2 uart0 a
+4.4 uart0 x
+5.0 stop

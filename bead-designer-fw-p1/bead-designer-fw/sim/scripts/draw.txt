@@ -1,0 +1,8 @@
+# Single-encoder walk: 3 detents CW moves the cursor (4,4) -> (7,4), place a bead,
+# then 2 detents CCW to (5,4) and place another. Needs PCNT in esp32sim.
+0   adc 34 1.95
+2.0 knob cw 3
+2.5 press boot 150
+3.0 knob ccw 2
+3.5 press boot 150
+4.5 stop
