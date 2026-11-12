@@ -11,7 +11,10 @@
 #include "board.h"
 #include "palettes.h"
 #include "text.h"
+#include "menu.h"
 #include <stdio.h>
+#include <string.h>
+#include "esp_timer.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
 
@@ -22,6 +25,7 @@
 #define COL_EMPTY    0x18E3  // empty cell
 #define COL_DIVIDER  0x39E7
 #define COL_NAME     0xFFFF
+#define COL_TEXT     0xFFFF
 #define COL_COUNT    0xAD55
 
 // Strip geometry (below the grid)
@@ -50,15 +54,12 @@ static void layout(void)
 static const palette_t *pal(void) { return &PALETTES[UI.palette]; }
 
 // Half brightness (each RGB565 channel >> 1). Whichever area does NOT have focus is
-// drawn dimmed: the cursor frame while picking a colour, the strip while placing.
+// drawn dimmed: the cursor frame while browsing colours, the strip while placing.
 // dim(COL_FRAME) == COL_FRAME_DIM, so both use exactly the same amount.
 static inline uint16_t dim(uint16_t c) { return (uint16_t)((c >> 1) & 0x7BEF); }
 
-// Strip colours: full brightness only while it has focus (picking).
-static uint16_t strip_col(uint16_t c) { return UI.mode == MODE_PALETTE ? c : dim(c); }
-
-// The chip the strip is showing: the colour being picked, or the selected one.
-static int shown_chip(void) { return UI.mode == MODE_PALETTE ? UI.pick : UI.color; }
+// Strip colours: full brightness only while it has focus (browsing).
+static uint16_t strip_col(uint16_t c) { return UI.browsing ? c : dim(c); }
 
 static int count_color(int idx)
 {
@@ -78,7 +79,7 @@ static int count_color(int idx)
 
 static inline uint16_t be16(uint16_t c) { return (uint16_t)((c >> 8) | (c << 8)); }
 
-#define TILE_MAX (CHIP + 8)                 // largest tile edge (chip slot)
+#define TILE_MAX 32                          // largest tile edge (grid cell + ring = 26)
 static uint16_t s_tile[TILE_MAX * TILE_MAX];
 
 // Fill [x0,x1) x [y0,y1) of a w-wide tile with one colour.
@@ -99,7 +100,7 @@ static uint16_t cell_color(uint8_t idx)
 
 static uint16_t cursor_frame(void)
 {
-    return UI.mode == MODE_PALETTE ? COL_FRAME_DIM : COL_FRAME;
+    return UI.browsing ? COL_FRAME_DIM : COL_FRAME;
 }
 
 // frame = cursor frame colour (COL_BG = no frame).
@@ -137,84 +138,252 @@ static void draw_grid(void)
 
 // ---- palette strip ----------------------------------------------------------
 
-static int s_first;  // first chip index visible (strip scrolls for big palettes)
+// The strip shows a list of chips: normally the SLOTS shortlist, while browsing a
+// scrolling window onto the whole palette in browse order (grouped by family).
+static int s_first;  // first list position visible
+
+static int strip_len(void)  { return UI.browsing ? pal()->count : SLOTS; }
+static int strip_sel(void)  { return UI.browsing ? UI.browse_pos : UI.slot; }
+static int strip_item(int i){ return UI.browsing ? palette_browse_index(pal(), i) : UI.slots[i]; }
 
 static int strip_visible(void)
 {
-    int fit = (DISPLAY_W - 2 * 8) / CHIP_PITCH;
-    return pal()->count < fit ? pal()->count : fit;
+    int fit = (DISPLAY_W - 2 * 8) / CHIP_PITCH, n = strip_len();
+    return n < fit ? n : fit;
 }
 
-// Scroll so chip `i` is visible. Returns 1 if the window moved.
-static int strip_scroll_to(int i)
+// Scroll so list position `i` is visible.
+static void strip_scroll_to(int i)
 {
     int vis = strip_visible(), f = s_first;
     if (i < f) f = i;
     if (i >= f + vis) f = i - vis + 1;
-    if (f > pal()->count - vis) f = pal()->count - vis;
+    if (f > strip_len() - vis) f = strip_len() - vis;
     if (f < 0) f = 0;
-    int moved = (f != s_first);
     s_first = f;
-    return moved;
 }
 
-static void draw_chip(int i, int framed)
+// The whole strip row is composed off-screen and sent in ONE blit: switching
+// between the 5 slots and the catalogue window moves every chip, which done
+// chip by chip would need a visible clear.
+#define STRIP_H (CHIP + 8)
+static uint16_t s_strip[DISPLAY_W * STRIP_H];
+
+static void strip_rect(int x0, int y0, int x1, int y1, uint16_t c)
 {
-    int vis = strip_visible();
-    if (i < s_first || i >= s_first + vis) return;
-    int x0 = (DISPLAY_W - vis * CHIP_PITCH) / 2 + (CHIP_PITCH - CHIP) / 2;
-    int x = x0 + (i - s_first) * CHIP_PITCH, y = CHIP_Y;
-    // One tile: white ring, black gap, colour square (mockup style, square). The
-    // slot (CHIP + 8) is narrower than CHIP_PITCH, so chip tiles never overlap.
-    const int w = CHIP + 8;
-    tile_rect(w, 0, 0, w, w, framed ? strip_col(COL_FRAME) : COL_BG);
-    if (framed) tile_rect(w, 2, 2, w - 2, w - 2, COL_BG);
-    tile_rect(w, 4, 4, w - 4, w - 4, strip_col(pal()->colors[i].rgb565));
-    D->blit(x - 4, y - 4, w, w, s_tile);
+    uint16_t b = be16(c);
+    for (int y = y0; y < y1; y++)
+        for (int x = x0; x < x1; x++) s_strip[y * DISPLAY_W + x] = b;
 }
 
 static void draw_strip(void)
 {
-    // No clear first: every visible slot is redrawn as a whole tile, and the
-    // spaces between slots are only ever black (from render_full).
-    int vis = strip_visible(), sel = shown_chip();
-    for (int i = s_first; i < s_first + vis; i++) draw_chip(i, i == sel);
+    strip_scroll_to(strip_sel());
+    strip_rect(0, 0, DISPLAY_W, STRIP_H, COL_BG);
+    int vis = strip_visible(), sel = strip_sel();
+    int x0 = (DISPLAY_W - vis * CHIP_PITCH) / 2 + (CHIP_PITCH - CHIP) / 2 - 4;
+    for (int k = 0; k < vis; k++) {
+        int i = s_first + k, x = x0 + k * CHIP_PITCH;
+        // white ring, black gap, colour square (mockup style, square)
+        if (i == sel) {
+            strip_rect(x, 0, x + STRIP_H, STRIP_H, strip_col(COL_FRAME));
+            strip_rect(x + 2, 2, x + STRIP_H - 2, STRIP_H - 2, COL_BG);
+        }
+        uint16_t c = pal()->colors[strip_item(i)].rgb565;
+        // Very dark chips (black, charcoal) vanish on the black strip: outline them.
+        int luma = ((c >> 11) * 8 * 3 + ((c >> 5) & 0x3F) * 4 * 6 + (c & 0x1F) * 8) / 10;
+        if (luma < 48)
+            strip_rect(x + 3, 3, x + STRIP_H - 3, STRIP_H - 3, strip_col(COL_DIVIDER));
+        strip_rect(x + 4, 4, x + STRIP_H - 4, STRIP_H - 4, strip_col(c));
+    }
+    D->blit(0, CHIP_Y - 4, DISPLAY_W, STRIP_H, s_strip);
 }
 
-// "Magenta ........ 13": name left, bead count right. The whole line is composed
-// off-screen and sent in one blit, so it never shows half updated.
-static uint16_t s_line[DISPLAY_W * TEXT_H];
+// "S93 Peach ...... 13": code + name left, bead count right. The whole line is
+// composed off-screen and sent in one blit, so it never shows half updated.
+// A label wider than its space is shown shortened with "..."; after
+// MARQUEE_DELAY_US unchanged it scrolls once right-to-left (one blit per frame),
+// then shows the shortened form again and waits another MARQUEE_DELAY_US.
+#define MARQUEE_DELAY_US 5000000
+#define MARQUEE_FRAME_MS 40
+#define MARQUEE_STEP     2          // px per frame (50 px/s)
+#define MARQUEE_GAP      48         // px between the end and the repeated start
 
-static void draw_info(void)
+static uint16_t s_line[DISPLAY_W * TEXT_H];
+static char s_info_label[48];
+static bool s_info_long;            // label wider than its space
+static bool s_marquee;              // currently scrolling
+static int s_marquee_off;
+static int64_t s_info_since_us;     // label unchanged since
+
+static void compose_info(void)
 {
-    int idx = shown_chip();
+    int idx = ui_color();
     char num[8];
     snprintf(num, sizeof num, "%d", count_color(idx));
     const uint16_t bg = be16(COL_BG);
     for (int i = 0; i < DISPLAY_W * TEXT_H; i++) s_line[i] = bg;
     int cw = text_width(num);
     int cx = DISPLAY_W - TEXT_PAD - cw;
-    text_render(s_line, DISPLAY_W, TEXT_PAD, pal()->colors[idx].name,
-                cx - TEXT_PAD - 8, be16(strip_col(COL_NAME)), bg);
+    int x0 = TEXT_PAD, x1 = cx - 8;               // label space
+    uint16_t fg = be16(strip_col(COL_NAME));
+    if (s_marquee) {
+        int tw = text_width(s_info_label);
+        text_render_clip(s_line, DISPLAY_W, x0 - s_marquee_off, x0, x1, s_info_label, fg, bg);
+        text_render_clip(s_line, DISPLAY_W, x0 - s_marquee_off + tw + MARQUEE_GAP, x0, x1,
+                         s_info_label, fg, bg);
+    } else {
+        char fit[52];
+        text_fit(s_info_label, x1 - x0, fit, sizeof fit);
+        text_render(s_line, DISPLAY_W, x0, fit, x1 - x0, fg, bg);
+    }
     text_render(s_line, DISPLAY_W, cx, num, cw, be16(strip_col(COL_COUNT)), bg);
     D->blit(0, TEXT_Y, DISPLAY_W, TEXT_H, s_line);
+}
+
+// Content changed (colour, count, focus): show it shortened and restart the delay.
+static void draw_info(void)
+{
+    const bead_color_t *bc = &pal()->colors[ui_color()];
+    // The code first (what gets ordered), then the name.
+    snprintf(s_info_label, sizeof s_info_label, "%s %s", bc->code, bc->name);
+    char num[8];
+    snprintf(num, sizeof num, "%d", count_color(ui_color()));
+    int space = DISPLAY_W - TEXT_PAD - text_width(num) - 8 - TEXT_PAD;
+    s_info_long = text_width(s_info_label) > space;
+    s_marquee = false;
+    s_marquee_off = 0;
+    s_info_since_us = esp_timer_get_time();
+    compose_info();
+}
+
+int render_tick_ms(void)
+{
+    if (UI.mode != MODE_DRAW || !s_info_long) return -1;
+    if (s_marquee) return MARQUEE_FRAME_MS;
+    int64_t left = MARQUEE_DELAY_US - (esp_timer_get_time() - s_info_since_us);
+    return left <= 0 ? 1 : (int)(left / 1000) + 1;
+}
+
+void render_tick(void)
+{
+    if (UI.mode != MODE_DRAW || !s_info_long) return;
+    int64_t now = esp_timer_get_time();
+    if (!s_marquee) {
+        if (now - s_info_since_us < MARQUEE_DELAY_US) return;
+        s_marquee = true;
+        s_marquee_off = 0;
+    }
+    s_marquee_off += MARQUEE_STEP;
+    if (s_marquee_off >= text_width(s_info_label) + MARQUEE_GAP) {
+        s_marquee = false;                         // one full pass: rest again
+        s_info_since_us = now;
+    }
+    compose_info();
+}
+
+// ---- menu / list screens --------------------------------------------------------
+// Title band + VISIBLE rows, each ROW_H tall, each composed off-screen in the
+// band buffer (s_strip, same 240 x 32 size) and sent in one blit. Switching screens
+// replaces the old content band by band; the screen never goes blank in between.
+#define ROW_H        32
+#define MENU_VISIBLE ((DISPLAY_H - ROW_H) / ROW_H)    // 9; menu.c VISIBLE_ROWS
+_Static_assert(STRIP_H == ROW_H, "menu bands reuse the strip buffer");
+#define COL_TEXT_DIM 0xAD55
+
+static void band_text(int x, const char *str, int max_w, uint16_t fg)
+{
+    text_render(s_strip + 3 * DISPLAY_W, DISPLAY_W, x, str, max_w, be16(fg), be16(COL_BG));
+}
+
+static void draw_title(const menu_view_t *v)
+{
+    strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
+    band_text(8, v->title, DISPLAY_W - 16, COL_TEXT);
+    strip_rect(8, ROW_H - 2, DISPLAY_W - 8, ROW_H - 1, COL_DIVIDER);
+    D->blit(0, 0, DISPLAY_W, ROW_H, s_strip);
+}
+
+static void draw_menu_row(const menu_view_t *v, int i)
+{
+    int k = i - v->top;
+    if (k < 0 || k >= MENU_VISIBLE) return;
+    strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
+    if (i < v->count) {
+        menu_row_t r;
+        menu_row(i, &r);
+        if (i == v->sel) {                               // white frame, like the cursor
+            strip_rect(2, 0, DISPLAY_W - 2, ROW_H, COL_FRAME);
+            strip_rect(4, 2, DISPLAY_W - 4, ROW_H - 2, COL_BG);
+        }
+        int x = 12;
+        if (r.swatch >= 0) {
+            uint16_t c = (uint16_t)r.swatch;
+            int luma = ((c >> 11) * 8 * 3 + ((c >> 5) & 0x3F) * 4 * 6 + (c & 0x1F) * 8) / 10;
+            if (luma < 48) strip_rect(9, 5, 31, 27, COL_DIVIDER);
+            strip_rect(10, 6, 30, 26, c);
+            x = 38;
+        }
+        int rw = text_width(r.right);
+        int rx = DISPLAY_W - 12 - rw;
+        char fit[52];
+        text_fit(r.left, rx - x - 6, fit, sizeof fit);  // long names end in "..."
+        band_text(x, fit, rx - x - 6, COL_TEXT);
+        if (rw) band_text(rx, r.right, rw, COL_TEXT_DIM);
+    }
+    D->blit(0, ROW_H * (1 + k), DISPLAY_W, ROW_H, s_strip);
+}
+
+static menu_view_t s_menu_shown;
+
+static void render_menu_full(void)
+{
+    menu_view_t v;
+    menu_view(&v);
+    draw_title(&v);
+    for (int k = 0; k < MENU_VISIBLE; k++) draw_menu_row(&v, v.top + k);
+    s_menu_shown = v;
+}
+
+static void render_menu_update(void)
+{
+    menu_view_t v;
+    menu_view(&v);
+    if (v.version != s_menu_shown.version || v.top != s_menu_shown.top ||
+        v.count != s_menu_shown.count) {
+        render_menu_full();                              // content/scroll changed
+        return;
+    }
+    if (strcmp(v.title, s_menu_shown.title) != 0) draw_title(&v);   // e.g. family
+    if (v.sel != s_menu_shown.sel) {                     // just the highlight moved
+        draw_menu_row(&v, s_menu_shown.sel);
+        draw_menu_row(&v, v.sel);
+    }
+    s_menu_shown = v;
 }
 
 // ---- screen state -------------------------------------------------------------
 
 // What is on screen now, so render_update() can redraw only what changed.
-static ui_mode_t s_shown_mode;
-static int s_shown_x, s_shown_y, s_shown_chip, s_shown_count;
+typedef struct {
+    ui_mode_t mode;
+    int x, y;
+    bool browsing;
+    int slot, pos, color, count;
+    uint8_t slots[SLOTS];
+} shown_t;
+static shown_t s_shown;
 
-static void remember_shown(void)
+static void snapshot(shown_t *v)
 {
-    s_shown_mode = UI.mode;
-    s_shown_x = UI.cur_x; s_shown_y = UI.cur_y;
-    s_shown_chip = shown_chip();
-    s_shown_count = count_color(s_shown_chip);
+    memset(v, 0, sizeof *v);            // padding too, so memcmp is meaningful
+    v->mode = UI.mode; v->x = UI.cur_x; v->y = UI.cur_y;
+    v->browsing = UI.browsing; v->slot = UI.slot; v->pos = UI.browse_pos;
+    v->color = ui_color(); v->count = count_color(v->color);
+    memcpy(v->slots, UI.slots, SLOTS);
 }
 
-static int grid_mode(ui_mode_t m) { return m == MODE_DRAW || m == MODE_PALETTE; }
+static int grid_mode(ui_mode_t m) { return m == MODE_DRAW; }
 
 void render_full(void)
 {
@@ -223,46 +392,53 @@ void render_full(void)
 #endif
     static int once = 0;
     if (!once) { layout(); D->init(); once = 1; }
-    D->fill_rect(0, 0, DISPLAY_W, DISPLAY_H, COL_BG);
     if (grid_mode(UI.mode)) {
-        draw_grid();
+        // No full-screen clear (it would flash): cell tiles, strip and info line
+        // each overwrite their area in one blit; only the margins between them
+        // are filled, straight to their final black.
+        const int gx0 = s_ox - 1, gx1 = gx0 + GRID_N * (s_cell + GAP);
+        const int gy0 = s_oy - 1, gy1 = gy0 + GRID_N * (s_cell + GAP);
+        const int sy0 = CHIP_Y - 4, sy1 = sy0 + STRIP_H;
+        D->fill_rect(0, 0, DISPLAY_W, gy0, COL_BG);
+        D->fill_rect(0, gy0, gx0, gy1 - gy0, COL_BG);
+        D->fill_rect(gx1, gy0, DISPLAY_W - gx1, gy1 - gy0, COL_BG);
+        D->fill_rect(0, gy1, DISPLAY_W, DIVIDER_Y - gy1, COL_BG);
+        D->fill_rect(0, DIVIDER_Y, 8, 1, COL_BG);
         D->fill_rect(8, DIVIDER_Y, DISPLAY_W - 16, 1, COL_DIVIDER);
-        strip_scroll_to(shown_chip());
+        D->fill_rect(DISPLAY_W - 8, DIVIDER_Y, 8, 1, COL_BG);
+        D->fill_rect(0, DIVIDER_Y + 1, DISPLAY_W, sy0 - DIVIDER_Y - 1, COL_BG);
+        D->fill_rect(0, sy1, DISPLAY_W, TEXT_Y - sy1, COL_BG);
+        D->fill_rect(0, TEXT_Y + TEXT_H, DISPLAY_W, DISPLAY_H - TEXT_Y - TEXT_H, COL_BG);
+        draw_grid();
         draw_strip();
         draw_info();
+    } else {
+        render_menu_full();
     }
-    // MODE_SETTINGS: P1 TODO menu rows + selection bar
-    // MODE_EXPORT:   P1 TODO QR code; until then SSID/URL text
-    remember_shown();
+    snapshot(&s_shown);
 }
 
 void render_update(void)
 {
-    // Leaving or entering a non-grid screen needs the whole screen.
-    if (!grid_mode(UI.mode) || !grid_mode(s_shown_mode)) { render_full(); return; }
+    // Switching between drawing and the menu repaints everything (band by band).
+    if (UI.mode != s_shown.mode) { render_full(); return; }
+    if (!grid_mode(UI.mode)) { render_menu_update(); return; }
+    shown_t now;
+    snapshot(&now);
 
-    // Grid: old cursor cell loses its frame, new one drawn last. Place/erase only
-    // change the cursor cell; the cursor frame dims while the strip has focus.
-    if (s_shown_x != UI.cur_x || s_shown_y != UI.cur_y)
-        draw_cell(s_shown_x, s_shown_y, COL_BG);
-    if (s_shown_x != UI.cur_x || s_shown_y != UI.cur_y || s_shown_mode != UI.mode
-        || UI.mode == MODE_DRAW)
-        draw_cell(UI.cur_x, UI.cur_y, cursor_frame());
+    // Grid: old cursor cell loses its frame; the cursor cell is redrawn on every
+    // event (place/erase change it; its frame dims while browsing).
+    if (now.x != s_shown.x || now.y != s_shown.y) draw_cell(s_shown.x, s_shown.y, COL_BG);
+    draw_cell(UI.cur_x, UI.cur_y, cursor_frame());
 
-    // Strip: focus change re-colours the whole strip (dim <-> bright); otherwise
-    // move the frame (or redraw the strip if it had to scroll).
-    int chip = shown_chip();
-    if (s_shown_mode != UI.mode) {
-        strip_scroll_to(chip);
+    // Strip: any change of list, selection, slot colours or focus -> one blit.
+    if (now.browsing != s_shown.browsing || now.slot != s_shown.slot ||
+        now.pos != s_shown.pos || memcmp(now.slots, s_shown.slots, SLOTS) != 0)
         draw_strip();
+    if (now.browsing != s_shown.browsing || now.color != s_shown.color ||
+        now.count != s_shown.count)
         draw_info();
-    } else if (chip != s_shown_chip) {
-        if (strip_scroll_to(chip)) draw_strip();
-        else { draw_chip(s_shown_chip, 0); draw_chip(chip, 1); }
-    }
-    if (s_shown_mode == UI.mode && (chip != s_shown_chip || count_color(chip) != s_shown_count))
-        draw_info();
-    remember_shown();
+    s_shown = now;
 }
 
 void render_idle_tick(void)

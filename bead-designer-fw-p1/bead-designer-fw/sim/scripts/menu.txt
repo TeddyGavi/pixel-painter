@@ -1,0 +1,7 @@
+# MENU opens the main menu (drawn band by band over the grid, no blank screen).
+# Expected: title "Menu"; rows Brand (Artkal), Edit shortlist, Colours in pattern (0),
+# Export; first row highlighted.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.6 stop

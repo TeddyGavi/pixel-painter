@@ -1,0 +1,10 @@
+# Press-and-turn on the hardware path: hold the encoder push (BOOT) and turn 3
+# detents. The first detent steps 1, then acceleration (emulated detents are ~16 ms
+# apart) steps 4 each: browse position +9 from S01 in browse order. Captured while
+# still held: strip shows the catalogue window (bright), cursor frame dimmed, slot 0
+# now that colour.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 press sw 2000
+2.4 knob cw 3
+3.0 stop

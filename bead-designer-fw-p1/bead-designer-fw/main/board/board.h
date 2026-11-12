@@ -8,16 +8,23 @@
 #include <stdbool.h>
 #include "sdkconfig.h"   // CONFIG_IDF_TARGET_* used below
 
+// Inputs (all switches active low): a 5-way D-pad (cursor; centre = erase,
+// long-press = eyedropper), one push-encoder (turn = colour slot, press = place,
+// press-and-turn = browse the catalogue), MENU and SIDE. -1 = not wired.
 #if CONFIG_IDF_TARGET_ESP32S3
-// ---- Waveshare 2.41 V2, header J8 ----
-#define PIN_ENC_L_A     1   // J8-3
-#define PIN_ENC_L_B     7   // J8-13
-#define PIN_ENC_L_SW    8   // J8-15, active low
-#define PIN_ENC_R_A     38  // J8-19
-#define PIN_ENC_R_B     39  // J8-21 (MTCK: no external JTAG while in use)
-#define PIN_ENC_R_SW    40  // J8-23, active low
-#define PIN_BTN_MENU    41  // J8-25, active low
-#define PIN_BTN_SIDE    42  // J8-24, active low
+// ---- Waveshare 2.41 V2 + Rev B control board, D variant (layout-revB.md),
+//      via header J8 ----
+#define PIN_DPAD_UP     38  // J8-19
+#define PIN_DPAD_DOWN   39  // J8-21 (MTCK: no external JTAG while in use)
+#define PIN_DPAD_LEFT   40  // J8-23
+#define PIN_DPAD_RIGHT  41  // J8-25
+#define PIN_DPAD_CENTER 1   // J8-3
+#define PIN_ENC_A       7   // J8-13
+#define PIN_ENC_B       8   // J8-15
+#define PIN_ENC_SW      42  // J8-24
+#define PIN_BTN_MENU    (-1) // EXIO5 on the onboard I/O expander: TODO expander driver
+#define PIN_BTN_SIDE    (-1) // EXIO6 on the onboard I/O expander: TODO expander driver
+#define PIN_DPAD_LADDER (-1) // D-pad uses its own GPIOs here
 #define PIN_PWR_KEY     15  // onboard PWR key (Key_BAT)
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops
 #define PIN_BAT_ADC     17  // battery voltage / 3 (200k/100k divider)
@@ -27,15 +34,19 @@
 #elif CONFIG_IDF_TARGET_ESP32
 // ---- Freenove FNK0114A 2.4" ST7789 (ESP32-WROOM-32E), from Freenove's
 //      2.4inch_ESP32-32E_Display_Schematic.pdf. Only 2 free GPIOs exist. ----
-#define PIN_ENC_L_A     35   // P4 pin 2 ("IO port"); input-only, EXTERNAL 10k pull-up required
-#define PIN_ENC_L_B     27   // P3 pin 4 ("SPI port"); free, not strapping
-#define PIN_ENC_L_SW    (-1)
-#define PIN_ENC_R_A     (-1) // not wired on interim board
-#define PIN_ENC_R_B     (-1)
-#define PIN_ENC_R_SW    0    // BOOT key = "place" (onboard 10k pull-up); don't hold during reset
-#define SINGLE_ENCODER  1    // one knob walks the grid row by row
-#define PIN_BTN_MENU    (-1) // optional: IO19 (P3 pin 2) if the SD card is not used
-#define PIN_BTN_SIDE    (-1)
+// Breadboard bench wiring (BENCH.md). Only 5 GPIOs reach connectors, so the
+// 5-way D-pad is a resistor ladder on one ADC pin. P3 = the SD-card bus: no card.
+#define PIN_DPAD_UP     (-1) // all 5 directions: ladder on PIN_DPAD_LADDER
+#define PIN_DPAD_DOWN   (-1)
+#define PIN_DPAD_LEFT   (-1)
+#define PIN_DPAD_RIGHT  (-1)
+#define PIN_DPAD_CENTER (-1)
+#define PIN_DPAD_LADDER 27   // P3 pin 4: ADC2_CH7 (unreadable while Wi-Fi runs)
+#define PIN_ENC_A       35   // P4 pin 2; input-only, EXTERNAL 10k pull-up required
+#define PIN_ENC_B       23   // P3 pin 1 (SPI_MOSI)
+#define PIN_ENC_SW      19   // P3 pin 2 (SPI_MISO)
+#define PIN_BTN_MENU    18   // P3 pin 3 (SPI_CLK)
+#define PIN_BTN_SIDE    0    // onboard BOOT key (10k pull-up); don't hold it during reset
 #define PIN_PWR_KEY     (-1)
 #define PIN_PWR_LATCH   (-1)
 #define PIN_BAT_ADC     34   // 100k/100k divider (x2)

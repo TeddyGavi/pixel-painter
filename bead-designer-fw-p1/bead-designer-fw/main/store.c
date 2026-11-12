@@ -1,14 +1,28 @@
-// Pattern storage in NVS: one blob per slot + an autosave blob so the
+// Pattern storage in NVS: one blob per save slot + an autosave blob so the
 // working pattern survives power-off (spec: single working pattern persists;
 // multiple named slots via Settings).
+//
+// A pattern = brand (palette) + its 5-colour shortlist + the cells, versioned.
+// Loading validates everything; anything else (older format, other size, indices
+// out of range for the palette) is ignored and the caller's defaults stay.
 #include "store.h"
 #include "ui.h"
+#include "palettes.h"
+#include <string.h>
+#include "esp_log.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "esp_timer.h"
 #include <stdio.h>
 
 static nvs_handle_t s_nvs;
+
+static int count_beads(void)
+{
+    int n = 0;
+    for (int i = 0; i < GRID_N * GRID_N; i++) n += UI.cells[i] != CELL_EMPTY;
+    return n;
+}
 
 void store_init(void)
 {
@@ -20,16 +34,48 @@ void store_init(void)
     nvs_open("beads", NVS_READWRITE, &s_nvs);
 }
 
+#define PATTERN_VERSION 2   // 1 = bare cells (pre-shortlist), no longer loaded
+
+typedef struct {
+    uint8_t version;
+    uint8_t palette;                  // index into PALETTES[]
+    uint8_t slots[SLOTS];             // shortlist (palette colour indices)
+    uint8_t slot;                     // selected slot
+    uint8_t cells[GRID_N * GRID_N];   // palette colour index, CELL_EMPTY = none
+} pattern_t;
+
 static bool save_key(const char *key)
 {
-    if (nvs_set_blob(s_nvs, key, UI.cells, sizeof UI.cells) != ESP_OK) return false;
+    pattern_t pt = { .version = PATTERN_VERSION, .palette = (uint8_t)UI.palette,
+                     .slot = (uint8_t)UI.slot };
+    memcpy(pt.slots, UI.slots, sizeof pt.slots);
+    memcpy(pt.cells, UI.cells, sizeof pt.cells);
+    if (nvs_set_blob(s_nvs, key, &pt, sizeof pt) != ESP_OK) return false;
     return nvs_commit(s_nvs) == ESP_OK;
+}
+
+static bool valid(const pattern_t *pt)
+{
+    if (pt->version != PATTERN_VERSION || pt->palette >= PALETTE_COUNT || pt->slot >= SLOTS)
+        return false;
+    int n = PALETTES[pt->palette].count;
+    for (int i = 0; i < SLOTS; i++) if (pt->slots[i] >= n) return false;
+    for (int i = 0; i < GRID_N * GRID_N; i++)
+        if (pt->cells[i] != CELL_EMPTY && pt->cells[i] >= n) return false;
+    return true;
 }
 
 static bool load_key(const char *key)
 {
-    size_t len = sizeof UI.cells;
-    return nvs_get_blob(s_nvs, key, UI.cells, &len) == ESP_OK && len == sizeof UI.cells;
+    pattern_t pt;
+    size_t len = sizeof pt;
+    if (nvs_get_blob(s_nvs, key, &pt, &len) != ESP_OK || len != sizeof pt || !valid(&pt))
+        return false;
+    UI.palette = pt.palette;
+    UI.slot = pt.slot;
+    memcpy(UI.slots, pt.slots, sizeof UI.slots);
+    memcpy(UI.cells, pt.cells, sizeof UI.cells);
+    return true;
 }
 
 bool store_save_slot(int slot)
@@ -38,7 +84,14 @@ bool store_save_slot(int slot)
 bool store_load_slot(int slot)
 { char k[8]; snprintf(k, sizeof k, "s%d", slot); return load_key(k); }
 
-void store_load_autosave(void) { load_key("auto"); }
+void store_load_autosave(void)
+{
+    if (load_key("auto"))
+        ESP_LOGI("store", "pattern restored: %s, %d beads, slot %d",
+                 PALETTES[UI.palette].brand, count_beads(), UI.slot);
+    else
+        ESP_LOGI("store", "no valid saved pattern (new, or an older format): defaults");
+}
 
 #define AUTOSAVE_IDLE_US 1500000   // save 1.5 s after the last edit
 

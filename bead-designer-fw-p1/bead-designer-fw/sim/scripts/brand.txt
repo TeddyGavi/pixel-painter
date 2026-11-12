@@ -1,0 +1,16 @@
+# Brand switch remaps placed beads and slots to the nearest colour of the new brand.
+# Place S05 Red (slot 2) at (4,4), then Menu > Brand > Perler (list: Perler, Hama,
+# Artkal; starts on the current one) and close the menu.
+# Expected: grid with Perler's nearest red-ish starter colour at (4,4); slots remapped.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 p
+2.6 uart0 m
+2.8 uart0 k
+3.0 uart0 w
+3.2 uart0 w
+3.4 uart0 k
+3.6 uart0 m
+4.2 stop

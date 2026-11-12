@@ -1,8 +1,12 @@
-# Single-encoder walk: 3 detents CW moves the cursor (4,4) -> (7,4), place a bead,
-# then 2 detents CCW to (5,4) and place another. Needs PCNT in esp32sim.
+# Hardware encoder path (PCNT on GPIO35/27 + BOOT as the encoder push).
+# knob cw 2 -> slot 2 (S05 Red); press = place at the centre (4,4). Move right with the
+# D-pad (serial 'd'), knob ccw 1 -> slot 1 (S13 Black), press = place at (5,4).
+# Expected: Red (4,4), Black (5,4) with the cursor; strip slot 1 framed; "S13 Black 1".
 0   adc 34 1.95
-2.0 knob cw 3
-2.5 press boot 150
-3.0 knob ccw 2
-3.5 press boot 150
-4.5 stop
+0   adc 27 3.3
+2.0 knob cw 2
+2.3 press sw 150
+2.8 uart0 d
+3.1 knob ccw 1
+3.4 press sw 150
+4.2 stop

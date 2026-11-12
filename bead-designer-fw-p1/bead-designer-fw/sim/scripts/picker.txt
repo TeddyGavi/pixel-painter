@@ -1,8 +1,0 @@
-# Mid-pick screen: place a White bead, open the strip picker (m) and step to Baby Blue
-# (a: White wraps back to the last chip). Expected: cursor frame dimmed (strip has
-# focus), Baby Blue chip framed, text "Baby Blue 0".
-0   adc 34 1.95
-2.0 uart0 p
-2.3 uart0 m
-2.6 uart0 a
-3.5 stop

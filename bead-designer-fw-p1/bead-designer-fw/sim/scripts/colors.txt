@@ -1,0 +1,12 @@
+# Menu > Edit shortlist > slot 1 > Browse colours: a scrolling list of all colours
+# (swatch, code, name; family name on each family's first row), starting centred on
+# the slot's current colour (S01 White), then d = jump to the next family.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.0 uart0 d
+3.6 stop

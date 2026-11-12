@@ -1,0 +1,15 @@
+# SIDE opens "Colours in pattern": place 3 White and 1 Red, then o.
+# Expected: title "In pattern: 4"; rows S01 White 3, S05 Red 1.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 p
+2.2 uart0 d
+2.4 uart0 p
+2.6 uart0 d
+2.8 uart0 p
+3.0 uart0 l
+3.2 uart0 l
+3.4 uart0 s
+3.6 uart0 p
+3.8 uart0 o
+4.4 stop
