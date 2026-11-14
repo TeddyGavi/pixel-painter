@@ -1,0 +1,26 @@
+# Switch to Hama (full 88-colour chart) and export: place Red (4,4) and Yellow (5,4) on
+# Artkal, Menu > Brand > Hama (one up from Artkal), then Menu > Export.
+# Expected: QR for #1.hama.9.<two chart codes such as 04/05 and 03/43>:<rgb>.<cells>,
+# codes exactly as printed on the Hama chart (no "H" prefix).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 p
+2.6 uart0 d
+2.8 uart0 l
+3.0 uart0 p
+3.2 uart0 m
+3.4 uart0 k
+3.6 uart0 w
+3.8 uart0 k
+4.0 uart0 m
+4.4 uart0 m
+4.6 uart0 s
+4.8 uart0 s
+5.0 uart0 s
+5.2 uart0 s
+5.4 uart0 s
+5.6 uart0 s
+5.8 uart0 k
+6.6 stop

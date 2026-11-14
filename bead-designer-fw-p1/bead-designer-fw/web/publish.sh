@@ -2,14 +2,14 @@
 # Publish the QR export page (web/index.html + generated web/names.js) to the GitHub
 # Pages repo that CONFIG_BEAD_EXPORT_URL points at.
 #
-#   web/publish.sh                 # default repo git@github.com:TeddyGavi/bead-export.git
+#   web/publish.sh                 # default repo git@github.com:TeddyGavi/pixel-painter-export.git
 #   BEAD_EXPORT_REPO=<git url> web/publish.sh
 #
 # One-time setup: create the public repo on GitHub, then Settings > Pages > Deploy from
 # branch "main", folder "/ (root)". Run palettes/gen_palettes.py first if a TSV changed.
 set -euo pipefail
 WEB="$(cd "$(dirname "$0")" && pwd)"
-REPO="${BEAD_EXPORT_REPO:-git@github.com:TeddyGavi/bead-export.git}"
+REPO="${BEAD_EXPORT_REPO:-git@github.com:TeddyGavi/pixel-painter-export.git}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 git clone -q "$REPO" "$TMP/site" 2>/dev/null || { mkdir -p "$TMP/site"; git -C "$TMP/site" init -q -b main; git -C "$TMP/site" remote add origin "$REPO"; }

@@ -1,7 +1,7 @@
-// Bead palettes, const data in flash. Artkal S (225) and Miyuki Delica (254 curated)
-// are generated from palettes/*.tsv (see palettes/README.md). Hama is still a
-// 6-colour starter until its table is built the same way.
+// Bead palettes, const data in flash, all generated from palettes/*.tsv (see
+// palettes/README.md): Hama midi (88), Artkal S (225), Miyuki Delica (254 curated).
 #include "palettes.h"
+#include "palette_hama.h"            // generated: palettes/hama.tsv
 #include "palette_artkal_s.h"        // generated: palettes/artkal_s.tsv
 #include "palette_miyuki_delica.h"   // generated: palettes/miyuki_delica.tsv
 #include <string.h>
@@ -13,21 +13,10 @@ const char *const FAMILY_NAMES[FAMILY_COUNT] = {
     "Blues", "Purples", "Pinks",
 };
 
-#define C(n, code, r, g, b) { n, code, RGB565(r, g, b), 0, 0 }
-
-static const bead_color_t HAMA[] = {
-    C("White",      "H01", 0xF4, 0xF4, 0xF4),
-    C("Black",      "H18", 0x26, 0x26, 0x26),
-    C("Blue",       "H08", 0x2F, 0x3E, 0x9E),
-    C("Yellow",     "H03", 0xF6, 0xC4, 0x33),
-    C("Pink",       "H06", 0xE8, 0x3E, 0x83),
-    C("Light Blue", "H09", 0x46, 0xA8, 0xDE),
-};
-
 // Index order is stored in saved patterns (store.c): append new brands at the end,
 // and bump PATTERN_VERSION with a remap if this order ever changes.
 const palette_t PALETTES[] = {
-    { "Hama",   "hama",   HAMA,          sizeof HAMA / sizeof *HAMA, NULL },
+    { "Hama",   "hama",   HAMA,          HAMA_COUNT,          HAMA_ORDER },
     { "Artkal", "artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
     { "Miyuki", "miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
 };

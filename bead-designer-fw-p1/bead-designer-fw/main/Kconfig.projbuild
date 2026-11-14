@@ -20,7 +20,7 @@ config BEAD_PERF_LOG
 
 config BEAD_EXPORT_URL
     string "Base URL of the export page (QR export)"
-    default "https://github.com/TeddyGavi/pixel-painter-export"
+    default "https://teddygavi.github.io/pixel-painter-export/"
     help
         The Export screen shows a QR code for <this URL>#<pattern>. The page is the
         static web/index.html; the pattern itself travels in the URL fragment, so

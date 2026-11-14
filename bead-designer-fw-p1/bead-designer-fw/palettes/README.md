@@ -16,6 +16,29 @@ TSV columns: `code r g b name source note`.
 
 Order in the TSV = order of chips on the device's palette strip.
 
+## Method (all brands)
+
+The device's export is a bead order list, so **codes must match the manufacturer's
+chart exactly**. Colours only need to look right on screen. Every brand follows the
+same pipeline; the sections below record what differed.
+
+1. **Locate the tiles** on the official chart (image or PDF page render), from the grid
+   geometry or from the label positions.
+2. **Read the codes exactly.** Use the PDF text layer when there is one (Hama). Otherwise
+   OCR the labels and check every shipped code by eye against its crop (Artkal,
+   Miyuki). Check the count against the brand's stated total, and that codes are unique.
+3. **Get the colour.** Use the RGB printed on the label when the chart has one
+   (`source = label`). Otherwise take the median of the bead pixels in the swatch photo,
+   white-balanced, and mark it `source = photo` (firmware `approx = 1`).
+4. **Check in CIE Lab:** label vs photo dE for labelled colours, `uniformity` (the share
+   of bead pixels within dE 15 of the median) for photo colours, and pairwise dE for
+   near-duplicates.
+5. **Name** each colour with `colorname.py` where the brand publishes no names.
+6. **Write the TSV** (scripts in `tools/`, see each brand), then run `gen_palettes.py`.
+
+A palette holds at most **254 colours**: a cell stores a `uint8_t` palette index and
+`0xFF` means empty. A larger range has to be curated down (Miyuki).
+
 ## Artkal S (`artkal_s.tsv`): 225 colours, 5 mm midi, hard
 
 - **Source:** Artkal's official S-series colour chart image ("S-5MM color chart, 225"),
@@ -53,9 +76,8 @@ series (R soft midi, C/A/M mini).
   `https://www.miyuki-beads.co.jp/common/data/pdf/N-2.pdf` (retrieved 2026-11-13). The
   PDF is seven 300 dpi photos of the printed cards: codes and bead strips only. It has
   no text layer, no RGB and no names.
-- **Why 254:** the firmware stores a cell's colour as a `uint8_t` palette index, with
-  `0xFF` meaning empty, so a palette holds at most 254 colours. The chart has about
-  1,270 codes (DB, DBC cut, Duracoat, Picasso and so on).
+- **Why 254:** the palette cap (see Method). The chart has about 1,270 codes (DB, DBC
+  cut, Duracoat, Picasso and so on).
 - **Extraction:** a page-wide `tesseract --psm 11` pass found about 40-60% of the code
   labels. That was enough to fit each card's columns (with photo tilt) and its row
   pitch. Every cell was then cropped. Its label was binarised (gridlines removed) and
@@ -86,3 +108,68 @@ Miyuki tools, in run order (scratch dir `S` holds `work/`): `tools/miyuki_cells.
 and out-of-sequence codes), `tools/miyuki_curate.py S 254` (colour, uniformity,
 selection), `tools/miyuki_sheets.py` (verification contact sheets) and
 `tools/miyuki_write_tsv.py S palettes`.
+
+## Hama midi (`hama.tsv`): 88 colours, 5 mm
+
+- **Source:** Hama's colour chart PDF ("Hama 99198 Farvekort 2026"),
+  `https://cdn.shopify.com/s/files/1/0726/3771/0492/files/colour-chart-number.pdf?v=1777215620`
+  (retrieved 2026-11-13). One A4 page: an 11 x 8 grid of 88 bead photos, each with its
+  code printed below. It has no RGB and no names.
+- **88, not 122:** codes run 01-122, but 34 numbers are not on the chart (23, 25, 33,
+  39-42, 50-54, 57-59, 65-69, 80, 81, 85-94, 99, 100). The highest code is 122; the
+  chart has 88 colours.
+- **Codes are exact:** the PDF has a text layer, so codes come straight from
+  `pdftotext -bbox` (no OCR). They are kept as printed: two digits with a leading zero
+  (`01`), three digits from 100. The TSV is in chart order, row by row.
+- **Tiles:** the page is rendered at 400 dpi. Each tile is located from its own code's
+  position in the text layer: left from the label's x, top from the row's median y.
+  The label's own x is used rather than the column median, because tile 03 is printed
+  4.3 pt right of its column.
+- **Colour (`source = photo`, all `approx = 1`):** the median of the photo's bead pixels
+  after dropping the darkest 20% (hole shadows) and brightest 10% (highlights) by Lab
+  L*. The photos contain no paper, so one global white balance uses bead **01 (White)**
+  as the neutral reference, scaled to 245 grey (Miyuki's target). The gain is about
+  1.12 / 1.09 / 1.11 (R / G / B). Thirteen bright colours clip at 255, mostly in red
+  (02, 03, 04, 06, 32, 35, 38, 43, 72, 78, 79, 95, 121). The clipping merges no
+  colours that the unclipped values kept apart.
+- **Note column:** the chart marks each code with dots: blue = also made as **Mini**
+  (2.5 mm), green = also made as **Bio**. They are read by counting blue and green
+  pixels to the right of the code in the label band (starting 20 px below the label
+  top, clear of the photo's bleed), and recorded as `also Mini, Bio`
+  or `midi only`, with the tile's `uniformity`. 79 codes have Mini, 15 have Bio, and
+  nine are midi only: 55, 56, 61-64 and 72-74. These nine look like specialty finishes
+  (glow, metallic, pearl, glitter), but the chart does not say.
+- **Names:** generated by `colorname.py`, as for Artkal. They are unofficial: Hama's
+  names are not in this PDF. Specialty beads get plain hue names, so 61 (gold) is
+  "Tan", 62 (silver) is "Dark Grey", 63 (bronze) is "Brown", 64 (pearl) is "Peach" and
+  19 (clear) is "Light Grey".
+- **Validation:**
+  - the 88 codes in the TSV were checked against the text layer: same set, same
+    row-major order, same formatting;
+  - all codes are unique;
+  - the Mini and Bio dots were checked by eye on the page for 03, 37, 55, 56, 61-64
+    and 72-74, and on contact sheets for all 88. The review caught 55 flagged as Bio:
+    its pale-green photo bled into the top rows of the label band. The band now starts
+    below that bleed. Unflagged tiles count 0 dot pixels and real dots about 870, with
+    the threshold at 600;
+  - the review caught tile 03 sampled at its column position, which picked up a
+    sliver of page background. Tiles are now placed at their own label position;
+  - near-duplicates (dE < 5) are distinct products on the chart and are kept:
+    45/74 (dE 1.3), 60/79 (2.5), 04/35 (4.4), 38/79 (4.5) and 18/71 (4.9).
+- **Caveats:** colour is approximate. Low-uniformity tiles are mixed or
+  specialty-looking photos, so their single colour is rough: 63 (0.38), 122 (0.39),
+  102 (0.44), 07 (0.46), 10 (0.49), 117 and 119 (0.54), and 101 and 26 (0.55).
+  Translucent beads (13-16, 19) are sampled as photographed.
+
+Hama tools, in run order (scratch dir `S`): `pdftotext -bbox chart.pdf bbox.html`, then
+render the page at 400 dpi (`pdftoppm -r 400 -png chart.pdf hi`), then `tools/hama_extract.py bbox.html hi-1.png
+S/work_hama/hama.json S/work_hama/crops`, then `tools/hama_sheet.py S` (contact sheets
+for checking) and `tools/hama_write_tsv.py S/work_hama/hama.json palettes`.
+
+## Change log
+
+- **Hama, full chart:** the 6-colour Hama starter in `main/palettes.c` (H01, H18, H08,
+  H03, H06, H09) is replaced by the generated 88-colour `hama.tsv` table. Codes are
+  now the chart's printed codes (`01` ... `122`), not `H01`. The store format is bumped,
+  and saved patterns that use the old starter indices are remapped by code. The QR
+  export page's names table gains Hama.

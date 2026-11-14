@@ -36,8 +36,9 @@ void store_init(void)
     nvs_open("beads", NVS_READWRITE, &s_nvs);
 }
 
-#define PATTERN_VERSION 4   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look;
-                            // 4 = same layout, brand indices after Perler was removed
+#define PATTERN_VERSION 5   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look;
+                            // 4 = same layout, brand indices after Perler was removed;
+                            // 5 = same layout, Hama = full 88-colour chart (was 6)
 #define FLAG_BEVEL 0x01
 
 typedef struct {
@@ -75,6 +76,26 @@ static bool valid(const pattern_t *pt)
     return true;
 }
 
+// Before v5, Hama was a 6-colour starter table; map its indices to the full chart by
+// code (the starter's "H01".. are the chart's "01"..).
+static bool remap_old_hama(pattern_t *pt)
+{
+    static const char *const OLD[] = { "01", "18", "08", "03", "06", "09" };
+    int map[6];
+    for (int i = 0; i < 6; i++)
+        if ((map[i] = palette_find(&PALETTES[0], OLD[i])) < 0) return false;
+    for (int i = 0; i < SLOTS; i++) {
+        if (pt->slots[i] >= 6) return false;
+        pt->slots[i] = (uint8_t)map[pt->slots[i]];
+    }
+    for (int i = 0; i < GRID_N * GRID_N; i++) {
+        if (pt->cells[i] == CELL_EMPTY) continue;
+        if (pt->cells[i] >= 6) return false;
+        pt->cells[i] = (uint8_t)map[pt->cells[i]];
+    }
+    return true;
+}
+
 static bool load_key(const char *key)
 {
     pattern_t pt;
@@ -82,13 +103,14 @@ static bool load_key(const char *key)
     if (nvs_get_blob(s_nvs, key, &pt, &len) != ESP_OK) return false;
     if (pt.version == 2 && len == PATTERN_V2_SIZE) {        // migrate: default look
         pt.board = BOARD_DEFAULT; pt.texture = 0; pt.flags = FLAG_BEVEL;
-    } else if (!((pt.version == 3 || pt.version == PATTERN_VERSION) && len == sizeof pt)) {
+    } else if (!(pt.version >= 3 && pt.version <= PATTERN_VERSION && len == sizeof pt)) {
         return false;
     }
     if (pt.version < 4) {          // v2/v3 brands: 0 Perler (removed), 1 Hama, 2 Artkal
         if (pt.palette == 0) return false;
         pt.palette -= 1;
     }
+    if (pt.version < 5 && pt.palette == 0 && !remap_old_hama(&pt)) return false;
     if (!valid(&pt)) return false;
     UI.palette = pt.palette;
     UI.slot = pt.slot;

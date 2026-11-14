@@ -1,7 +1,7 @@
 # QR export: place Red (4,4), Yellow (5,4), Blue (5,5) and White (4,5) on Artkal,
 # then Menu > Export (7th row).
 # Expected: "Scan with phone" with a QR code that decodes to
-# https://teddygavi.github.io/bead-export/#1.artkal.9.<4 codes:rgb>.<81 cell chars>
+# https://teddygavi.github.io/pixel-painter-export/#1.artkal.9.<4 codes:rgb>.<81 cell chars>
 # and "Press for Wi-Fi" under it. The console logs the same URL.
 0   adc 34 1.95
 0   adc 27 3.3

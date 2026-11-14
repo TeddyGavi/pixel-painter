@@ -38,7 +38,7 @@ The board file is selected automatically by target (`#if CONFIG_IDF_TARGET_*`).
 ## Export (QR)
 
 Menu > Export shows a QR code. The device needs no network: the code holds a URL to a
-static page (`CONFIG_BEAD_EXPORT_URL`, default `https://teddygavi.github.io/bead-export/`)
+static page (`CONFIG_BEAD_EXPORT_URL`, default `https://teddygavi.github.io/pixel-painter-export/`)
 with the whole pattern in the URL fragment (`#1.<brand>.<n>.<code>:<rgb>,...<.><cells>`,
 see `main/export.c`). The phone opens it on its own connection. The fragment is never sent
 to the server, and the page draws the pattern, lists the beads to order by code with
