@@ -36,7 +36,8 @@ void store_init(void)
     nvs_open("beads", NVS_READWRITE, &s_nvs);
 }
 
-#define PATTERN_VERSION 3   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look
+#define PATTERN_VERSION 4   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look;
+                            // 4 = same layout, brand indices after Perler was removed
 #define FLAG_BEVEL 0x01
 
 typedef struct {
@@ -81,8 +82,12 @@ static bool load_key(const char *key)
     if (nvs_get_blob(s_nvs, key, &pt, &len) != ESP_OK) return false;
     if (pt.version == 2 && len == PATTERN_V2_SIZE) {        // migrate: default look
         pt.board = BOARD_DEFAULT; pt.texture = 0; pt.flags = FLAG_BEVEL;
-    } else if (pt.version != PATTERN_VERSION || len != sizeof pt) {
+    } else if (!((pt.version == 3 || pt.version == PATTERN_VERSION) && len == sizeof pt)) {
         return false;
+    }
+    if (pt.version < 4) {          // v2/v3 brands: 0 Perler (removed), 1 Hama, 2 Artkal
+        if (pt.palette == 0) return false;
+        pt.palette -= 1;
     }
     if (!valid(&pt)) return false;
     UI.palette = pt.palette;

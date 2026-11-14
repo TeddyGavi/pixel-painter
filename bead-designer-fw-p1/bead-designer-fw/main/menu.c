@@ -34,7 +34,7 @@ static int s_edit;                 // slot being edited (S_SLOT / S_COLORS / S_C
 static bool s_direct;              // opened straight into a screen (SIDE): back closes
 
 // Code entry
-#define CODE_MAX 5
+#define CODE_MAX 9   // longest code: Miyuki "DB-1472-1"
 static char s_code[CODE_MAX + 1];
 static char s_cands[24];           // valid next characters; '\x01' = OK
 static int s_cand;

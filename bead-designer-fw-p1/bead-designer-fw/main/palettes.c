@@ -1,8 +1,9 @@
-// Bead palettes, const data in flash. Artkal S is the full 225-colour table,
-// generated from palettes/artkal_s.tsv (see palettes/README.md). Perler and Hama
-// are still 6-colour starters until their tables are built the same way.
+// Bead palettes, const data in flash. Artkal S (225) and Miyuki Delica (254 curated)
+// are generated from palettes/*.tsv (see palettes/README.md). Hama is still a
+// 6-colour starter until its table is built the same way.
 #include "palettes.h"
-#include "palette_artkal_s.h"   // generated: palettes/artkal_s.tsv
+#include "palette_artkal_s.h"        // generated: palettes/artkal_s.tsv
+#include "palette_miyuki_delica.h"   // generated: palettes/miyuki_delica.tsv
 #include <string.h>
 #include <stddef.h>
 
@@ -14,15 +15,6 @@ const char *const FAMILY_NAMES[FAMILY_COUNT] = {
 
 #define C(n, code, r, g, b) { n, code, RGB565(r, g, b), 0, 0 }
 
-static const bead_color_t PERLER[] = {
-    C("White",       "P01", 0xF2, 0xF2, 0xF2),
-    C("Black",       "P18", 0x2B, 0x28, 0x29),
-    C("Dark Blue",   "P08", 0x2A, 0x3B, 0x8F),
-    C("Yellow",      "P03", 0xF5, 0xC8, 0x2B),
-    C("Magenta",     "P38", 0xE5, 0x3C, 0x7E),
-    C("Light Blue",  "P09", 0x4F, 0xAD, 0xD9),
-};
-
 static const bead_color_t HAMA[] = {
     C("White",      "H01", 0xF4, 0xF4, 0xF4),
     C("Black",      "H18", 0x26, 0x26, 0x26),
@@ -32,10 +24,12 @@ static const bead_color_t HAMA[] = {
     C("Light Blue", "H09", 0x46, 0xA8, 0xDE),
 };
 
+// Index order is stored in saved patterns (store.c): append new brands at the end,
+// and bump PATTERN_VERSION with a remap if this order ever changes.
 const palette_t PALETTES[] = {
-    { "Perler", PERLER,   sizeof PERLER   / sizeof *PERLER, NULL },
-    { "Hama",   HAMA,     sizeof HAMA     / sizeof *HAMA, NULL },
-    { "Artkal", ARTKAL_S, ARTKAL_S_COUNT, ARTKAL_S_ORDER },
+    { "Hama",   HAMA,          sizeof HAMA / sizeof *HAMA, NULL },
+    { "Artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
+    { "Miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
 };
 const int PALETTE_COUNT = sizeof PALETTES / sizeof *PALETTES;
 

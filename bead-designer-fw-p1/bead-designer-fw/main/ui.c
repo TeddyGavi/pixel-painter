@@ -15,7 +15,7 @@
 
 static const char *TAG = "ui";   // one log line per input event (BENCH.md)
 #define AUTOSAVE_QUIET_US 1000000   // no input for 1 s before an autosave may run
-ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 2 /* Artkal */,
+ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 1 /* Artkal */,
                   .board = BOARD_DEFAULT, .texture = 0, .bevel = true };
 
 // Default shortlist: white, black, red, yellow, blue where the palette has them.

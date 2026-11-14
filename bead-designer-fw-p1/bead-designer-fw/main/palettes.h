@@ -3,7 +3,7 @@
 
 typedef struct {
     const char *name;   // "Magenta" (descriptive; unofficial where the brand has none)
-    const char *code;   // brand code, e.g. "S10": what the order report lists
+    const char *code;   // brand code, e.g. "S10", "DB-1472-1": what the order report lists
     uint16_t rgb565;
     uint8_t approx;     // 1 = colour sampled from a photo, not manufacturer RGB
     uint8_t family;     // index into FAMILY_NAMES (browse family jump)
@@ -16,7 +16,7 @@ extern const char *const FAMILY_NAMES[FAMILY_COUNT];
 #define RGB565(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
 
 typedef struct {
-    const char *brand;  // "Perler" / "Hama" / "Artkal"
+    const char *brand;  // "Hama" / "Artkal" / "Miyuki"
     const bead_color_t *colors;
     int count;
     const uint8_t *order;   // browse order (grouped by family); NULL = table order

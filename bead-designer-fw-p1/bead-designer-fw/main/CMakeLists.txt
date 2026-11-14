@@ -12,6 +12,7 @@ idf_component_register(
         "board_style.c"
         "font_chicago.c"
         "palette_artkal_s.c"
+        "palette_miyuki_delica.c"
         "board/board_freenove.c"
         "board/board_ws241.c"
     INCLUDE_DIRS "." "board"

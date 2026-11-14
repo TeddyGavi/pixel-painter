@@ -1,6 +1,6 @@
 // Wi-Fi export: SoftAP + tiny HTTP server. The PHONE renders the PNG:
 // /            -> embedded page (canvas) with Save-image button
-// /grid.json   -> {"n":9,"brand":"Artkal","palette":[{name,code,rgb}],"cells":[...]}
+// /grid.json   -> {"n":9,"brand":"Miyuki","palette":[{name,code,rgb}],"cells":[...]}
 // Flat square pixels + colour legend + per-colour bead counts (spec decision).
 // P1 TODO: qrcodegen (Nayuki, single C file) for the on-screen QR; random
 // 8-char AP password shown beside it; captive-portal redirect (DNS) optional.
@@ -40,22 +40,28 @@ static esp_err_t h_index(httpd_req_t *r)
 
 static esp_err_t h_grid(httpd_req_t *r)
 {
+    // Streamed in chunks: a full palette (254 entries, ~70 B each) is far larger
+    // than any sensible static buffer. Each piece below is bounded by `buf`.
     const palette_t *p = &PALETTES[UI.palette];
-    static char buf[2048];
-    int n = snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", GRID_N, p->brand);
+    char buf[128];
+    httpd_resp_set_type(r, "application/json");
+    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", GRID_N, p->brand);
+    if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     for (int i = 0; i < p->count; i++) {
         uint16_t c = p->colors[i].rgb565;
-        n += snprintf(buf + n, sizeof buf - n, "%s{\"name\":\"%s\",\"code\":\"%s\",\"rgb\":\"#%02x%02x%02x\"}",
-                      i ? "," : "", p->colors[i].name, p->colors[i].code,
-                      (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3);
+        snprintf(buf, sizeof buf, "%s{\"name\":\"%s\",\"code\":\"%s\",\"rgb\":\"#%02x%02x%02x\"}",
+                 i ? "," : "", p->colors[i].name, p->colors[i].code,
+                 (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3);
+        if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     }
-    n += snprintf(buf + n, sizeof buf - n, "],\"cells\":[");
-    for (int i = 0; i < GRID_N * GRID_N; i++)
-        n += snprintf(buf + n, sizeof buf - n, "%s%d", i ? "," : "",
-                      UI.cells[i] == CELL_EMPTY ? -1 : UI.cells[i]);
-    n += snprintf(buf + n, sizeof buf - n, "]}");
-    httpd_resp_set_type(r, "application/json");
-    return httpd_resp_send(r, buf, n);
+    if (httpd_resp_sendstr_chunk(r, "],\"cells\":[") != ESP_OK) return ESP_FAIL;
+    for (int i = 0; i < GRID_N * GRID_N; i++) {
+        snprintf(buf, sizeof buf, "%s%d", i ? "," : "",
+                 UI.cells[i] == CELL_EMPTY ? -1 : UI.cells[i]);
+        if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
+    }
+    if (httpd_resp_sendstr_chunk(r, "]}") != ESP_OK) return ESP_FAIL;
+    return httpd_resp_sendstr_chunk(r, NULL);   // end of chunked response
 }
 
 void export_start(void)
