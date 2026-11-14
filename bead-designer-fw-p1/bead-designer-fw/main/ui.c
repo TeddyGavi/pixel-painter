@@ -37,7 +37,7 @@ static inline int wrap(int v) { return (v + GRID_N) % GRID_N; }
 static void set_cell(uint8_t v)
 {
     uint8_t *c = &UI.cells[UI.cur_y * GRID_N + UI.cur_x];
-    if (*c != v) { *c = v; store_mark_dirty(); }
+    if (*c != v) { *c = v; UI.unsaved = true; store_mark_dirty(); }
 }
 
 // Change the selected slot's colour; the shortlist is saved with the pattern.

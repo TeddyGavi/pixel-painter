@@ -344,34 +344,81 @@ static void draw_title(const menu_view_t *v)
     D->blit(0, 0, DISPLAY_W, ROW_H, s_strip);
 }
 
+// Rectangle in row coordinates, clipped to band b (rows are 1 or 2 bands tall).
+static void row_rect(int b, int x0, int y0, int x1, int y1, uint16_t c)
+{
+    y0 -= b * ROW_H; y1 -= b * ROW_H;
+    if (y0 < 0) y0 = 0;
+    if (y1 > ROW_H) y1 = ROW_H;
+    if (y0 < y1) strip_rect(x0, y0, x1, y1, c);
+}
+
+// Saved-slot thumbnail: 5 px per bead (45 px), a 1 px black gap and a 1 px white
+// border (dim and empty for an empty slot), centred in the double-height row.
+#define THUMB_PX   5
+#define THUMB_X    12
+#define THUMB_BOX  (GRID_N * THUMB_PX + 4)            // with gap + border: 49
+static void draw_slot_thumb(int b, int rh, const menu_row_t *r)
+{
+    const int x0 = THUMB_X, y0 = (rh - THUMB_BOX) / 2;
+    row_rect(b, x0, y0, x0 + THUMB_BOX, y0 + THUMB_BOX, r->thumb ? COL_FRAME : COL_DIVIDER);
+    row_rect(b, x0 + 1, y0 + 1, x0 + THUMB_BOX - 1, y0 + THUMB_BOX - 1, COL_BG);
+    const int tx = x0 + 2, ty = y0 + 2;
+    if (!r->thumb) return;
+    const bead_color_t *pc = PALETTES[r->thumb_pal].colors;
+    for (int cy = 0; cy < GRID_N; cy++)
+        for (int cx = 0; cx < GRID_N; cx++) {
+            uint8_t c = r->thumb[cy * GRID_N + cx];
+            row_rect(b, tx + cx * THUMB_PX, ty + cy * THUMB_PX, tx + (cx + 1) * THUMB_PX,
+                     ty + (cy + 1) * THUMB_PX, c == CELL_EMPTY ? 0x2104 : pc[c].rgb565);
+        }
+}
+
+// Screen y of row i (rows start under the title), or -1 if it is not on screen.
+static int row_y(const menu_view_t *v, int i)
+{
+    if (i < v->top) return -1;
+    int y = ROW_H;
+    for (int j = v->top; j < i; j++) y += menu_row_units(j) * ROW_H;
+    return y + menu_row_units(i) * ROW_H <= DISPLAY_H ? y : -1;
+}
+
 static void draw_menu_row(const menu_view_t *v, int i)
 {
-    int k = i - v->top;
-    if (k < 0 || k >= MENU_VISIBLE) return;
-    strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
-    if (i < v->count) {
-        menu_row_t r;
-        menu_row(i, &r);
+    if (i < 0 || i >= v->count) return;
+    int y = row_y(v, i);
+    if (y < 0) return;
+    menu_row_t r;
+    menu_row(i, &r);
+    const int units = menu_row_units(i), rh = units * ROW_H;
+    for (int b = 0; b < units; b++) {
+        strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
         if (i == v->sel) {                       // 1 px white frame, like the cursor
-            strip_rect(3, 1, DISPLAY_W - 3, ROW_H - 1, COL_FRAME);
-            strip_rect(4, 2, DISPLAY_W - 4, ROW_H - 2, COL_BG);
+            row_rect(b, 3, 1, DISPLAY_W - 3, rh - 1, COL_FRAME);
+            row_rect(b, 4, 2, DISPLAY_W - 4, rh - 2, COL_BG);
         }
         int x = 12;
-        if (r.swatch >= 0) {
+        if (r.slot) {
+            draw_slot_thumb(b, rh, &r);
+            x = THUMB_X + THUMB_BOX + 12;
+        } else if (r.swatch >= 0) {
             uint16_t c = (uint16_t)r.swatch;
             int luma = ((c >> 11) * 8 * 3 + ((c >> 5) & 0x3F) * 4 * 6 + (c & 0x1F) * 8) / 10;
             if (luma < 48) strip_rect(9, 5, 31, 27, COL_DIVIDER);
             strip_rect(10, 6, 30, 26, c);
             x = 38;
         }
-        int rw = text_width(r.right);
+        // Text: first band carries the main line (+ right text), second band `sub`.
+        const char *line = b == 0 ? r.left : r.sub;
+        const char *right = b == 0 ? r.right : "";
+        int rw = text_width(right);
         int rx = DISPLAY_W - 12 - rw;
         char fit[52];
-        text_fit(r.left, rx - x - 6, fit, sizeof fit);  // long names end in "..."
-        band_text(x, fit, rx - x - 6, COL_TEXT);
-        if (rw) band_text(rx, r.right, rw, COL_TEXT_DIM);
+        text_fit(line, rx - x - 6, fit, sizeof fit);    // long names end in "..."
+        band_text(x, fit, rx - x - 6, b == 0 ? COL_TEXT : COL_TEXT_DIM);
+        if (rw) band_text(rx, right, rw, COL_TEXT_DIM);
+        D->blit(0, y + b * ROW_H, DISPLAY_W, ROW_H, s_strip);
     }
-    D->blit(0, ROW_H * (1 + k), DISPLAY_W, ROW_H, s_strip);
 }
 
 static menu_view_t s_menu_shown;
@@ -418,7 +465,15 @@ static void render_menu_full(void)
     menu_view(&v);
     draw_title(&v);
     if (v.qr) { draw_qr_screen(&v); s_menu_shown = v; return; }
-    for (int k = 0; k < MENU_VISIBLE; k++) draw_menu_row(&v, v.top + k);
+    int y = ROW_H;
+    for (int i = v.top; i < v.count; i++) {             // rows that fit, in order
+        if (row_y(&v, i) < 0) break;
+        draw_menu_row(&v, i);
+        y += menu_row_units(i) * ROW_H;
+    }
+    strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);          // clear the rest, band by band
+    for (; y < DISPLAY_H; y += ROW_H)
+        D->blit(0, y, DISPLAY_W, DISPLAY_H - y < ROW_H ? DISPLAY_H - y : ROW_H, s_strip);
     s_menu_shown = v;
 }
 

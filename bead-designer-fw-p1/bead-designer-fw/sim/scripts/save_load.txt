@@ -1,0 +1,27 @@
+# Save, reset, load round trip. Place slot 2 (4,4) and slot 3 (5,4); Menu > Pattern >
+# Save > slot 1 (empty: saves and closes); Menu > Pattern > Reset board (saved, so no
+# warning: board clears); Menu > Pattern > Load > slot 1 (board empty: loads at once).
+# Expected: the two beads back at (4,4) and (5,4).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 p
+2.6 uart0 d
+2.8 uart0 l
+3.0 uart0 p
+3.2 uart0 m
+3.4 uart0 k
+3.6 uart0 k
+3.8 uart0 k
+4.2 uart0 m
+4.4 uart0 k
+4.6 uart0 s
+4.8 uart0 s
+5.0 uart0 k
+5.4 uart0 m
+5.6 uart0 k
+5.8 uart0 s
+6.0 uart0 k
+6.2 uart0 k
+7.0 stop

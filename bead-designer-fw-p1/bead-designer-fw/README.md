@@ -35,6 +35,21 @@ idf.py build flash monitor
 
 The board file is selected automatically by target (`#if CONFIG_IDF_TARGET_*`).
 
+## Patterns: Save, Load, Reset
+
+Menu > Pattern. The working board autosaves as before; **Save** copies it (brand,
+shortlist, beads) into one of 8 slots, shown with a thumbnail, brand and bead count.
+Saving over a used slot asks "Replace slot N?". **Load** replaces the working board
+with a slot. **Reset board** clears the beads. Both ask "Discard board?" when the board
+has beads that are not saved in any slot (`UI.unsaved`, kept in the autosave across
+power-off).
+
+The brand can only change while the board is empty; the shortlist then maps to the new
+brand's nearest colours. With beads on the board, Menu > Brand shows "<brand> locked"
+with a Reset shortcut that leads back to the brand list. Board / Texture / Beads are a
+device-wide display setting (NVS key `look`), not part of a pattern. The pattern format is
+v6, and v2-v5 autosaves are migrated (their look moves to `look`). See `main/store.c`.
+
 ## Export (QR)
 
 Menu > Export shows a QR code. The device needs no network: the code holds a URL to a

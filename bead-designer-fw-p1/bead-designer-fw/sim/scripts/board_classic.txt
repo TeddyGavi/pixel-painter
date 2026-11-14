@@ -13,6 +13,7 @@
 3.60 uart0 p
 3.80 uart0 a
 4.00 uart0 m
+4.10 uart0 s
 4.20 uart0 s
 4.40 uart0 s
 4.60 uart0 s

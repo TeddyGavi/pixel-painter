@@ -21,6 +21,7 @@
 4.6 uart0 j
 4.8 uart0 p
 5.0 uart0 m
+5.10 uart0 s
 5.2 uart0 s
 5.4 uart0 s
 5.6 uart0 s

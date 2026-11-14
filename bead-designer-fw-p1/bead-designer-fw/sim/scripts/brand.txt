@@ -1,15 +1,16 @@
-# Brand switch remaps placed beads and slots to the nearest colour of the new brand.
-# Place S05 Red (slot 2) at (4,4), then Menu > Brand > Miyuki (list: Hama, Artkal,
-# Miyuki; starts on the current one) and close the menu.
-# Expected: grid with Miyuki's nearest red Delica at (4,4); slots remapped.
+# Brand can change while the board is empty. Menu > Brand (2nd row) > Miyuki (one below
+# Artkal), close, then place slot 2 at (4,4).
+# Expected: the shortlist mapped to Miyuki's nearest colours; (4,4) has slot 2's Miyuki
+# red (info line "DB-2374 Red 1").
 0   adc 34 1.95
 0   adc 27 3.3
-2.0 uart0 l
-2.2 uart0 l
-2.4 uart0 p
-2.6 uart0 m
+2.0 uart0 m
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 s
 2.8 uart0 k
-3.0 uart0 s
-3.4 uart0 k
-3.6 uart0 m
+3.0 uart0 m
+3.2 uart0 l
+3.4 uart0 l
+3.6 uart0 p
 4.2 stop

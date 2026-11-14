@@ -21,7 +21,8 @@ typedef struct {
     int browse_pos;                 // position in the palette's browse order
     ui_mode_t mode;
     ui_focus_t focus;
-    // Canvas look, saved with the pattern (board_style.h)
+    bool unsaved;                   // beads changed since the last Save/Load (Pattern menu)
+    // Canvas look: device-wide display setting, not part of a pattern (board_style.h)
     uint8_t board;                  // board_t layout
     uint8_t texture;                // 0..TEXTURE_COUNT-1
     bool bevel;                     // subtle bead bevel

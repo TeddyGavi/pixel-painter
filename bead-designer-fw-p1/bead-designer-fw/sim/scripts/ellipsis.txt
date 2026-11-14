@@ -4,6 +4,7 @@
 0   adc 34 1.95
 0   adc 27 3.3
 2.00 uart0 m
+2.08 uart0 s
 2.15 uart0 s
 2.30 uart0 k
 2.45 uart0 k
