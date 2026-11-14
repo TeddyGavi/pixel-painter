@@ -17,6 +17,7 @@ extern const char *const FAMILY_NAMES[FAMILY_COUNT];
 
 typedef struct {
     const char *brand;  // "Hama" / "Artkal" / "Miyuki"
+    const char *key;    // stable id in export URLs: "hama" / "artkal" / "miyuki"
     const bead_color_t *colors;
     int count;
     const uint8_t *order;   // browse order (grouped by family); NULL = table order

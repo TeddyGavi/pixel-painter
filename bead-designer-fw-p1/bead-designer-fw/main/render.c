@@ -15,6 +15,7 @@
 #include "text.h"
 #include "menu.h"
 #include "board_style.h"
+#include "qrcodegen.h"
 #include <stdio.h>
 #include <string.h>
 #include "esp_timer.h"
@@ -375,11 +376,48 @@ static void draw_menu_row(const menu_view_t *v, int i)
 
 static menu_view_t s_menu_shown;
 
+// QR code screen: black-on-white modules, centred under the title, as large as fits
+// (integer px per module), with a light quiet zone of 4 modules (2 if space is
+// tight); then a dim hint line. Composed band by band in s_strip like menu rows.
+static void draw_qr_screen(const menu_view_t *v)
+{
+    const int size = qrcodegen_getSize(v->qr);
+    const int area_h = DISPLAY_H - 2 * ROW_H;            // between title and hint
+    const int lim = DISPLAY_W < area_h ? DISPLAY_W : area_h;
+    int quiet = 4, s = lim / (size + 2 * quiet);
+    if (s < 3) { quiet = 2; s = lim / (size + 2 * quiet); }
+    if (s < 1) s = 1;
+    const int box = (size + 2 * quiet) * s;
+    const int bx = (DISPLAY_W - box) / 2, by = ROW_H + (area_h - box) / 2;
+    const uint16_t white = be16(0xFFFF), black = be16(0x0000);
+    for (int y0 = ROW_H; y0 < DISPLAY_H - ROW_H; y0 += ROW_H) {
+        for (int r = 0; r < ROW_H; r++) {
+            uint16_t *row = s_strip + r * DISPLAY_W;
+            int y = y0 + r;
+            for (int x = 0; x < DISPLAY_W; x++) row[x] = be16(COL_BG);
+            if (y < by || y >= by + box) continue;
+            int my = (y - by) / s - quiet;
+            for (int x = bx; x < bx + box; x++) {
+                int mx = (x - bx) / s - quiet;
+                row[x] = qrcodegen_getModule(v->qr, mx, my) ? black : white;  // out of range = light
+            }
+        }
+        D->blit(0, y0, DISPLAY_W, ROW_H, s_strip);
+    }
+    strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
+    char fit[sizeof v->hint + 4];
+    text_fit(v->hint, DISPLAY_W - 16, fit, sizeof fit);
+    int hx = (DISPLAY_W - text_width(fit)) / 2;
+    band_text(hx < 8 ? 8 : hx, fit, DISPLAY_W - 16, COL_TEXT_DIM);
+    D->blit(0, DISPLAY_H - ROW_H, DISPLAY_W, ROW_H, s_strip);
+}
+
 static void render_menu_full(void)
 {
     menu_view_t v;
     menu_view(&v);
     draw_title(&v);
+    if (v.qr) { draw_qr_screen(&v); s_menu_shown = v; return; }
     for (int k = 0; k < MENU_VISIBLE; k++) draw_menu_row(&v, v.top + k);
     s_menu_shown = v;
 }

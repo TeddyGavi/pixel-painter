@@ -8,7 +8,8 @@
 //        ├─ Board ............. Solid / Pegs / Big pegs / Classic (press cycles)
 //        ├─ Texture ........... 1/8 .. 8/8 (press cycles)
 //        ├─ Beads ............. Bevel / Flat (press toggles)
-//        └─ Export ............ Wi-Fi export running while shown
+//        └─ Export ............ QR code: phone opens the export page (device offline)
+//                └─ Wi-Fi ..... fallback: SoftAP export running while shown
 //
 // Controls: up/down or encoder turn = move; encoder press or right = select;
 // D-pad centre (or left, except in colour lists) = back; MENU = close.
@@ -25,7 +26,9 @@
 
 #define VISIBLE_ROWS 9     // must match render.c (rows below the title band)
 
-typedef enum { S_MAIN, S_BRAND, S_SLOTS, S_SLOT, S_COLORS, S_CODE, S_USED, S_EXPORT } screen_t;
+typedef enum { S_MAIN, S_BRAND, S_SLOTS, S_SLOT, S_COLORS, S_CODE, S_USED, S_EXPORT, S_WIFI } screen_t;
+
+static const uint8_t *s_qr;   // QR of the pattern while S_EXPORT is shown (NULL = too big)
 
 static screen_t s_screen;
 static int s_sel, s_top;
@@ -156,7 +159,8 @@ static int row_count(void)
         return n;
     }
     case S_USED:   return s_used_n ? s_used_n : 1;
-    case S_EXPORT: return 4;
+    case S_EXPORT: return s_qr ? 0 : 2;            // QR drawn by render.c
+    case S_WIFI:   return 4;
     }
     return 0;
 }
@@ -221,7 +225,12 @@ void menu_row(int i, menu_row_t *r)
         color_row(s_used[i], r);
         snprintf(r->right, sizeof r->right, "%d", s_count[s_used[i]]);
         break;
-    case S_EXPORT: {
+    case S_EXPORT: {                                 // only shown without a QR
+        static const char *const L[] = { "Too many colours", "Press: Wi-Fi export" };
+        snprintf(r->left, sizeof r->left, "%s", L[i]);
+        break;
+    }
+    case S_WIFI: {
         static const char *const L[] = { "Wi-Fi", "Password", "Open", "Back stops it" };
         static const char *const R[] = { "BeadPad", "beads1234", "192.168.4.1", "" };
         snprintf(r->left, sizeof r->left, "%s", L[i]);
@@ -234,7 +243,9 @@ void menu_row(int i, menu_row_t *r)
 void menu_view(menu_view_t *v)
 {
     v->count = row_count();
-    v->sel = (s_screen == S_CODE || s_screen == S_EXPORT) ? -1 : s_sel;
+    v->sel = (s_screen == S_CODE || s_screen == S_EXPORT || s_screen == S_WIFI) ? -1 : s_sel;
+    v->qr = s_screen == S_EXPORT ? s_qr : NULL;
+    v->hint[0] = 0;
     v->top = s_top;
     v->version = s_version;
     switch (s_screen) {
@@ -250,7 +261,11 @@ void menu_view(menu_view_t *v)
     }
     case S_CODE:   snprintf(v->title, sizeof v->title, "Slot %d: code", s_edit + 1); break;
     case S_USED:   snprintf(v->title, sizeof v->title, "In pattern: %d", total_beads()); break;
-    case S_EXPORT: snprintf(v->title, sizeof v->title, "Export"); break;
+    case S_EXPORT:
+        snprintf(v->title, sizeof v->title, s_qr ? "Scan with phone" : "Export");
+        if (s_qr) snprintf(v->hint, sizeof v->hint, "Press for Wi-Fi");
+        break;
+    case S_WIFI:   snprintf(v->title, sizeof v->title, "Wi-Fi export"); break;
     }
 }
 
@@ -284,7 +299,8 @@ static menu_result_t back(void)
     case S_COLORS: go(S_SLOT, 0); break;
     case S_CODE:   go(S_SLOT, 1); break;
     case S_USED:   if (s_direct) return MENU_CLOSE; go(S_MAIN, 2); break;
-    case S_EXPORT: export_stop(); go(S_MAIN, 6); break;
+    case S_EXPORT: go(S_MAIN, 6); break;
+    case S_WIFI:   export_stop(); go(S_EXPORT, -1); break;
     }
     return MENU_STAY;
 }
@@ -299,7 +315,7 @@ static menu_result_t select(void)
         else if (s_sel == 3) { UI.board = (UI.board + 1) % BOARD__COUNT; look_changed(); }
         else if (s_sel == 4) { UI.texture = (UI.texture + 1) % TEXTURE_COUNT; look_changed(); }
         else if (s_sel == 5) { UI.bevel = !UI.bevel; look_changed(); }
-        else { store_flush(); export_start(); go(S_EXPORT, -1); }
+        else { s_qr = export_qr(); go(S_EXPORT, -1); }
         break;
     case S_BRAND:
         set_brand(s_sel);
@@ -338,7 +354,10 @@ static menu_result_t select(void)
     case S_USED:
         if (s_used_n) set_slot_color(UI.slot, s_used[s_sel]);   // load into selected slot
         return MENU_CLOSE;
-    case S_EXPORT:
+    case S_EXPORT:                                   // fallback: phone joins the device
+        store_flush(); export_start(); go(S_WIFI, -1);
+        break;
+    case S_WIFI:
         break;
     }
     return MENU_STAY;
@@ -350,7 +369,7 @@ void menu_open_used(void) { count_used(); s_direct = true; go(S_USED, 0); }
 menu_result_t menu_event(event_t ev)
 {
     if (ev == EV_MENU) {                               // close from anywhere
-        if (s_screen == S_EXPORT) export_stop();
+        if (s_screen == S_WIFI) export_stop();
         return MENU_CLOSE;
     }
     if (s_screen == S_CODE) {                          // character dial

@@ -69,7 +69,8 @@ onboard BOOT key.
 
 - **Take the microSD card out.** P3 is the SD card's bus (MOSI/MISO/CLK).
 - The D-pad pin (IO27) is on ADC2, which Wi-Fi takes over: **the D-pad does not respond
-  while Export (Wi-Fi) is running.** Use MENU to close it.
+  while the Wi-Fi export is running** (Export > press). Use MENU to close it. The QR
+  export does not use Wi-Fi, so the D-pad keeps working.
 - Neither connector carries 5V. Never connect 5V to any of these pins.
 
 Connector pinout, from Freenove's `2.4inch_ESP32-32E_Display_Schematic.pdf`:

@@ -7,6 +7,7 @@ idf_component_register(
         "palettes.c"
         "store.c"
         "export.c"
+        "qrcodegen.c"
         "text.c"
         "menu.c"
         "board_style.c"

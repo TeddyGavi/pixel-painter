@@ -18,4 +18,12 @@ config BEAD_PERF_LOG
         Bench diagnostics: logs how long each redraw and autosave takes (in us),
         and every full-screen redraw. Off by default.
 
+config BEAD_EXPORT_URL
+    string "Base URL of the export page (QR export)"
+    default "https://github.com/TeddyGavi/pixel-painter-export"
+    help
+        The Export screen shows a QR code for <this URL>#<pattern>. The page is the
+        static web/index.html; the pattern itself travels in the URL fragment, so
+        the device needs no network and the phone only fetches the static page.
+
 endmenu

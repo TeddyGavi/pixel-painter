@@ -17,6 +17,8 @@ typedef struct {
     int sel;               // highlighted row, -1 = none
     int top;               // first visible row
     unsigned version;      // bumps whenever row contents change (full redraw)
+    const uint8_t *qr;     // non-NULL: draw this QR code (qrcodegen) instead of rows
+    char hint[40];         // with qr: dim line under the code
 } menu_view_t;
 
 typedef enum { MENU_STAY, MENU_CLOSE } menu_result_t;

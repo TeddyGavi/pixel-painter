@@ -27,9 +27,9 @@ static const bead_color_t HAMA[] = {
 // Index order is stored in saved patterns (store.c): append new brands at the end,
 // and bump PATTERN_VERSION with a remap if this order ever changes.
 const palette_t PALETTES[] = {
-    { "Hama",   HAMA,          sizeof HAMA / sizeof *HAMA, NULL },
-    { "Artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
-    { "Miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
+    { "Hama",   "hama",   HAMA,          sizeof HAMA / sizeof *HAMA, NULL },
+    { "Artkal", "artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
+    { "Miyuki", "miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
 };
 const int PALETTE_COUNT = sizeof PALETTES / sizeof *PALETTES;
 
