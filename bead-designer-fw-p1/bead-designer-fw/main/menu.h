@@ -32,4 +32,5 @@ void menu_open_used(void);          // SIDE from drawing: colours in pattern
 menu_result_t menu_event(event_t ev);
 void menu_view(menu_view_t *v);
 void menu_row(int i, menu_row_t *r);
-int menu_row_units(int i);          // row height in ROW_H units (slot rows are 2)
+int menu_row_units(int i);
+bool menu_saver_allowed(void);      // false on the export screens (QR, Wi-Fi)          // row height in ROW_H units (slot rows are 2)

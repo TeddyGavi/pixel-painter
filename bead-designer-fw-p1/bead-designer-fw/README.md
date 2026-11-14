@@ -50,6 +50,18 @@ with a Reset shortcut that leads back to the brand list. Board / Texture / Beads
 device-wide display setting (NVS key `look`), not part of a pattern. The pattern format is
 v6, and v2-v5 autosaves are migrated (their look moves to `look`). See `main/store.c`.
 
+## Screen saver
+
+Menu > Screensaver sets the idle time (Off / 5s / 30s / 1m / 5m, default 1m; stored in
+`look`). After it, from the board or any menu except the export screens, a halftone
+particle animation takes over (`main/saver.c`). Every 8 s (`SAVER_CYCLE_MS`) it picks a
+gradient shape, an origin (side, corner or centre), a motion (gravity, spring, swirl,
+drift) and one bead colour from the pattern (shortlist if fewer than two usable), and the
+dots flow from the old image into the new one. Any input wakes it and is ignored, as is
+input that follows within 300 ms. The origin will follow device tilt once a sensor
+overrides `saver_tilt()`; until then it is random. Its ~55 KB of buffers are allocated
+only while it runs. Each cycle logs its frame rate (`saver: cycle N: ... fps`).
+
 ## Export (QR)
 
 Menu > Export shows a QR code. The device needs no network: the code holds a URL to a

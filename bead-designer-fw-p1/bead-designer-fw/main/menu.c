@@ -11,6 +11,7 @@
 //        ├─ Board ............. Solid / Pegs / Big pegs / Classic (press cycles)
 //        ├─ Texture ........... 1/8 .. 8/8 (press cycles)
 //        ├─ Beads ............. Bevel / Flat (press toggles)
+//        ├─ Screensaver ....... Off / 5s / 30s / 1m / 5m idle (press cycles)
 //        └─ Export ............ QR code: phone opens the export page (device offline)
 //                └─ Wi-Fi ..... fallback: SoftAP export running while shown
 //
@@ -23,6 +24,7 @@
 #include "store.h"
 #include "export.h"
 #include "board_style.h"
+#include "saver.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -181,7 +183,7 @@ static int code_match(void)
 static int row_count(void)
 {
     switch (s_screen) {
-    case S_MAIN:   return 8;
+    case S_MAIN:   return 9;
     case S_BRAND:  return PALETTE_COUNT;
     case S_SLOTS:  return SLOTS;
     case S_SLOT:   return 2;
@@ -219,7 +221,7 @@ void menu_row(int i, menu_row_t *r)
     switch (s_screen) {
     case S_MAIN: {
         static const char *const L[] = { "Pattern", "Brand", "Edit shortlist", "Colours used",
-                                         "Board", "Texture", "Beads", "Export" };
+                                         "Board", "Texture", "Beads", "Screensaver", "Export" };
         snprintf(r->left, sizeof r->left, "%s", L[i]);
         if (i == 0 && unsaved_beads()) snprintf(r->right, sizeof r->right, "unsaved");
         if (i == 1) snprintf(r->right, sizeof r->right, "%s", pal()->brand);
@@ -227,6 +229,7 @@ void menu_row(int i, menu_row_t *r)
         if (i == 4) snprintf(r->right, sizeof r->right, "%s", BOARD_NAMES[UI.board]);
         if (i == 5) snprintf(r->right, sizeof r->right, "%d/%d", UI.texture + 1, TEXTURE_COUNT);
         if (i == 6) snprintf(r->right, sizeof r->right, "%s", UI.bevel ? "Bevel" : "Flat");
+        if (i == 7) snprintf(r->right, sizeof r->right, "%s", SAVER_NAMES[UI.saver]);
         break;
     }
     case S_PATTERN: {
@@ -412,7 +415,7 @@ static menu_result_t back(void)
     case S_COLORS: go(S_SLOT, 0); break;
     case S_CODE:   go(S_SLOT, 1); break;
     case S_USED:   if (s_direct) return MENU_CLOSE; go(S_MAIN, 3); break;
-    case S_EXPORT: go(S_MAIN, 7); break;
+    case S_EXPORT: go(S_MAIN, 8); break;
     case S_WIFI:   export_stop(); go(S_EXPORT, -1); break;
     }
     return MENU_STAY;
@@ -432,6 +435,7 @@ static menu_result_t select(void)
         else if (s_sel == 4) { UI.board = (UI.board + 1) % BOARD__COUNT; look_changed(); }
         else if (s_sel == 5) { UI.texture = (UI.texture + 1) % TEXTURE_COUNT; look_changed(); }
         else if (s_sel == 6) { UI.bevel = !UI.bevel; look_changed(); }
+        else if (s_sel == 7) { UI.saver = (UI.saver + 1) % SAVER_CHOICES; look_changed(); }
         else { s_qr = export_qr(); go(S_EXPORT, -1); }
         break;
     case S_BRAND:
@@ -507,6 +511,8 @@ static menu_result_t select(void)
     }
     return MENU_STAY;
 }
+
+bool menu_saver_allowed(void) { return s_screen != S_EXPORT && s_screen != S_WIFI; }
 
 void menu_open_main(void) { s_direct = false; go(S_MAIN, 0); }
 void menu_open_used(void) { count_used(); s_direct = true; go(S_USED, 0); }

@@ -8,6 +8,7 @@
 #include "palettes.h"
 #include "board_style.h"
 #include "board.h"
+#include "saver.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -16,7 +17,8 @@
 static const char *TAG = "ui";   // one log line per input event (BENCH.md)
 #define AUTOSAVE_QUIET_US 1000000   // no input for 1 s before an autosave may run
 ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 1 /* Artkal */,
-                  .board = BOARD_DEFAULT, .texture = 0, .bevel = true };
+                  .board = BOARD_DEFAULT, .texture = 0, .bevel = true,
+                  .saver = SAVER_DEFAULT };
 
 // Default shortlist: white, black, red, yellow, blue where the palette has them.
 static const char *const DEFAULT_SLOTS[SLOTS] = { "S01", "S13", "S05", "S27", "S11" };
@@ -120,7 +122,8 @@ void ui_run(void)
     default_slots();
     store_load_autosave();
     render_full();
-    int64_t last_input_us = 0;
+    int64_t last_input_us = esp_timer_get_time();
+    int64_t swallow_us = 0;          // after a wake: input arriving before this is ignored
     for (;;) {
         event_t ev;
         // Poll faster while a save is pending so it lands ~1.5 s after the last edit,
@@ -128,7 +131,28 @@ void ui_run(void)
         int wait_ms = store_pending() ? 200 : 1000;
         int tick_ms = render_tick_ms();
         if (tick_ms >= 0 && tick_ms < wait_ms) wait_ms = tick_ms;
+        int64_t saver_us = (int64_t)SAVER_TIMEOUT_S[UI.saver] * 1000000;
+        bool saver_may = saver_us > 0 && (UI.mode != MODE_MENU || menu_saver_allowed());
+        if (saver_active()) {
+            wait_ms = saver_next_ms();
+        } else if (saver_may) {
+            int64_t left = (last_input_us + saver_us - esp_timer_get_time()) / 1000;
+            if (left < wait_ms) wait_ms = left < 0 ? 0 : (int)left;
+        }
         if (!input_wait(&ev, wait_ms)) {
+            if (saver_active()) {
+                saver_frame();
+                if (esp_timer_get_time() - last_input_us >= AUTOSAVE_QUIET_US)
+                    store_autosave_if_idle();
+                continue;
+            }
+            if (saver_may && esp_timer_get_time() - last_input_us >= saver_us) {
+                ESP_LOGI(TAG, "screen saver after %u s idle", SAVER_TIMEOUT_S[UI.saver]);
+                UI.browsing = false;
+                saver_start();
+                if (!saver_active()) last_input_us = esp_timer_get_time();   // retry later
+                continue;
+            }
             render_tick();
 #if CONFIG_BEAD_PERF_LOG
             bool was = store_pending();
@@ -147,6 +171,17 @@ void ui_run(void)
             continue;
         }
         last_input_us = esp_timer_get_time();
+        // Wake from the screen saver: the input only wakes. Input that keeps coming
+        // (a held D-pad repeating, a fast encoder turn) is ignored until a pause.
+        if (saver_active() || last_input_us < swallow_us) {
+            if (saver_active()) {
+                saver_stop();
+                render_full();
+                ESP_LOGI(TAG, "wake (ev=%s ignored)", (unsigned)ev < EV__COUNT ? EVENT_NAMES[ev] : "?");
+            }
+            swallow_us = last_input_us + 300000;
+            continue;
+        }
         ESP_LOGI(TAG, "ev=%s mode=%d cur=%d,%d slot=%d",
                  (unsigned)ev < EV__COUNT ? EVENT_NAMES[ev] : "?",
                  (int)UI.mode, UI.cur_x, UI.cur_y, UI.slot);

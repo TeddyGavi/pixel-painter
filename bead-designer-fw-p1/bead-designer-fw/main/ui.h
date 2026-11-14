@@ -26,6 +26,7 @@ typedef struct {
     uint8_t board;                  // board_t layout
     uint8_t texture;                // 0..TEXTURE_COUNT-1
     bool bevel;                     // subtle bead bevel
+    uint8_t saver;                  // screen saver timeout, index into SAVER_TIMEOUT_S
 } ui_state_t;
 
 extern ui_state_t UI;

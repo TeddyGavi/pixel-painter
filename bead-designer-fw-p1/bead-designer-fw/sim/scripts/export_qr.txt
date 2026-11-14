@@ -28,5 +28,6 @@
 5.8 uart0 s
 6.0 uart0 s
 6.2 uart0 s
+6.3 uart0 s
 6.4 uart0 k
 7.2 stop

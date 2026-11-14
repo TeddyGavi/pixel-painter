@@ -1,7 +1,7 @@
 // Pattern storage in NVS.
 //   "auto"     the working pattern, autosaved after edits (survives power-off)
 //   "s0".."s7" save slots: snapshots of the working pattern (Pattern > Save / Load)
-//   "look"     device-wide display settings (board style, texture, bevel)
+//   "look"     device-wide display settings (board style, texture, bevel, screen saver)
 //
 // A pattern = brand (palette) + its 5-colour shortlist + the cells, versioned. The
 // working pattern also records whether its beads changed since the last Save/Load,
@@ -12,6 +12,7 @@
 #include "ui.h"
 #include "palettes.h"
 #include "board_style.h"
+#include "saver.h"
 #include <stddef.h>
 #include <string.h>
 #include "esp_log.h"
@@ -53,9 +54,10 @@ typedef struct {                      // v2..v5 layout (v2 ends before `board`)
 } pattern_old_t;
 #define PATTERN_V2_SIZE offsetof(pattern_old_t, board)
 
-#define LOOK_VERSION 1
+#define LOOK_VERSION 2   // 2 = + screen saver timeout
 #define LFLAG_BEVEL 0x01
-typedef struct { uint8_t version, board, texture, flags; } look_t;
+typedef struct { uint8_t version, board, texture, flags, saver; } look_t;
+#define LOOK_V1_SIZE offsetof(look_t, saver)
 
 // Look found in a pre-v6 autosave, used once if there is no "look" record yet.
 static bool s_old_look_valid;
@@ -120,7 +122,7 @@ static bool read_pattern(const char *key, pattern_t *pt)
     // Older working patterns: beads count as unsaved (nothing was ever in a slot).
     if (count_beads(pt->cells)) pt->flags |= PFLAG_UNSAVED;
     if (v35 && strcmp(key, "auto") == 0 && o->board < BOARD__COUNT && o->texture < TEXTURE_COUNT) {
-        s_old_look = (look_t){ LOOK_VERSION, o->board, o->texture, (uint8_t)(o->flags & 1) };
+        s_old_look = (look_t){ LOOK_VERSION, o->board, o->texture, (uint8_t)(o->flags & 1), 0 };
         s_old_look_valid = true;
     }
     return true;
@@ -212,7 +214,7 @@ void store_init(void)
 
 static bool save_look(void)
 {
-    look_t l = { LOOK_VERSION, UI.board, UI.texture, (uint8_t)(UI.bevel ? LFLAG_BEVEL : 0) };
+    look_t l = { LOOK_VERSION, UI.board, UI.texture, (uint8_t)(UI.bevel ? LFLAG_BEVEL : 0), UI.saver };
     return write_blob("look", &l, sizeof l);
 }
 
@@ -227,9 +229,15 @@ void store_load_autosave(void)
         ESP_LOGI(TAG, "no valid saved pattern (new, or an unknown format): defaults");
     }
     look_t l; size_t len = sizeof l;
-    if (nvs_get_blob(s_nvs, "look", &l, &len) == ESP_OK && len == sizeof l &&
-        l.version == LOOK_VERSION && l.board < BOARD__COUNT && l.texture < TEXTURE_COUNT) {
+    bool v2 = false, v1 = false;
+    if (nvs_get_blob(s_nvs, "look", &l, &len) == ESP_OK) {
+        v2 = l.version == LOOK_VERSION && len == sizeof l && l.saver < SAVER_CHOICES;
+        v1 = l.version == 1 && len == LOOK_V1_SIZE;
+    }
+    if ((v1 || v2) && l.board < BOARD__COUNT && l.texture < TEXTURE_COUNT) {
         UI.board = l.board; UI.texture = l.texture; UI.bevel = (l.flags & LFLAG_BEVEL) != 0;
+        if (v2) UI.saver = l.saver;
+        else save_look();                           // v1: add the saver default
     } else if (s_old_look_valid) {                  // migrate from a pre-v6 autosave
         UI.board = s_old_look.board; UI.texture = s_old_look.texture;
         UI.bevel = (s_old_look.flags & LFLAG_BEVEL) != 0;
