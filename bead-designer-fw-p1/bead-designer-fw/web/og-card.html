@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Source of og.png, the link-preview card. Regenerate (1200x630) with:
+     chromium --headless=new --hide-scrollbars --window-size=1200,630 --screenshot=og.png og-card.html
+     (serve this folder over http first so the font loads). -->
+<html><head><meta charset="utf-8">
+
+<style>
+  @font-face { font-family: "Chicago"; src: url("ChicagoKare-Regular.woff2"); }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+  body { background: #d6dcc9; color: #141412; font-family: "Chicago"; display: flex; align-items: center;
+         gap: 64px; padding: 0 72px; box-sizing: border-box; -webkit-font-smoothing: none; }
+  .win { background: #fafbf6; border: 4px solid #141412; box-shadow: 10px 10px 0 #141412; width: 430px; flex: none; }
+  .bar { height: 40px; border-bottom: 4px solid #141412; display: flex; align-items: center; justify-content: center;
+         background: repeating-linear-gradient(#fafbf6 0 6px, #141412 6px 8px); background-clip: content-box; padding: 7px; }
+  .bar b { background: #fafbf6; padding: 0 14px; font: 24px "Chicago"; font-weight: normal; }
+  canvas { display: block; width: 100%; padding: 18px; box-sizing: border-box; }
+  h1 { font: 96px/1 "Chicago"; margin: 0 0 22px; font-weight: normal; }
+  p { font-size: 32px; line-height: 1.5; margin: 0 0 30px; color: #3c3d36; }
+  .tag { display: inline-flex; gap: 12px; align-items: center; border: 4px solid #141412; background: #fafbf6; box-shadow: 6px 6px 0 #141412; padding: 10px 20px; font-size: 32px; }
+         
+  .tag i { width: 24px; height: 24px; border: 2px solid #141412; display: inline-block; }
+</style></head>
+<body>
+  <div class="win"><div class="bar"><b>pattern.bead</b></div><canvas id="c"></canvas></div>
+  <div>
+    <h1>Bead<br>Pattern</h1>
+    <p>Made on a bead pad. Open it to see the board, the colours and how many of each to buy.</p>
+    <div class="tag"><i style="background:#d92033"></i><i style="background:#ffc60d"></i><i style="background:#f5f5f5"></i>Hama · Artkal · Miyuki</div>
+  </div>
+<script>
+const G = ["003333300","031121130","312211213","312111213","311121113","033444330","003444300","003444300","000333000"];
+const COL = { 1: "#d92033", 2: "#f5f5f5", 3: "#362626", 4: "#ffc60d" };
+const c = document.getElementById("c"), cell = 64, pad = 16, n = 9, size = n * cell + pad * 2;
+c.width = c.height = size; const x = c.getContext("2d");
+x.fillStyle = "#ecebe7"; x.beginPath(); x.roundRect(0, 0, size, size, 16); x.fill();
+G.forEach((row, j) => [...row].forEach((ch, i) => {
+  const cx = pad + i * cell + cell / 2, cy = pad + j * cell + cell / 2;
+  x.fillStyle = "#d9d7d1"; x.beginPath(); x.arc(cx, cy, cell * .12, 0, 7); x.fill();
+  if (ch === "0") return;
+  const r = cell * .44; x.fillStyle = COL[ch]; x.beginPath(); x.roundRect(cx - r, cy - r, 2 * r, 2 * r, r * .45); x.fill();
+  x.strokeStyle = "rgba(0,0,0,.18)"; x.lineWidth = 2; x.stroke();
+}));
+</script>
+</body></html>

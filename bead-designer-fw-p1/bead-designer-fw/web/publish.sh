@@ -13,7 +13,8 @@ REPO="${BEAD_EXPORT_REPO:-git@github.com:TeddyGavi/pixel-painter-export.git}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 git clone -q "$REPO" "$TMP/site" 2>/dev/null || { mkdir -p "$TMP/site"; git -C "$TMP/site" init -q -b main; git -C "$TMP/site" remote add origin "$REPO"; }
-cp "$WEB/index.html" "$WEB/names.js" "$TMP/site/"
+cp "$WEB/index.html" "$WEB/names.js" "$WEB/ChicagoKare-Regular.woff2" "$WEB/CHICAGO-KARE-LICENSE.txt" \
+   "$WEB/og.png" "$TMP/site/"
 touch "$TMP/site/.nojekyll"                          # serve files as-is
 cd "$TMP/site"
 git add -A
