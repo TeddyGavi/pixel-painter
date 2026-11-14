@@ -4,7 +4,10 @@
 //        │                      to the nearest colour of the new brand
 //        ├─ Edit shortlist ─── slot ─┬─ Browse colours (list, family jump)
 //        │                           └─ Enter code (dial characters, OK)
-//        ├─ Colours in pattern  (counts; press = load into the selected slot)
+//        ├─ Colours used ...... counts; press = load into the selected slot
+//        ├─ Board ............. Solid / Pegs / Big pegs / Classic (press cycles)
+//        ├─ Texture ........... 1/8 .. 8/8 (press cycles)
+//        ├─ Beads ............. Bevel / Flat (press toggles)
 //        └─ Export ............ Wi-Fi export running while shown
 //
 // Controls: up/down or encoder turn = move; encoder press or right = select;
@@ -15,6 +18,7 @@
 #include "palettes.h"
 #include "store.h"
 #include "export.h"
+#include "board_style.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,6 +46,13 @@ static int s_used_n;
 static int s_count[256];
 
 static const palette_t *pal(void) { return &PALETTES[UI.palette]; }
+
+// Board / texture / bead style changed in place: redraw the row, save with the pattern.
+static void look_changed(void)
+{
+    s_version++;
+    store_mark_dirty();
+}
 
 static void go(screen_t sc, int sel)
 {
@@ -133,7 +144,7 @@ static int code_match(void)
 static int row_count(void)
 {
     switch (s_screen) {
-    case S_MAIN:   return 4;
+    case S_MAIN:   return 7;
     case S_BRAND:  return PALETTE_COUNT;
     case S_SLOTS:  return SLOTS;
     case S_SLOT:   return 2;
@@ -163,10 +174,14 @@ void menu_row(int i, menu_row_t *r)
     r->swatch = -1;
     switch (s_screen) {
     case S_MAIN: {
-        static const char *const L[] = { "Brand", "Edit shortlist", "Colours used", "Export" };
+        static const char *const L[] = { "Brand", "Edit shortlist", "Colours used",
+                                         "Board", "Texture", "Beads", "Export" };
         snprintf(r->left, sizeof r->left, "%s", L[i]);
         if (i == 0) snprintf(r->right, sizeof r->right, "%s", pal()->brand);
         if (i == 2) { count_used(); snprintf(r->right, sizeof r->right, "%d", s_used_n); }
+        if (i == 3) snprintf(r->right, sizeof r->right, "%s", BOARD_NAMES[UI.board]);
+        if (i == 4) snprintf(r->right, sizeof r->right, "%d/%d", UI.texture + 1, TEXTURE_COUNT);
+        if (i == 5) snprintf(r->right, sizeof r->right, "%s", UI.bevel ? "Bevel" : "Flat");
         break;
     }
     case S_BRAND:
@@ -269,7 +284,7 @@ static menu_result_t back(void)
     case S_COLORS: go(S_SLOT, 0); break;
     case S_CODE:   go(S_SLOT, 1); break;
     case S_USED:   if (s_direct) return MENU_CLOSE; go(S_MAIN, 2); break;
-    case S_EXPORT: export_stop(); go(S_MAIN, 3); break;
+    case S_EXPORT: export_stop(); go(S_MAIN, 6); break;
     }
     return MENU_STAY;
 }
@@ -281,6 +296,9 @@ static menu_result_t select(void)
         if (s_sel == 0) go(S_BRAND, UI.palette);
         else if (s_sel == 1) go(S_SLOTS, UI.slot);
         else if (s_sel == 2) { count_used(); go(S_USED, 0); s_direct = false; }
+        else if (s_sel == 3) { UI.board = (UI.board + 1) % BOARD__COUNT; look_changed(); }
+        else if (s_sel == 4) { UI.texture = (UI.texture + 1) % TEXTURE_COUNT; look_changed(); }
+        else if (s_sel == 5) { UI.bevel = !UI.bevel; look_changed(); }
         else { store_flush(); export_start(); go(S_EXPORT, -1); }
         break;
     case S_BRAND:

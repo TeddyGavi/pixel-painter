@@ -1,9 +1,11 @@
 // Drawing via board display ops only — no GUI library, no full framebuffer.
 // Layout (portrait, DISPLAY_W wide):
 //   top    square 9x9 bead grid (DISPLAY_W x DISPLAY_W)
-//   below  divider, then the palette strip: one square chip per colour (selected
-//          one framed), and a text row with the colour name and how many beads of
-//          that colour are in the pattern.
+//   below  the palette strip: one square chip per colour (selected one framed),
+//          and a text row with the colour name and how many beads of that colour
+//          are in the pattern.
+// The board texture (board_style.c) covers the whole drawing screen behind all of
+// it; text drawn on it gets a 1 px black outline. Menu screens stay plain black.
 // Updates are incremental (render_update): only cells, chips and text that changed
 // are redrawn, because a full clear + redraw over SPI visibly flashes.
 #include "render.h"
@@ -12,42 +14,42 @@
 #include "palettes.h"
 #include "text.h"
 #include "menu.h"
+#include "board_style.h"
 #include <stdio.h>
 #include <string.h>
 #include "esp_timer.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
 
-#define GAP 2
 #define COL_BG       0x0000
 #define COL_FRAME    0xFFFF  // cursor / selected chip
 #define COL_FRAME_DIM 0x7BEF // cursor while the strip has focus (= dim(COL_FRAME))
-#define COL_EMPTY    0x18E3  // empty cell
 #define COL_DIVIDER  0x39E7
 #define COL_NAME     0xFFFF
 #define COL_TEXT     0xFFFF
 #define COL_COUNT    0xAD55
 
 // Strip geometry (below the grid)
-#define DIVIDER_Y  (DISPLAY_W + 3)
+#define DIVIDER_Y  (DISPLAY_W + 3)   // top of the strip area (no line drawn)
 #define CHIP       24          // chip square
 #define CHIP_PITCH 36          // chip + frame + spacing
 #define CHIP_Y     (DIVIDER_Y + 9) // frame ring starts 4 px above
 #define TEXT_Y     (CHIP_Y + CHIP + 12)
 #define TEXT_PAD   12
 
-_Static_assert(TEXT_Y + TEXT_H <= DISPLAY_H, "strip text must fit on screen");
+_Static_assert(TEXT_Y + TEXT_H + 1 <= DISPLAY_H, "strip text (+ outline) must fit on screen");
 
 static int s_cell;   // cell size in px
+static int s_gap;    // px between cells (depends on the board variant)
 static int s_ox, s_oy;
 static const display_ops_t *D;
 
 static void layout(void)
 {
-    D = board_display();
-    s_cell = (DISPLAY_W - (GRID_N + 1) * GAP) / GRID_N;
-    int used = GRID_N * s_cell + (GRID_N + 1) * GAP;
-    s_ox = (DISPLAY_W - used) / 2 + GAP;
+    s_gap = board_gap();
+    s_cell = (DISPLAY_W - (GRID_N + 1) * s_gap) / GRID_N;
+    int used = GRID_N * s_cell + (GRID_N + 1) * s_gap;
+    s_ox = (DISPLAY_W - used) / 2 + s_gap;
     s_oy = s_ox;
 }
 
@@ -59,7 +61,8 @@ static const palette_t *pal(void) { return &PALETTES[UI.palette]; }
 static inline uint16_t dim(uint16_t c) { return (uint16_t)((c >> 1) & 0x7BEF); }
 
 // Strip colours: full brightness only while it has focus (browsing).
-static uint16_t strip_col(uint16_t c) { return UI.browsing ? c : dim(c); }
+static bool palette_focus(void) { return UI.browsing || UI.focus == FOCUS_PALETTE; }
+static uint16_t strip_col(uint16_t c) { return palette_focus() ? c : dim(c); }
 
 static int count_color(int idx)
 {
@@ -79,57 +82,62 @@ static int count_color(int idx)
 
 static inline uint16_t be16(uint16_t c) { return (uint16_t)((c >> 8) | (c << 8)); }
 
-#define TILE_MAX 32                          // largest tile edge (grid cell + ring = 26)
+#define TILE_MAX (DISPLAY_W / GRID_N + 2)    // largest tile edge (cell + gap)
 static uint16_t s_tile[TILE_MAX * TILE_MAX];
-
-// Fill [x0,x1) x [y0,y1) of a w-wide tile with one colour.
-static void tile_rect(int w, int x0, int y0, int x1, int y1, uint16_t c)
-{
-    uint16_t b = be16(c);
-    for (int y = y0; y < y1; y++)
-        for (int x = x0; x < x1; x++) s_tile[y * w + x] = b;
-}
 
 // ---- grid -------------------------------------------------------------------
 
-static uint16_t cell_color(uint8_t idx)
-{
-    if (idx == CELL_EMPTY || idx >= pal()->count) return COL_EMPTY;
-    return pal()->colors[idx].rgb565;
-}
-
 static uint16_t cursor_frame(void)
 {
-    return UI.browsing ? COL_FRAME_DIM : COL_FRAME;
+    return palette_focus() ? COL_FRAME_DIM : COL_FRAME;
 }
 
 // frame = cursor frame colour (COL_BG = no frame).
-// Each cell owns a (s_cell + 2) square tile: the cell plus its own 1 px half of the
-// 2 px GAP on every side, so neighbouring tiles never overlap and drawing order
-// does not matter. The cursor frame is 1 px wide and lives in that half-gap; the
-// neighbour's half stays black, so the frame never touches a neighbouring bead.
-// Inside the frame a 1 px black ring separates it from the cell's own colour (same
-// layering as the strip chips). Unframed cells show their colour full size.
+// Each cell owns a (s_cell + s_gap) square tile: the cell plus its own half of the
+// gap on every side, so neighbouring tiles never overlap and drawing order does
+// not matter. The cursor frame is a 1 px ring right around the cell, inside that
+// half-gap; the rest of the half-gap shows the board texture. Inside the frame a
+// 1 px black ring separates it from the cell's own colour (same layering as the
+// strip chips). Unframed cells show their colour full size.
 static void draw_cell(int x, int y, uint16_t frame)
 {
-    int px = s_ox + x * (s_cell + GAP);
-    int py = s_oy + y * (s_cell + GAP);
-    uint16_t c = cell_color(UI.cells[y * GRID_N + x]);
-    const int w = s_cell + 2;
-    tile_rect(w, 0, 0, w, w, frame);                       // frame (black if none)
-    if (frame != COL_BG) {
-        tile_rect(w, 1, 1, w - 1, w - 1, COL_BG);           // inner black ring
-        tile_rect(w, 2, 2, w - 2, w - 2, c);
-    } else {
-        tile_rect(w, 1, 1, w - 1, w - 1, c);
+    const int h = s_gap / 2, n = s_cell, w = n + s_gap;
+    int px = s_ox + x * (n + s_gap);
+    int py = s_oy + y * (n + s_gap);
+    uint8_t idx = UI.cells[y * GRID_N + x];
+    bool empty = idx == CELL_EMPTY || idx >= pal()->count;
+    uint16_t c = empty ? 0 : pal()->colors[idx].rgb565;
+    bool framed = frame != COL_BG;
+    // Bevel edges sit inside the cursor's black inner ring when framed.
+    const int lo = framed ? 1 : 0, hi = framed ? n - 2 : n - 1;
+    for (int ty = 0; ty < w; ty++) {
+        for (int tx = 0; tx < w; tx++) {
+            int X = px - h + tx, Y = py - h + ty;   // screen coordinates
+            int cx = tx - h, cy = ty - h;           // inside the cell
+            uint16_t v;
+            if (cx < 0 || cy < 0 || cx >= n || cy >= n) {          // half-gap
+                bool ring = cx >= -1 && cy >= -1 && cx <= n && cy <= n;
+                v = framed && ring ? frame : board_px(X, Y);
+            } else if (framed && (cx == 0 || cy == 0 || cx == n - 1 || cy == n - 1)) {
+                v = COL_BG;                                   // cursor's inner black ring
+            } else if (empty) {
+                v = slot_px(X, Y, cx, cy, n);
+            } else if (UI.bevel && (cx == hi || cy == hi)) {
+                v = bevel_px(c, -1);                          // shadow bottom/right
+            } else if (UI.bevel && (cx == lo || cy == lo)) {
+                v = bevel_px(c, +1);                          // lit top/left
+            } else {
+                v = c;
+            }
+            s_tile[ty * w + tx] = be16(v);
+        }
     }
-    D->blit(px - 1, py - 1, w, w, s_tile);
+    D->blit(px - h, py - h, w, w, s_tile);
 }
 
 static void draw_grid(void)
 {
-    // Each cell's border overlaps the shared GAP with its neighbours, so the
-    // cursor cell is drawn last; otherwise later cells paint over its frame.
+    // Tiles never overlap; the cursor cell is drawn with its frame.
     for (int y = 0; y < GRID_N; y++)
         for (int x = 0; x < GRID_N; x++)
             if (x != UI.cur_x || y != UI.cur_y) draw_cell(x, y, COL_BG);
@@ -179,21 +187,21 @@ static void strip_rect(int x0, int y0, int x1, int y1, uint16_t c)
 static void draw_strip(void)
 {
     strip_scroll_to(strip_sel());
-    strip_rect(0, 0, DISPLAY_W, STRIP_H, COL_BG);
+    const int sy0 = CHIP_Y - 4;                      // board texture behind chips
+    for (int y = 0; y < STRIP_H; y++)
+        for (int x = 0; x < DISPLAY_W; x++)
+            s_strip[y * DISPLAY_W + x] = be16(board_px(x, sy0 + y));
     int vis = strip_visible(), sel = strip_sel();
     int x0 = (DISPLAY_W - vis * CHIP_PITCH) / 2 + (CHIP_PITCH - CHIP) / 2 - 4;
     for (int k = 0; k < vis; k++) {
         int i = s_first + k, x = x0 + k * CHIP_PITCH;
-        // white ring, black gap, colour square (mockup style, square)
-        if (i == sel) {
-            strip_rect(x, 0, x + STRIP_H, STRIP_H, strip_col(COL_FRAME));
-            strip_rect(x + 2, 2, x + STRIP_H - 2, STRIP_H - 2, COL_BG);
-        }
+        // Selected: 1 px white ring + 1 px black gap, same as the grid cursor.
+        // Every chip has the 1 px black edge, so a mid-grey chip never blends
+        // into the texture.
+        if (i == sel)
+            strip_rect(x + 2, 2, x + STRIP_H - 2, STRIP_H - 2, strip_col(COL_FRAME));
+        strip_rect(x + 3, 3, x + STRIP_H - 3, STRIP_H - 3, COL_BG);
         uint16_t c = pal()->colors[strip_item(i)].rgb565;
-        // Very dark chips (black, charcoal) vanish on the black strip: outline them.
-        int luma = ((c >> 11) * 8 * 3 + ((c >> 5) & 0x3F) * 4 * 6 + (c & 0x1F) * 8) / 10;
-        if (luma < 48)
-            strip_rect(x + 3, 3, x + STRIP_H - 3, STRIP_H - 3, strip_col(COL_DIVIDER));
         strip_rect(x + 4, 4, x + STRIP_H - 4, STRIP_H - 4, strip_col(c));
     }
     D->blit(0, CHIP_Y - 4, DISPLAY_W, STRIP_H, s_strip);
@@ -209,7 +217,10 @@ static void draw_strip(void)
 #define MARQUEE_STEP     2          // px per frame (50 px/s)
 #define MARQUEE_GAP      48         // px between the end and the repeated start
 
-static uint16_t s_line[DISPLAY_W * TEXT_H];
+// The line is 1 px taller than the text above and below, for the text outline.
+#define LINE_H (TEXT_H + 2)
+#define LINE_Y (TEXT_Y - 1)
+static uint16_t s_line[DISPLAY_W * LINE_H];
 static char s_info_label[48];
 static bool s_info_long;            // label wider than its space
 static bool s_marquee;              // currently scrolling
@@ -221,24 +232,52 @@ static void compose_info(void)
     int idx = ui_color();
     char num[8];
     snprintf(num, sizeof num, "%d", count_color(idx));
-    const uint16_t bg = be16(COL_BG);
-    for (int i = 0; i < DISPLAY_W * TEXT_H; i++) s_line[i] = bg;
+    // Pass 1: render the glyphs as markers (NAME/COUNT ink, 0 = no ink) ...
+    enum { NONE, NAME, COUNT };
+    uint16_t *text = s_line + DISPLAY_W;          // text rows start 1 px down
+    memset(s_line, 0, sizeof s_line);
     int cw = text_width(num);
     int cx = DISPLAY_W - TEXT_PAD - cw;
     int x0 = TEXT_PAD, x1 = cx - 8;               // label space
-    uint16_t fg = be16(strip_col(COL_NAME));
     if (s_marquee) {
         int tw = text_width(s_info_label);
-        text_render_clip(s_line, DISPLAY_W, x0 - s_marquee_off, x0, x1, s_info_label, fg, bg);
-        text_render_clip(s_line, DISPLAY_W, x0 - s_marquee_off + tw + MARQUEE_GAP, x0, x1,
-                         s_info_label, fg, bg);
+        text_render_clip(text, DISPLAY_W, x0 - s_marquee_off, x0, x1, s_info_label, NAME, NONE);
+        text_render_clip(text, DISPLAY_W, x0 - s_marquee_off + tw + MARQUEE_GAP, x0, x1,
+                         s_info_label, NAME, NONE);
     } else {
         char fit[52];
         text_fit(s_info_label, x1 - x0, fit, sizeof fit);
-        text_render(s_line, DISPLAY_W, x0, fit, x1 - x0, fg, bg);
+        text_render(text, DISPLAY_W, x0, fit, x1 - x0, NAME, NONE);
     }
-    text_render(s_line, DISPLAY_W, cx, num, cw, be16(strip_col(COL_COUNT)), bg);
-    D->blit(0, TEXT_Y, DISPLAY_W, TEXT_H, s_line);
+    text_render(text, DISPLAY_W, cx, num, cw, COUNT, NONE);
+    // ... pass 2: ink -> colour, next to ink -> black outline, else board texture.
+    // Rows are rewritten in place one behind, so keep the previous row's markers.
+    static uint8_t prev[DISPLAY_W], cur[DISPLAY_W];
+    const uint16_t ink[3] = { 0, be16(strip_col(COL_NAME)), be16(strip_col(COL_COUNT)) };
+    memset(prev, 0, sizeof prev);
+    for (int x = 0; x < DISPLAY_W; x++) cur[x] = (uint8_t)s_line[x];
+    for (int y = 0; y < LINE_H; y++) {
+        uint16_t *row = s_line + y * DISPLAY_W;
+        const uint16_t *next = y + 1 < LINE_H ? row + DISPLAY_W : NULL;
+        for (int x = 0; x < DISPLAY_W; x++) {
+            uint16_t v;
+            if (cur[x]) {
+                v = ink[cur[x]];
+            } else {
+                bool near = false;
+                for (int dx = -1; dx <= 1 && !near; dx++) {
+                    int nx = x + dx;
+                    if (nx < 0 || nx >= DISPLAY_W) continue;
+                    near = prev[nx] || cur[nx] || (next && next[nx]);
+                }
+                v = near ? be16(COL_BG) : be16(board_px(x, LINE_Y + y));
+            }
+            row[x] = v;
+        }
+        memcpy(prev, cur, sizeof cur);
+        if (next) for (int x = 0; x < DISPLAY_W; x++) cur[x] = (uint8_t)next[x];
+    }
+    D->blit(0, LINE_Y, DISPLAY_W, LINE_H, s_line);
 }
 
 // Content changed (colour, count, focus): show it shortened and restart the delay.
@@ -312,8 +351,8 @@ static void draw_menu_row(const menu_view_t *v, int i)
     if (i < v->count) {
         menu_row_t r;
         menu_row(i, &r);
-        if (i == v->sel) {                               // white frame, like the cursor
-            strip_rect(2, 0, DISPLAY_W - 2, ROW_H, COL_FRAME);
+        if (i == v->sel) {                       // 1 px white frame, like the cursor
+            strip_rect(3, 1, DISPLAY_W - 3, ROW_H - 1, COL_FRAME);
             strip_rect(4, 2, DISPLAY_W - 4, ROW_H - 2, COL_BG);
         }
         int x = 12;
@@ -368,8 +407,8 @@ static void render_menu_update(void)
 typedef struct {
     ui_mode_t mode;
     int x, y;
-    bool browsing;
-    int slot, pos, color, count;
+    bool browsing, palette_focus, bevel;
+    int slot, pos, color, count, board, texture;
     uint8_t slots[SLOTS];
 } shown_t;
 static shown_t s_shown;
@@ -379,11 +418,28 @@ static void snapshot(shown_t *v)
     memset(v, 0, sizeof *v);            // padding too, so memcmp is meaningful
     v->mode = UI.mode; v->x = UI.cur_x; v->y = UI.cur_y;
     v->browsing = UI.browsing; v->slot = UI.slot; v->pos = UI.browse_pos;
+    v->palette_focus = palette_focus(); v->bevel = UI.bevel;
+    v->board = UI.board; v->texture = UI.texture;
     v->color = ui_color(); v->count = count_color(v->color);
     memcpy(v->slots, UI.slots, SLOTS);
 }
 
 static int grid_mode(ui_mode_t m) { return m == MODE_DRAW; }
+
+// Board texture for a margin region, composed in the band buffer and sent at once.
+static void board_region(int x0, int y0, int w, int h)
+{
+    if (w <= 0 || h <= 0) return;
+    // s_strip holds DISPLAY_W * STRIP_H pixels; margins are thin, split if needed
+    int rows = (DISPLAY_W * STRIP_H) / w;
+    for (int y = y0; y < y0 + h; y += rows) {
+        int n = (y0 + h - y) < rows ? (y0 + h - y) : rows;
+        for (int r = 0; r < n; r++)
+            for (int x = 0; x < w; x++)
+                s_strip[r * w + x] = be16(board_px(x0 + x, y + r));
+        D->blit(x0, y, w, n, s_strip);
+    }
+}
 
 void render_full(void)
 {
@@ -391,24 +447,22 @@ void render_full(void)
     ESP_LOGW("perf", "FULL REDRAW");
 #endif
     static int once = 0;
-    if (!once) { layout(); D->init(); once = 1; }
+    if (!once) { D = board_display(); D->init(); once = 1; }
     if (grid_mode(UI.mode)) {
         // No full-screen clear (it would flash): cell tiles, strip and info line
         // each overwrite their area in one blit; only the margins between them
-        // are filled, straight to their final black.
-        const int gx0 = s_ox - 1, gx1 = gx0 + GRID_N * (s_cell + GAP);
-        const int gy0 = s_oy - 1, gy1 = gy0 + GRID_N * (s_cell + GAP);
+        // are filled, straight to their final content (the board texture).
+        layout();                                   // gap depends on the variant
+        const int h = s_gap / 2, pitch = s_cell + s_gap;
+        const int gx0 = s_ox - h, gx1 = gx0 + GRID_N * pitch;
+        const int gy0 = s_oy - h, gy1 = gy0 + GRID_N * pitch;
         const int sy0 = CHIP_Y - 4, sy1 = sy0 + STRIP_H;
-        D->fill_rect(0, 0, DISPLAY_W, gy0, COL_BG);
-        D->fill_rect(0, gy0, gx0, gy1 - gy0, COL_BG);
-        D->fill_rect(gx1, gy0, DISPLAY_W - gx1, gy1 - gy0, COL_BG);
-        D->fill_rect(0, gy1, DISPLAY_W, DIVIDER_Y - gy1, COL_BG);
-        D->fill_rect(0, DIVIDER_Y, 8, 1, COL_BG);
-        D->fill_rect(8, DIVIDER_Y, DISPLAY_W - 16, 1, COL_DIVIDER);
-        D->fill_rect(DISPLAY_W - 8, DIVIDER_Y, 8, 1, COL_BG);
-        D->fill_rect(0, DIVIDER_Y + 1, DISPLAY_W, sy0 - DIVIDER_Y - 1, COL_BG);
-        D->fill_rect(0, sy1, DISPLAY_W, TEXT_Y - sy1, COL_BG);
-        D->fill_rect(0, TEXT_Y + TEXT_H, DISPLAY_W, DISPLAY_H - TEXT_Y - TEXT_H, COL_BG);
+        board_region(0, 0, DISPLAY_W, gy0);
+        board_region(0, gy0, gx0, gy1 - gy0);
+        board_region(gx1, gy0, DISPLAY_W - gx1, gy1 - gy0);
+        board_region(0, gy1, DISPLAY_W, sy0 - gy1);
+        board_region(0, sy1, DISPLAY_W, LINE_Y - sy1);
+        board_region(0, LINE_Y + LINE_H, DISPLAY_W, DISPLAY_H - LINE_Y - LINE_H);
         draw_grid();
         draw_strip();
         draw_info();
@@ -420,8 +474,10 @@ void render_full(void)
 
 void render_update(void)
 {
-    // Switching between drawing and the menu repaints everything (band by band).
-    if (UI.mode != s_shown.mode) { render_full(); return; }
+    // Switching between drawing and the menu repaints everything (band by band);
+    // so does a change of the canvas look.
+    if (UI.mode != s_shown.mode || UI.board != s_shown.board ||
+        UI.texture != s_shown.texture || UI.bevel != s_shown.bevel) { render_full(); return; }
     if (!grid_mode(UI.mode)) { render_menu_update(); return; }
     shown_t now;
     snapshot(&now);
@@ -432,10 +488,11 @@ void render_update(void)
     draw_cell(UI.cur_x, UI.cur_y, cursor_frame());
 
     // Strip: any change of list, selection, slot colours or focus -> one blit.
-    if (now.browsing != s_shown.browsing || now.slot != s_shown.slot ||
+    if (now.browsing != s_shown.browsing || now.palette_focus != s_shown.palette_focus ||
+        now.slot != s_shown.slot ||
         now.pos != s_shown.pos || memcmp(now.slots, s_shown.slots, SLOTS) != 0)
         draw_strip();
-    if (now.browsing != s_shown.browsing || now.color != s_shown.color ||
+    if (now.palette_focus != s_shown.palette_focus || now.color != s_shown.color ||
         now.count != s_shown.count)
         draw_info();
     s_shown = now;

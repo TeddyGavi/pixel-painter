@@ -8,6 +8,8 @@
 #include "store.h"
 #include "ui.h"
 #include "palettes.h"
+#include "board_style.h"
+#include <stddef.h>
 #include <string.h>
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -34,7 +36,8 @@ void store_init(void)
     nvs_open("beads", NVS_READWRITE, &s_nvs);
 }
 
-#define PATTERN_VERSION 2   // 1 = bare cells (pre-shortlist), no longer loaded
+#define PATTERN_VERSION 3   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look
+#define FLAG_BEVEL 0x01
 
 typedef struct {
     uint8_t version;
@@ -42,12 +45,18 @@ typedef struct {
     uint8_t slots[SLOTS];             // shortlist (palette colour indices)
     uint8_t slot;                     // selected slot
     uint8_t cells[GRID_N * GRID_N];   // palette colour index, CELL_EMPTY = none
+    // v3:
+    uint8_t board;                    // board_t layout
+    uint8_t texture;                  // 0..TEXTURE_COUNT-1
+    uint8_t flags;                    // FLAG_BEVEL
 } pattern_t;
+#define PATTERN_V2_SIZE offsetof(pattern_t, board)   // v2 records end before `board`
 
 static bool save_key(const char *key)
 {
     pattern_t pt = { .version = PATTERN_VERSION, .palette = (uint8_t)UI.palette,
-                     .slot = (uint8_t)UI.slot };
+                     .slot = (uint8_t)UI.slot, .board = UI.board, .texture = UI.texture,
+                     .flags = UI.bevel ? FLAG_BEVEL : 0 };
     memcpy(pt.slots, UI.slots, sizeof pt.slots);
     memcpy(pt.cells, UI.cells, sizeof pt.cells);
     if (nvs_set_blob(s_nvs, key, &pt, sizeof pt) != ESP_OK) return false;
@@ -56,8 +65,8 @@ static bool save_key(const char *key)
 
 static bool valid(const pattern_t *pt)
 {
-    if (pt->version != PATTERN_VERSION || pt->palette >= PALETTE_COUNT || pt->slot >= SLOTS)
-        return false;
+    if (pt->palette >= PALETTE_COUNT || pt->slot >= SLOTS) return false;
+    if (pt->board >= BOARD__COUNT || pt->texture >= TEXTURE_COUNT) return false;
     int n = PALETTES[pt->palette].count;
     for (int i = 0; i < SLOTS; i++) if (pt->slots[i] >= n) return false;
     for (int i = 0; i < GRID_N * GRID_N; i++)
@@ -69,12 +78,20 @@ static bool load_key(const char *key)
 {
     pattern_t pt;
     size_t len = sizeof pt;
-    if (nvs_get_blob(s_nvs, key, &pt, &len) != ESP_OK || len != sizeof pt || !valid(&pt))
+    if (nvs_get_blob(s_nvs, key, &pt, &len) != ESP_OK) return false;
+    if (pt.version == 2 && len == PATTERN_V2_SIZE) {        // migrate: default look
+        pt.board = BOARD_DEFAULT; pt.texture = 0; pt.flags = FLAG_BEVEL;
+    } else if (pt.version != PATTERN_VERSION || len != sizeof pt) {
         return false;
+    }
+    if (!valid(&pt)) return false;
     UI.palette = pt.palette;
     UI.slot = pt.slot;
     memcpy(UI.slots, pt.slots, sizeof UI.slots);
     memcpy(UI.cells, pt.cells, sizeof UI.cells);
+    UI.board = pt.board;
+    UI.texture = pt.texture;
+    UI.bevel = (pt.flags & FLAG_BEVEL) != 0;
     return true;
 }
 

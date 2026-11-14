@@ -101,6 +101,12 @@ static void dsp_init(void)
     esp_lcd_panel_reset(s_panel);
     esp_lcd_panel_init(s_panel);
     esp_lcd_panel_invert_color(s_panel, true); // IPS ST7789 panels are usually inverted; flip if colours look wrong
+    // FRCTRL2 (C6h): column inversion (NLA=111) at 90 Hz (RTNA=05h). The chip
+    // default is dot inversion at 60 Hz, under which a 1 px checker background puts
+    // every light pixel on the same polarity and the whole screen pulses at 30 Hz
+    // ("shake"). Column inversion cancels that for all our textures, and 90 Hz
+    // pushes any remainder above flicker fusion. ST7789VW datasheet 9.2.18.
+    ESP_ERROR_CHECK(esp_lcd_panel_io_tx_param(io, 0xC6, (const uint8_t[]){ 0xE5 }, 1));
     esp_lcd_panel_disp_on_off(s_panel, true);
 
     s_line = heap_caps_malloc(LINE_PX * sizeof(uint16_t), MALLOC_CAP_DMA);

@@ -6,6 +6,7 @@
 #include "store.h"
 #include "menu.h"
 #include "palettes.h"
+#include "board_style.h"
 #include "board.h"
 #include "esp_log.h"
 #include "esp_timer.h"
@@ -14,7 +15,8 @@
 
 static const char *TAG = "ui";   // one log line per input event (BENCH.md)
 #define AUTOSAVE_QUIET_US 1000000   // no input for 1 s before an autosave may run
-ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 2 /* Artkal */ };
+ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 2 /* Artkal */,
+                  .board = BOARD_DEFAULT, .texture = 0, .bevel = true };
 
 // Default shortlist: white, black, red, yellow, blue where the palette has them.
 static const char *const DEFAULT_SLOTS[SLOTS] = { "S01", "S13", "S05", "S27", "S11" };
@@ -77,6 +79,16 @@ static void family_jump(int dir)
 
 static void draw_mode(event_t ev)
 {
+    switch (ev) {                      // focus follows the control used last
+    case EV_ENC_CW: case EV_ENC_CCW: case EV_BROWSE_CW: case EV_BROWSE_CCW:
+        UI.focus = FOCUS_PALETTE; break;
+    case EV_LEFT: case EV_RIGHT:
+        if (!UI.browsing) UI.focus = FOCUS_BOARD;    // while browsing: family jump
+        break;
+    case EV_UP: case EV_DOWN: case EV_CENTER: case EV_CENTER_LONG: case EV_ENC_PRESS:
+        UI.focus = FOCUS_BOARD; break;
+    default: break;
+    }
     switch (ev) {
     // D-pad: cursor (while browsing, left/right jump colour families instead)
     case EV_UP:    if (!UI.browsing) UI.cur_y = wrap(UI.cur_y - 1); break;
@@ -147,7 +159,7 @@ void ui_run(void)
         switch (UI.mode) {
         case MODE_DRAW:     draw_mode(ev);     break;
         case MODE_MENU:
-            if (menu_event(ev) == MENU_CLOSE) UI.mode = MODE_DRAW;
+            if (menu_event(ev) == MENU_CLOSE) { UI.mode = MODE_DRAW; UI.focus = FOCUS_BOARD; }
             break;
         }
 #if CONFIG_BEAD_PERF_LOG

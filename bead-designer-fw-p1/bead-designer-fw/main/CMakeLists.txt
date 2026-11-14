@@ -9,6 +9,7 @@ idf_component_register(
         "export.c"
         "text.c"
         "menu.c"
+        "board_style.c"
         "font_chicago.c"
         "palette_artkal_s.c"
         "board/board_freenove.c"
