@@ -602,7 +602,12 @@ module front_shell() {
 // =====================================================================
 module skirt() {
     difference() {
-        zext(Z_split - lip_h, Z_split + eps) difference() { cav2d(lip_clr); cav2d(lip_clr + lip_t); }
+        union() {
+            zext(Z_split - lip_h, Z_split + eps) difference() { cav2d(lip_clr); cav2d(lip_clr + lip_t); }
+            // 0.8 web behind the parting plane: ties the lip (inset lip_clr from the wall) to the back wall,
+            // otherwise the lip strips export as separate bodies (fix 2026-11-15)
+            zext(Z_split - eps, Z_split + 0.8) difference() { cav2d(-0.05); cav2d(lip_clr + lip_t); }
+        }
         for (p = top_boss_xy) zcyl(p[0], p[1], insert_boss_d + 4 * lip_clr, Z_split - lip_h - 1, Z_split + 1);
         // USB duct (left wall) and control-PCB header ends (both walls)
         zbox(cav_x0 - 1, usb_floor_x1 + 0.5, usb_y - usb_duct_hw - 0.5, usb_y + usb_duct_hw + 0.5, Z_split - lip_h - 1, Z_split + 1);
