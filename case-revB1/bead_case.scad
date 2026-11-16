@@ -227,23 +227,29 @@ thb_hole_clr = 0.5;      // radial clearance of the panel opening
 thb_hole_fallback = 16.0; // brief fallback if the computed value is not trusted
 
 /* [12. Cursor control D: Alps SKQUCAA010 (Adafruit 504) + printed cross cap] */
-skqu_body_w     = 10.0;  // datasheet "10 mm square"
-skqu_body_h     = 3.2;   // TBV: drawing "H3.2" (label not read)
-skqu_top_h      = 5.2;   // TBV: stem top above the PCB top
-skqu_stem_d     = 3.0;   // TBV: stem joint Dia (cap socket bore follows)
-skqu_dir_travel = 0.4;   // datasheet: 4-dir travel, measured 2.9 below the stem top
+// Dimensions from the Alps SKQUCAA010 drawing (style 3, snap-in), confirmed by the user's
+// caliper on the physical Adafruit 504 (2026-11-15). Heights are above the PCB top face.
+skqu_body_w     = 10.0;  // Alps: body square 10
+skqu_body_h     = 3.15;  // Alps: housing top
+skqu_collar_h   = 5.8;   // Alps: top of the round collar, where the square stem starts
+skqu_collar_d   = 7.0;   // user caliper 2026-11-15: raised metal collar Dia 7.0 (black plastic ring 6.0 across flats, ~6.2 diagonal); sizes the cap-rear relief
+skqu_top_h      = 10.0;  // Alps: stem top
+skqu_stem_w     = 3.2;   // Alps: square stem 3.2 x 3.2
+skqu_stem_trim  = 0;     // optional: mm cut off the stem top before fitting the cap (lowers the cap)
+skqu_dir_travel = 0.4;   // Alps: 4-direction travel, measured 2.9 below the stem top
 skqu_meas_below = 2.9;
-skqu_pivot_h    = skqu_top_h - skqu_meas_below; // TBV interpretation: stem pivots 2.9 below its top
-skqu_push       = 0.2;   // centre push travel
-dp_span         = 24.0;  // cross tip to tip
-dp_arm          = 8.0;   // arm width
-dp_clr          = 0.3;   // opening clearance per side (brief)
-dp_proud        = 1.5;   // cross top in front of the panel face
-dp_lip          = 1.2;   // flange beyond the cross outline (tilt over-travel stop)
+skqu_pivot_h    = 1.23;  // Alps: centre of stem rotation
+skqu_push       = 0.2;   // Alps: centre-push travel (user: clicks well under 1 mm)
+dp_span         = 23.2;  // cross tip to tip   } opening stays 24.6 x 8.6 with the larger clearance
+dp_arm          = 7.2;   // arm width          }
+dp_clr          = 0.7;   // opening clearance per side (side shift at the face is about 0.5 at actuation)
+dp_skin         = 0.8;   // cap material in front of the stem top
+dp_lip          = 1.9;   // flange beyond the cross outline (1.2 over the panel; tilt over-travel stop)
 dp_fl_t         = 0.8;
 dp_fl_rin       = 7.6;   // flange ring starts outside the switch body corners (7.07)
-dp_sock_depth   = 1.4;   // TBV: socket over the stem joint (press fit + glue)
-dp_sock_od      = 5.0;
+dp_sock_fit     = 0.1;   // square socket over the stem: 3.3 square, press fit + a drop of glue
+dp_relief       = 0.8;   // cap rear stops this far in front of the collar top (tilt + push + margin)
+dp_relief_clr   = 0.5;   // radial clearance of the collar relief
 dp_stop_margin  = 0.15;  // flange touches the panel this much after the switch actuates
 dp_over_deg     = 2.0;   // tilt allowed past actuation for the checks
 
@@ -425,20 +431,24 @@ thb_top_Z   = cp_top_Z - thb_h_top;                       // stick top
 thb_dome_Z  = cp_top_Z - (thb_h_top - thb_shaft_h);       // housing top
 
 // D: cross cap
-skqu_top_Z   = cp_top_Z - skqu_top_h;                     // 3.3
-skqu_pivot_Z = cp_top_Z - skqu_pivot_h;                   // 6.2
-skqu_body_Z0 = cp_top_Z - skqu_body_h;
-dp_act_deg   = atan(skqu_dir_travel / skqu_meas_below);   // tilt at actuation
+skqu_top_Z    = cp_top_Z - (skqu_top_h - skqu_stem_trim);  // -1.5: the stem stands proud of the panel face
+skqu_collar_Z = cp_top_Z - skqu_collar_h;                  // 2.7
+skqu_pivot_Z  = cp_top_Z - skqu_pivot_h;                   // 7.27
+skqu_body_Z0  = cp_top_Z - skqu_body_h;                    // 5.35
+dp_lever     = skqu_top_h - skqu_meas_below - skqu_pivot_h; // 5.87: pivot to the travel measuring point
+dp_act_deg   = atan(skqu_dir_travel / dp_lever);           // tilt at actuation (3.9 deg)
 dp_max_deg   = dp_act_deg + dp_over_deg;
 dp_fl_r      = dp_span / 2 + dp_lip;                      // flange tip radius on an arm axis
 dp_rise_act  = dp_fl_r * sin(dp_act_deg) - (skqu_pivot_Z - panel_t) * (1 - cos(dp_act_deg));
 dp_fl_Z0     = panel_t + dp_rise_act + dp_stop_margin;    // flange front face (rest)
 dp_fl_Z1     = dp_fl_Z0 + dp_fl_t;
-dp_top_Z     = -dp_proud;
-dp_sock_Z1   = skqu_top_Z + dp_sock_depth;                // cap rear at the centre
-dp_cap_len   = dp_sock_Z1 - dp_top_Z;
+dp_top_Z     = skqu_top_Z - dp_skin;                      // cross top
+dp_proud     = -dp_top_Z;                                 // cross top in front of the panel face
+dp_sock_Z1   = skqu_collar_Z - dp_relief;                 // socket open end = cap rear over the collar
+dp_sock_od   = skqu_collar_d + 2 * dp_relief_clr;         // collar relief Dia in the cap rear
+dp_cap_len   = dp_fl_Z1 - dp_top_Z;
 dp_lat_front = skqu_pivot_Z * sin(dp_act_deg);            // cross side shift at the front face, at actuation
-dp_sink      = (dp_span / 2) * sin(dp_act_deg) - dp_proud; // pressed arm tip behind the front face (>0)
+dp_sink      = (dp_span / 2) * sin(dp_act_deg) - dp_proud; // pressed arm tip behind the front face (<0: stays proud)
 
 // ---------------- design-rule checks (re-run by validate_case.py for both variants) ----------------
 assert(ctrl == "J" || ctrl == "D", "ctrl must be \"J\" or \"D\"");
@@ -475,6 +485,9 @@ assert(back_in_Z >= idc_fold_Z + 0.3, "back wall on the IDC fold");
 assert(ctrl != "J" || thb_frame_h <= enc_body_h - 0.2, "THB001P frame reaches the panel");
 assert(ctrl != "D" || dp_fl_Z0 - panel_t >= skqu_push + 0.2, "d-pad flange gap smaller than the centre-push travel");
 assert(ctrl != "D" || dp_fl_Z0 > skqu_top_Z, "d-pad flange in front of the 5-way stem top");
+assert(ctrl != "D" || dp_sock_Z1 - skqu_top_Z >= 2.0, "d-pad socket grips less than 2.0 of the stem");
+assert(ctrl != "D" || dp_sock_Z1 <= dp_fl_Z0, "d-pad socket rear behind the flange");
+assert(ctrl != "D" || dp_lat_front <= dp_clr, "d-pad side shift at the face exceeds the opening clearance");
 assert(ctrl != "D" || case_x0 - (cur_xy[0] - dp_span / 2 - dp_clr) <= -min_wall, "cross opening within 1.0 of the left face");
 
 // =====================================================================
@@ -669,9 +682,11 @@ module dpad_cap() {
                 intersection() { offset(delta = dp_lip) cross2d(); cav2d(0.3); }
                 translate(cur_xy) circle(r = dp_fl_rin);
             }
-            zcyl(cur_xy[0], cur_xy[1], dp_sock_od, dp_fl_Z0, dp_sock_Z1);
         }
-        zcyl(cur_xy[0], cur_xy[1], skqu_stem_d + 0.1, skqu_top_Z, dp_sock_Z1 + 1);
+        // square socket over the stem (blind at the front, dp_skin thick)
+        zext(skqu_top_Z, dp_sock_Z1 + eps) translate(cur_xy) square(skqu_stem_w + dp_sock_fit, center = true);
+        // relief over the round collar
+        zcyl(cur_xy[0], cur_xy[1], dp_sock_od, dp_sock_Z1, dp_fl_Z1 + 1);
         // 0.3 x 0.3 edge rebate on the cross top (breaks the sharp edge)
         translate([0, 0, mz(dp_top_Z) - 0.3]) linear_extrude(height = 0.3 + eps)
             difference() { offset(delta = 1) cross2d(); offset(delta = -0.3) cross2d(); }
@@ -770,7 +785,8 @@ module ghost_control() {
     } else color([0.3, 0.3, 0.35], ghost_alpha) {
         zbox(cur_xy[0] - skqu_body_w / 2, cur_xy[0] + skqu_body_w / 2, cur_xy[1] - skqu_body_w / 2, cur_xy[1] + skqu_body_w / 2,
              skqu_body_Z0, cp_top_Z);
-        zcyl(cur_xy[0], cur_xy[1], skqu_stem_d, skqu_top_Z, skqu_body_Z0);
+        zcyl(cur_xy[0], cur_xy[1], skqu_collar_d, skqu_collar_Z, skqu_body_Z0);
+        zext(skqu_top_Z, skqu_collar_Z) translate(cur_xy) square(skqu_stem_w, center = true);
     }
 }
 module ghost_knob() {

@@ -1,5 +1,9 @@
 # Parts order rev B: Option J (thumbstick) + Option D (5-way) prototyping (2026-11-08)
 
+> **Corrected 2026-11-15.** Option D (Adafruit 504 D-pad) is the build; Option J is parked, so its lines are deferred (qty 0).
+> Fixes from the Rev B review: AWHW header qty 1 → 2; added the C317 10 nF line; screws now match the case-revB1 BOM
+> (2× M2×14 SHCS, 2× M2×14 countersunk, 1× M2×6 SHCS); M2×10 dropped; the 0.8 mm nylon washers are not used by case B.1.
+
 Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you already own are left out.
 
 ## Read first: what could and could not be verified
@@ -20,26 +24,28 @@ Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you alre
 
 | # | Item | Mfr | MPN | Supplier | Supplier PN | URL | Qty | Unit price | Stock | Datasheet / key spec |
 |---|------|-----|-----|----------|-------------|-----|-----|-----------|-------|----------------------|
-| 1 | Thumbstick with push (Option J) | C&K | THB001P | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/c-k/THB001P/11687191 | 2 | TBV (Mouser.com: **US$3.52** @1, US$3.16 @5) | DigiKey TBV; Mouser.com 5,893, 14 wk lead | https://www.littelfuse.com/assetdocs/littelfuse-c-k-rotary-thb-series-datasheet?assetguid=e3458825-585e-4962-9461-54efaec08a2f (2 × 10 kΩ, centre push, THT) |
+| 1 | Thumbstick with push (Option J) **DEFERRED: J parked** | C&K | THB001P | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/c-k/THB001P/11687191 | 0 (was 2) | TBV (Mouser.com: **US$3.52** @1, US$3.16 @5) | DigiKey TBV; Mouser.com 5,893, 14 wk lead | https://www.littelfuse.com/assetdocs/littelfuse-c-k-rotary-thb-series-datasheet?assetguid=e3458825-585e-4962-9461-54efaec08a2f (2 × 10 kΩ, centre push, THT) |
 | 1-M | Same, Mouser alternative | C&K | THB001P | Mouser | 611-THB001P | https://www.mouser.com/en/ProductDetail/CK/THB001P?qs=OlC7AqGiEDlMaVQ%2FEBrivA%3D%3D | (2) | **US$3.52** | 5,893 | as above |
 | 1a | Thumbstick cap | — | — | — | — | — | 0 | — | — | No separate cap found. Mouser, SnapEDA and DigiKey list no accessory. Datasheet shows a 7.75 mm plastic shaft; whether a cap is needed or sold separately is TBV |
-| 2 | Thumbstick fallback | Alps Alpine | RKJXV122400R | Mouser CA | 688-RKJXV122400R | https://www.mouser.ca/ProductDetail/Alps-Alpine/RKJXV122400R/?qs=GedFDFLaBXEbB%252ByoOVwLBg%3D%3D | (2, only if needed) | **CA$4.72** @1 | 7,966, 19 wk lead | https://www.mouser.com/datasheet/2/15/RKJXK-1370937.pdf (23° max, 10 kΩ). Not on DigiKey |
+| 2 | Thumbstick fallback **DEFERRED: J parked** | Alps Alpine | RKJXV122400R | Mouser CA | 688-RKJXV122400R | https://www.mouser.ca/ProductDetail/Alps-Alpine/RKJXV122400R/?qs=GedFDFLaBXEbB%252ByoOVwLBg%3D%3D | (2, only if needed) | **CA$4.72** @1 | 7,966, 19 wk lead | https://www.mouser.com/datasheet/2/15/RKJXK-1370937.pdf (23° max, 10 kΩ). Not on DigiKey |
 | 3 | 5-way nav switch, THT (Option D) | Adafruit | 504 | DigiKey CA | TBV (Adafruit parts are `1528-…-ND`, exact PN TBV) | https://www.digikey.ca/en/products/detail/adafruit-industries-llc/504/26735579 | 2 | TBV (Mouser.com: **US$1.95**) | DigiKey "ships today", qty TBV; Mouser.com 225 | SKQUCAA010 drawing: https://core-electronics.com.au/attachments/localcontent/SKQUCAA010-ALPS_1857261b06a.pdf |
 | 3-M | Same, Mouser alternative | Adafruit | 504 | Mouser | 485-504 | https://www.mouser.com/ProductDetail/485-504 | (2) | **US$1.95** | 225, 1 wk lead | as above |
 | 4 | Knob Ø19.05, black matte, no indicator, 6 mm bore | Kilo International | OEJNI-75-4-7 | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/kilo-international/OEJNI-75-4-7/5970395 | 2 | TBV | TBV | Listing: "Knurled, Diamond Knob 0.236" (6.00mm) Shaft … Metal Black Matte". Not found at Mouser |
 | 5 | Pre-made 34-pos IDC cable, socket to socket, 6" (152.4 mm), grey, with strain relief and polarising key | Assmann WSW | H3DDS-3406G | DigiKey CA | TBV (search `H3DDS-3406G`) | TBV (search H3DDS-3406G on digikey.ca; DigiKey description "IDC CBL - HHKR34S/AE34G/HHKR34S") | 1 | TBV | TBV | Replaces H3DDH-3406G (discontinued). Same HHKR34 socket with strain relief + key and AE34G grey ribbon; only the contact plating differs (H3DDH = HHKR34H gold, H3DDS = HHKR34S tin). 2.54 mm connector pitch, 1.27 mm cable pitch. Length chart: media.digikey.com/pdf/Data%20Sheets/Digi-Key%20PDFs/Ribbon_Cable_Assembly_Length.pdf |
-| 6 | 2×17 shrouded box header, THT, straight | Assmann WSW | AWHW-34G-0202-T | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/assmann-wsw-components/AWHW-34G-0202-T/5224934 | 1 | TBV | TBV | "Connector Header Through Hole 34 position 0.100" (2.54mm)" |
+| 6 | 2×17 shrouded box header, THT, straight | Assmann WSW | AWHW-34G-0202-T | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/assmann-wsw-components/AWHW-34G-0202-T/5224934 | 2 (one per control PCB built, plus a spare / second D board) | TBV | TBV | "Connector Header Through Hole 34 position 0.100" (2.54mm)" |
 | 7 (alt to 5) | IDC socket 34-pos, centre-bump key, **with strain relief** | 3M | 89134-0103 | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/3m/89134-0103/2767072 | (2) | TBV | TBV | 3M 891 series: suffix "-0103" = centre-bump key + strain relief (https://docs.rs-online.com/208d/0900766b813e073f.pdf) |
 | 7b (alt to 5) | 34-way 1.27 mm grey ribbon, ~150 mm | 3M (e.g. 3302 series) | TBV | DigiKey CA | TBV | — | (1 ft) | TBV | TBV | Not looked up in detail. Needed only if you crimp your own instead of buying #5 |
-| 8 | M2 nylon washer, 0.8 mm thick | Essentra | 16M02050080 | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/essentra-components/16M02050080/10299172 | 20 | TBV | TBV | "M2 Flat Washer 0.031" (0.80mm) Thick Nylon". OD probably 5.0 mm (read from the PN, TBV). Thinner option: Essentra MFW010A, 0.30 mm (https://www.digikey.ca/en/products/detail/essentra-components/MFW010A/4105387) |
+| 8 | M2 nylon washer, 0.8 mm thick **OPTIONAL: not used by case B.1** | Essentra | 16M02050080 | DigiKey CA | TBV | https://www.digikey.ca/en/products/detail/essentra-components/16M02050080/10299172 | 0 (was 20) | TBV | TBV | "M2 Flat Washer 0.031" (0.80mm) Thick Nylon". OD probably 5.0 mm (read from the PN, TBV). Thinner option: Essentra MFW010A, 0.30 mm (https://www.digikey.ca/en/products/detail/essentra-components/MFW010A/4105387) |
 | 9 | M2 heat-set insert, brass, M2 × 4 mm, Ø3.2 mm hole | ruthex | RX-M2x4 (GE-M2x04-001), 70 pcs | **Amazon.ca fallback** (none found at DigiKey or Mouser) | ASIN TBV | Spec reference: https://www.3djake.com/ruthex/threaded-insert-m2-70-pieces | 1 pack | TBV (3DJake US$8.36 ex-VAT, reference only) | TBV | L 4.0 mm, OD 3.6 mm, hole Ø3.2 mm (3DJake table, columns not labelled) |
-| 10 | M2 × 6 socket-head cap screw | generic | — | **Amazon.ca or Bambu Lab CA store fallback** (no DigiKey or Mouser listing found) | — | https://us.store.bambulab.com/products/m2-socket-head-cap-machine-screws-shcs | 10 (pack of 20) | TBV | TBV | Bambu: 4.8-grade carbon steel, 4–30 mm lengths, packs of 20 up to 16 mm |
-| 11 | M2 × 10 socket-head cap screw | generic | — | as #10 | — | as #10 | 10 (pack of 20) | TBV | TBV | as #10 |
+| 10 | M2 × 6 socket-head cap screw (ISO 4762), H3 | generic | — | **Amazon.ca or Bambu Lab CA store fallback** (no DigiKey or Mouser listing found) | — | https://us.store.bambulab.com/products/m2-socket-head-cap-machine-screws-shcs | 1 per device (pack of 20) | TBV | TBV | Bambu: 4.8-grade carbon steel, 4–30 mm lengths, packs of 20 up to 16 mm |
+| 11 | M2 × 14 socket-head cap screw (ISO 4762), H1/H2 through back shell + PCB | generic | — | as #10 | — | as #10 | 2 per device (pack of 20) | TBV | TBV | Replaces the unused M2 × 10. Bambu packs go up to 16 mm |
+| 12 | M2 × 14 countersunk screw (ISO 10642), back-shell top corners | generic | — | Amazon.ca fallback | — | — | 2 per device (pack) | TBV | TBV | Head flush in the back shell; into the front-shell inserts |
+| 13 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET | C317C103K5R5TA | DigiKey CA | TBV (search `C317C103K5R5TA`) | — | 2 spare (D needs 10, 10 are owned; +10 per extra D board; +8 if J is revived) | TBV | TBV | Stand upright on the bottom side |
 
 ## Totals
 
-- **Verified prices only:** THB001P 2 × US$3.52 = US$7.04, plus Adafruit 504 2 × US$1.95 = US$3.90.
-  **Subtotal US$10.94 (Mouser.com, USD)**, before shipping, duty and FX.
+- **Verified prices only:** Adafruit 504 2 × US$1.95 = **US$3.90 (Mouser.com, USD)**. (THB001P, 2 × US$3.52, is deferred with Option J.)
+  Subtotal, before shipping, duty and FX.
 - Every other line (Kilo knobs, IDC cable, box header, washers, inserts, screws) is **TBV**, so no grand total is given.
   Get it by bulk-adding `digikey-revB.csv` into a digikey.ca cart.
 - Fallback RKJXV122400R, if used: 2 × CA$4.72 = CA$9.44 at mouser.ca.
@@ -66,7 +72,7 @@ Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you alre
    sockets facing the same way: confirm it with a continuity check (TBV). Consider ordering 2 cables as a spare.
 5. **Fasteners.** No M2 heat-set inserts or M2 socket-cap screws were found at DigiKey or Mouser (McMaster excluded as
    requested). Essentra nylon washers are on DigiKey. Inserts and screws fall back to Amazon.ca (ruthex RX-M2x4 70-pack;
-   any M2 × 6 and M2 × 10 SHCS packs) or the Bambu Lab Canada store.
+   M2 × 6 and M2 × 14 SHCS packs, M2 × 14 countersunk) or the Bambu Lab Canada store.
 
 ## Sources
 - SKQUCAA010 NLM: https://my.element14.com/alps/skqucaa010/switch-5-way-0-05a-12vdc-tht/dp/1435775 ; EOL notice: https://www.farnell.com/datasheets/3565107.pdf

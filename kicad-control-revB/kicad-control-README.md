@@ -55,7 +55,8 @@ Coordinates are front view in mm. The top side faces the front panel. KiCad Y = 
 | 24 | GPIO42 | BTN_SIDE | ENC_SW |
 | 25 | GPIO41 | BTN_MENU | NAV_RIGHT |
 | 16, 30, 32 | 3V3 | +3V3 | +3V3 |
-| 1, 4, 18, 33, 34 | GND | GND | GND |
+| 1, 18, 34 | GND | GND | GND |
+| 4, 33 | (GND on J8) | GND | **NC** (reversal guard: a 180-deg flipped ribbon would put pin 4 on USB_5V and pin 33 on BAT; changed 2026-11-15) |
 | other | - | no-connect | no-connect |
 
 Signal conditioning:
@@ -63,7 +64,7 @@ Signal conditioning:
 - **Switches** (encoder push, MENU, SIDE, stick push, every 5-way line): 10k pull-up to 3V3 and 10 nF to GND. Each switch closes to GND.
 - **Stick (J):** pot ends go to 3V3 (pins 1 and 1'/4) and GND (pins 3 and 3'/6). Wipers (pins 2 and 2'/5) go to the ADC pins, each with 10 nF to GND.
 - **Stick push (J):** pads a (7) and d (10) are the diagonal pins of the 4-pin switch, which are opposite contacts on any 4-pin tact switch. Pads b and c are left open.
-- **5-way (D):** A=UP, B=RIGHT, C=DOWN, D=LEFT, 6=centre, and 4=COM to GND. The physical A..D direction is TBV; firmware can remap it.
+- **5-way (D):** physical directions per the Alps top view: A (pin 1) = UP, B (pin 2) = LEFT, C (pin 3) = DOWN, D (pin 5) = RIGHT, 6 = centre, 4 = COM to GND. The PCB net names on pins 2 and 5 are crossed (pin 2 = NAV_RIGHT, pin 5 = NAV_LEFT); firmware `board.h` swaps them (2026-11-15), so the board was not respun.
 
 Resistor and capacitor references:
 
@@ -93,7 +94,7 @@ Owned stock: PEC11R x5, B3F-4055 x4, B3F-1000 x4, PTS645VL31 x10, 10k x25, C317 
 | 10k 1% 0.25 W axial | YAGEO MFR-25FRF52-10K or equivalent | 8 | 12 | 20 of 25 | 0 |
 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET C317C103K5R5TA | 8 | 10 | 10 of 10 | **8** (+2 spare) |
 | Knob (off-board) | Kilo OEJNI-75-4-7 | 1 | 1 | 0 | 2 |
-| 34-way IDC ribbon, F/F | Assmann H3DDH-3406G | 1 | 1 | 0 | 1-2 (one per assembled device) |
+| 34-way IDC ribbon, F/F | Assmann H3DDS-3406G (replaces discontinued H3DDH) | 1 | 1 | 0 | 1-2 (one per assembled device) |
 | M2 screws | M2x14 SHCS (H1, H2), M2x6 SHCS (H3) | 2 + 1 | 2 + 1 | 0 | per case BOM |
 
 The 4 owned B3F-4055 are no longer used (see deviation 1).
@@ -103,7 +104,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
 1. **Bottom-side passives first** (R*, C*): insert from the bottom and solder on the top.
    - Trim the leads to 1.0 mm or less on the top side.
    - D only: anything under the cross cap must stay at 1.5 mm or less above the top face. The cross area is drawn on Dwgs.User.
-   - Seat the C317s flat. Their height (up to about 6.6 mm) is fine on the bottom.
+   - Stand the C317s upright, body flush to the board (do not bend them over). Their height (up to about 6.6 mm) is fine on the bottom.
 2. Top-side low parts: TP1/TP2 are bare pads, so nothing to fit.
 3. MENU SW1 (B3F-1000). Trim its bottom-side leads flush, because they sit under the J1 shroud edge.
 4. SIDE SW2. Push it against the board so the actuator tip ends at X 43.20.

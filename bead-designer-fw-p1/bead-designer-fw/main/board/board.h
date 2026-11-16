@@ -16,8 +16,12 @@
 //      via header J8 ----
 #define PIN_DPAD_UP     38  // J8-19
 #define PIN_DPAD_DOWN   39  // J8-21 (MTCK: no external JTAG while in use)
-#define PIN_DPAD_LEFT   40  // J8-23
-#define PIN_DPAD_RIGHT  41  // J8-25
+// LEFT/RIGHT are deliberately crossed against the PCB net names. Alps SKQUCAA010
+// top view: B (pin 2) = LEFT, D (pin 5) = RIGHT, but control PCB Rev B wires
+// pad 2 to net NAV_RIGHT (J8-25) and pad 5 to NAV_LEFT (J8-23). Fixed here
+// rather than respinning the board (2026-11-15).
+#define PIN_DPAD_LEFT   41  // J8-25, net NAV_RIGHT = SW3 pin 2 (B, physical left)
+#define PIN_DPAD_RIGHT  40  // J8-23, net NAV_LEFT  = SW3 pin 5 (D, physical right)
 #define PIN_DPAD_CENTER 1   // J8-3
 #define PIN_ENC_A       7   // J8-13
 #define PIN_ENC_B       8   // J8-15

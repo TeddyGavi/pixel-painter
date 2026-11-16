@@ -5,7 +5,7 @@ Coordinates follow `layout-revB.md`. Waveshare data comes from `ws241-mechanical
 
 | File | What it is |
 |---|---|
-| `bead_case.scad` | The model: all parameters, derived values, 35 `assert()` design-rule checks and every part. Variant set by `ctrl = "J"` (thumbstick) or `"D"` (5-way + cross cap). |
+| `bead_case.scad` | The model: all parameters, derived values, 38 `assert()` design-rule checks and every part. Variant set by `ctrl = "J"` (thumbstick) or `"D"` (5-way + cross cap). |
 | `validate_case.py` | Static checker. It parses the .scad, checks every identifier, then for **both** variants evaluates the parameters, reruns the asserts and prints a clearance table. Python 3 only. |
 | `validate.log` | Output of the last validator run |
 
@@ -32,7 +32,7 @@ Coordinates follow `layout-revB.md`. Waveshare data comes from `ws241-mechanical
 | `"key_cap"` | Key pin for PWR/BOOT/RST | 3 (+2) |
 | `"menu_cap"` | MENU cap Ø9 (hole Ø9.4), flange Ø12 x 1.0 with a flat towards H3, Ø3 nub offset 1.5 onto the B3F-1000 plunger | 1 (+1) |
 | `"side_cap"` | SIDE cap Ø3.6, 0.8 flange | 1 (+2) |
-| `"dpad_cap"` | **ctrl D only**: cross cap 24 x 8, flange ring, socket onto the 5-way stem | 1 (+1) |
+| `"dpad_cap"` | **ctrl D only**: cross cap 23.2 x 7.2, flange ring, square 3.3 socket onto the 5-way stem | 1 (+1) |
 | `"print_plate"` | Every printed part of the selected variant laid flat | overview |
 | `"assembly"` | Shells + ghosts (Waveshare + glass, control PCB with the chosen cursor part, knob, battery, IDC + ribbon). F5. | n/a |
 
@@ -52,7 +52,7 @@ Only the **front shell** differs between J and D (round Ø14.15 opening or cross
 | Part | Process / material | Notes |
 |---|---|---|
 | Front + back shell, key plate | **MJF PA12**, grey or dyed black | Thinnest walls are 1.0: key-plate rail ledge, USB frame/duct, top insert skin and wall, back-screw columns, right wall behind the SIDE counterbore. The 1.1 ledge behind the glass is the glass seat; ask for no bead-blasting on the ledge face. Upload each STL separately. |
-| D-pad cap, MENU cap | MJF PA12 or SLA | D-pad: printed top-face down. Its socket (Ø3.1 x 1.4) is sized for a press-fit + glue onto the 5-way stem (stem shape TBV). |
+| D-pad cap, MENU cap | MJF PA12 or SLA | D-pad: printed top-face down. Its square socket (3.3 x 3.3 x 3.4 deep, 0.8 skin in front) is a press fit + glue onto the 3.2 square stem. |
 | SIDE cap, key pins | **SLA** (e.g. JLC 9000R) | SIDE flange 0.8 thick (MJF minimum, SLA preferred for the Ø3.6 stem); Ø1.6 key pins are below reliable MJF feature size. |
 | First fit test | SLA resin | Checks glass flush, stick/d-pad opening, knob stack, ribbon fold. Use glue-in or self-tapping instead of heat-set inserts in resin. |
 
@@ -94,7 +94,7 @@ Total shell screws: 4 (2 top countersunk + 2 through the control PCB at H1/H2), 
 - **SIDE cap (B.1):** the KiCad board puts the SW2 actuator tip at X 43.20 (PCB edge + 0.20) and its centre at Y -23.0. With 0.25 pre-travel the cap face is at 43.45, which leaves exactly the full **0.8 flange** with 1.0 of right wall behind the counterbore. The flange is still derived (`side_flange_t`); a tip further out thins it again.
 - **MENU cap (B.1):** the B3F-1000 sits at (18.25, -18.1), only 6.9 from the H3 boss (Ø5.6 at (18.25, -25.0)). A Ø9 cap centred on the switch would put its panel hole and flange on that boss. The cap axis is therefore moved +Y to **(18.25, -16.6)**. The axis is derived (`menu_cap_xy`) so the flange flat (5.3 from the axis, 0.6 beyond the hole) is 0.3 from the boss, and the boss also keys the cap against rotation. A Ø3.0 nub, offset 1.5 to -Y, lands on the centre of the Ø3.5 plunger (top Z 4.2 = PCB top 8.5 − 4.3, Omron B3F table) with a 0.1 gap, so the nub is 1.1 long. The flange rear (Z 3.0) is 2.0 in front of the switch body. The 1.5 offset puts a small moment on the cap. If it feels rocky, shorten the proud height or drop to a Ø8 cap (offset 1.0).
 - **J opening Ø14.15 (fallback Ø16).** The THB001P drawing is an image the tools could not read. The datasheet text gives 26° max tilt and a 7.75 plastic shaft. The 19.45 height and the Ø13.15 and Ø4 callouts come from the earlier parts survey and are interpreted as stick top, dome Ø and shaft Ø (TBV). The dome Ø13.15 + 2 x 0.5 sets the opening. At 26° the Ø4 shaft sweeps only r 2.96 across the panel band (pivot assumed 8.0 above the PCB, TBV). The stick top stands 10.95 above the face without a cap. The tilted tip clears the knob by 9.4. If the dome turns out to be larger, set `thb_hole_d` directly or use the 16 fallback.
-- **D cross cap (derived).** It assumes the SKQU stem pivots 2.9 below its top (TBV), so actuation is at atan(0.4/2.9) = 7.85°. The flange ring (r ≥ 7.6, clear of the switch body) is the over-travel stop. Its rest gap of 1.91 behind the panel touches 0.15 after actuation and before +2° overtravel. The socket sits 1.4 deep over the stem top (Z 3.3). Cap length 6.2. **The cross shifts 0.85 sideways at the front face when it tilts, against the 0.3 clearance from the brief** (warning). Opening the clearance to 0.9 would leave only 0.85 of skin at the left face (cross tip X −7.0 next to the case at −8.75). So 0.3 stays until the real pivot is measured. If the cap binds, move the cursor centre ≥ 0.6 to +X and set `dp_clr = 0.9`. A pressed arm tip ends 0.14 behind the face. Control-PCB parts under the cross + lip must stay ≤ 1.5 tall.
+- **D cross cap (updated 2026-11-15 to the Alps SKQUCAA010 drawing, confirmed with calipers on the Adafruit 504).** Stem top 10.0 above the PCB (Z −1.5, so the stem stands 1.5 in front of the panel face), square stem 3.2 from the collar top at 5.8, housing 3.15, pivot 1.23 above the PCB, 0.4 travel measured 2.9 below the top, so actuation is atan(0.4/5.87) = 3.9°; centre push 0.2. The cap covers the stem with 0.8 skin, so the cross stands **2.3** proud. Set `skqu_stem_trim` (mm cut off the stem) to lower it; the socket must keep ≥ 2.0 of grip. The socket grips 3.4 of the stem; the cap rear stops 0.8 in front of the collar with a Ø8.0 relief (collar Ø7.0 TBV, not dimensioned). Side shift at the face is 0.49 at actuation against `dp_clr` 0.7. The span and arm were reduced to 23.2 x 7.2 so the panel opening stays 24.6 x 8.6. The flange gap is 1.06 and it stops the tilt 0.15 after actuation. Cap length 6.2. A pressed arm tip stays 1.5 in front of the face.
 - **Battery:** held by tape on the Waveshare rear plus a top-end fence on the back shell. The ribbon crosses the other three sides, so there are no full bay ribs.
 
 ## 7. TBV parameters (update after measuring, then rerun the validator)
@@ -106,7 +106,7 @@ Total shell screws: 4 (2 top countersunk + 2 through the control PCB at H1/H2), 
 | P | `nb_conn_x0`, `nb_conn_Z0`, `ins_tilt` | −4.9, 6.0, 12° | The left-edge part beyond the glass: is it real, and how deep? Is the tilt insertion OK? |
 | S | `side_act_len`, `side_act_h` | 0.20 (KiCad, tip X 43.20), 3.5 | SW2 tip on the soldered board (push the switch fully home). Beyond 43.20 the flange thins below 0.8 |
 | J1 | `thb_h_top`, `thb_dome_d`, `thb_shaft_d`, `thb_pivot_h`, `thb_frame_h`, `thb_frame_w/l` | 19.45, 13.15, 4.0, 8.0, 6.0, 17/21 | THB001P drawing. Frame must stay ≤ 6.3 above the PCB |
-| D1 | `skqu_top_h`, `skqu_body_h`, `skqu_stem_d`, `skqu_pivot_h` | 5.2, 3.2, 3.0, top − 2.9 | SKQUCAA010 drawing. These set the cap socket, flange gap and side shift |
+| D1 | `skqu_collar_d` | 7.0 | Collar Ø (the only SKQU value not on the Alps drawing). Only sizes the relief in the cap rear (Ø8.0). The other SKQU values were confirmed on 2026-11-15 |
 | E | `enc_body_h`, `enc_bush_len`, `enc_washer_t`, `enc_nut_af` | 6.5, 5.0, 0.5, 10.0 | PEC11R. `enc_body_h` sets the whole control-PCB depth |
 | K | `knob_cb_h`, `knob_setscrew_from_top`, `enc_flat_len` | 4.0, 7.2, 7.0 | Kilo OEJ-75 drawing (OEJ-90 values used) |
 | M | `menu_plunger_h`, `menu_plunger_d`, `menu_sw_body_h` | 4.3 (Omron table), 3.5, 3.5 (TBV) | B3F-1000 (Rev B.1). Height 4.3 sets the nub length 1.1; body height sets the 2.0 flange travel room |

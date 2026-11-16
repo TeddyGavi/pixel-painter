@@ -3111,6 +3111,14 @@
 		(uuid "65175000-f6ec-50df-94ab-867cf836b734")
 	)
 	(no_connect
+		(at 71.12 83.82)
+		(uuid "3679f887-6c4e-46bd-8378-a50d1cd81c3a")
+	)
+	(no_connect
+		(at 58.42 121.92)
+		(uuid "c08566c0-b08a-4353-af87-d8b9ad6e8d4f")
+	)
+	(no_connect
 		(at 71.12 81.28)
 		(uuid "925faa89-3b00-5572-9320-dda26f437473")
 	)
@@ -3145,7 +3153,7 @@
 		)
 		(uuid "d0181ebd-3c82-5799-a3dc-ffa614da0c9e")
 	)
-	(text "(J8-4)  GND"
+	(text "(J8-4)  NC: GND removed, reversed-ribbon guard (lands on J8-31 USB_5V)"
 		(exclude_from_sim no)
 		(at 91.44 83.82 0)
 		(effects
@@ -3155,93 +3163,6 @@
 			(justify left)
 		)
 		(uuid "60f7390c-f23d-5209-bd45-240f4e302c6a")
-	)
-	(wire
-		(pts
-			(xy 71.12 83.82) (xy 76.2 83.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f2a79887-b2b7-5c3e-81ac-5d49c81177ac")
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 76.2 83.82 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "d760fbf7-1331-515c-8e4d-6ac960abddf8")
-		(property "Reference" "#PWR02"
-			(at 83.82 83.82 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 81.28 83.185 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 76.2 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 76.2 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 76.2 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "2bf7aa68-6349-5212-9c1d-fb04d716b1e2")
-		)
-		(instances
-			(project "control"
-				(path "/6f4e348e-e661-5ae5-90d5-8f4ef18eb6dc"
-					(reference "#PWR02")
-					(unit 1)
-				)
-			)
-		)
 	)
 	(text "IO2  (J8-5)"
 		(exclude_from_sim no)
@@ -4139,7 +4060,7 @@
 			)
 		)
 	)
-	(text "GND  (J8-33)"
+	(text "NC: GND removed, reversed-ribbon guard (lands on J8-2 BAT)  (J8-33)"
 		(exclude_from_sim no)
 		(at 35.56 121.92 0)
 		(effects
@@ -4149,93 +4070,6 @@
 			(justify right)
 		)
 		(uuid "5c65af92-cdde-5a99-8aac-5047032edbc0")
-	)
-	(wire
-		(pts
-			(xy 58.42 121.92) (xy 53.34 121.92)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "edacba03-907d-5d56-817a-5b9c535e2bd3")
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 53.34 121.92 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "f879b294-7df9-5b2e-9c26-17c31d794cac")
-		(property "Reference" "#PWR07"
-			(at 45.72 121.92 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 48.26 121.285 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 53.34 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 53.34 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 53.34 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "bb94096c-2d7b-5a16-8a5a-cffe7fa5fbc3")
-		)
-		(instances
-			(project "control"
-				(path "/6f4e348e-e661-5ae5-90d5-8f4ef18eb6dc"
-					(reference "#PWR07")
-					(unit 1)
-				)
-			)
-		)
 	)
 	(text "(J8-34)  GND"
 		(exclude_from_sim no)
