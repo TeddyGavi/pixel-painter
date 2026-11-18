@@ -19,6 +19,7 @@
 // D-pad centre (or left, except in colour lists) = back; MENU = close.
 // In colour lists left/right jump colour families.
 #include "menu.h"
+#include "board.h"
 #include "ui.h"
 #include "palettes.h"
 #include "store.h"
@@ -29,7 +30,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define VISIBLE_ROWS 9     // row units below the title band; must match render.c
+#define VISIBLE_ROWS ((DISPLAY_H - 32) / 32)  // row units below the title band; = render.c MENU_VISIBLE (9 on 240x320, 17 on 450x600)
 
 typedef enum { S_MAIN, S_BRAND, S_SLOTS, S_SLOT, S_COLORS, S_CODE, S_USED, S_EXPORT, S_WIFI,
                S_PATTERN, S_SAVE, S_LOAD, S_CONFIRM, S_BRAND_LOCKED } screen_t;

@@ -39,6 +39,16 @@
 #include "esp_adc/adc_cali_scheme.h"
 #if CONFIG_BEAD_SERIAL_KEYS
 #include "driver/uart.h"
+#include "nvs_flash.h"
+#include "esp_system.h"
+#include "esp_rom_crc.h"
+#include "esp_debug_helpers.h"
+#include "miniz.h"                 // ROM deflate (tdefl) for the screen dump
+#include "esp_heap_caps.h"
+#include <stdio.h>
+#if CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG
+#include "driver/usb_serial_jtag.h"
+#endif
 static void serial_task(void *arg);
 #endif
 
@@ -71,17 +81,18 @@ typedef struct {
     int64_t next_rep_us; // auto-repeat (K_DIR)
     bool long_fired;     // K_CENTER
     ladder_t ladder;     // ladder position when pin < 0 and a ladder is fitted
+    int exio;            // I/O-expander bit when pin < 0 (MENU/SIDE on the Waveshare), else -1
 } sw_t;
 
 static sw_t s_sw[] = {
-    { .pin = PIN_DPAD_UP, .kind = K_DIR, .ev = EV_UP, .ladder = L_UP },
-    { .pin = PIN_DPAD_DOWN, .kind = K_DIR, .ev = EV_DOWN, .ladder = L_DOWN },
-    { .pin = PIN_DPAD_LEFT, .kind = K_DIR, .ev = EV_LEFT, .ladder = L_LEFT },
-    { .pin = PIN_DPAD_RIGHT, .kind = K_DIR, .ev = EV_RIGHT, .ladder = L_RIGHT },
-    { .pin = PIN_DPAD_CENTER, .kind = K_CENTER, .ev = EV_CENTER, .ladder = L_CENTER },
-    { .pin = PIN_ENC_SW, .kind = K_ENC, .ev = EV_ENC_PRESS },
-    { .pin = PIN_BTN_MENU, .kind = K_BTN, .ev = EV_MENU },
-    { .pin = PIN_BTN_SIDE, .kind = K_BTN, .ev = EV_SIDE },
+    { .pin = PIN_DPAD_UP, .kind = K_DIR, .ev = EV_UP, .ladder = L_UP, .exio = -1 },
+    { .pin = PIN_DPAD_DOWN, .kind = K_DIR, .ev = EV_DOWN, .ladder = L_DOWN, .exio = -1 },
+    { .pin = PIN_DPAD_LEFT, .kind = K_DIR, .ev = EV_LEFT, .ladder = L_LEFT, .exio = -1 },
+    { .pin = PIN_DPAD_RIGHT, .kind = K_DIR, .ev = EV_RIGHT, .ladder = L_RIGHT, .exio = -1 },
+    { .pin = PIN_DPAD_CENTER, .kind = K_CENTER, .ev = EV_CENTER, .ladder = L_CENTER, .exio = -1 },
+    { .pin = PIN_ENC_SW, .kind = K_ENC, .ev = EV_ENC_PRESS, .exio = -1 },
+    { .pin = PIN_BTN_MENU, .kind = K_BTN, .ev = EV_MENU, .exio = EXIO_BTN_MENU },
+    { .pin = PIN_BTN_SIDE, .kind = K_BTN, .ev = EV_SIDE, .exio = EXIO_BTN_SIDE },
 };
 #define N_SW (sizeof s_sw / sizeof *s_sw)
 
@@ -248,10 +259,13 @@ static void poll_switches(void)
 {
     int64_t now = esp_timer_get_time();
     ladder_t lad = s_ladder_ok ? ladder_read() : L_NONE;
+    // Expander inputs (one I2C read per poll). A failed read = nothing pressed.
+    int ex = (EXIO_BTN_MENU >= 0 || EXIO_BTN_SIDE >= 0) ? board_exio_read() : -1;
     for (unsigned i = 0; i < N_SW; i++) {
         sw_t *s = &s_sw[i];
         bool level_down;
         if (s->pin >= 0) level_down = gpio_get_level(s->pin) == 0;  // active low
+        else if (s->exio >= 0) level_down = ex >= 0 && !((ex >> s->exio) & 1); // active low
         else if (s_ladder_ok && s->ladder != L_NONE) level_down = (lad == s->ladder);
         else continue;
         if (level_down != s->down) {
@@ -295,9 +309,21 @@ void input_init(void)
     ladder_init();
     xTaskCreate(poll_task, "input", 3072, NULL, 10, NULL);
 #if CONFIG_BEAD_SERIAL_KEYS
+#if CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG
+    // ESP32-S3: the console is the chip's USB Serial/JTAG port. The driver is
+    // installed for reading keys only; output stays on the default console path,
+    // which waits briefly for the host and then drops data instead of blocking.
+    // (Routing stdout through the driver hung the UI: with a screen dump and log
+    // lines in flight together, the driver's TX path stalled and every task that
+    // logged blocked forever.)
+    usb_serial_jtag_driver_config_t ucfg = { .rx_buffer_size = 256, .tx_buffer_size = 256 };
+    if (usb_serial_jtag_driver_install(&ucfg) == ESP_OK)
+        xTaskCreate(serial_task, "keys", 8192, NULL, 5, NULL);   // 8 KB: the screen dump runs ROM deflate + newlib fputs on this stack
+#else
     // UART0 is also the log console; the driver only takes over its RX side here.
     if (uart_driver_install(UART_NUM_0, 256, 0, 0, NULL, 0) == ESP_OK)
-        xTaskCreate(serial_task, "keys", 2560, NULL, 5, NULL);
+        xTaskCreate(serial_task, "keys", 8192, NULL, 5, NULL);   // 8 KB: the screen dump runs ROM deflate + newlib fputs on this stack
+#endif
 #endif
 }
 
@@ -317,17 +343,96 @@ int input_wait(event_t *ev, uint32_t timeout_ms)
 static const char *KEY_HELP =
     "w/a/s/d=D-pad  x=centre(erase)  X=long centre(eyedropper)  j/l=encoder ccw/cw  "
     "k|p|space=encoder press(place)  J/L=press+turn(browse; a/d=family)  "
-    "m=menu  o=side  t=colour bars  v=D-pad volts  ?=help";
+    "m=menu  o=side  t=colour bars  v=D-pad volts  F=screen dump  !Z=factory reset  ?=help";
+
+static int key_read(uint8_t *c, TickType_t wait)
+{
+#if CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG
+    return usb_serial_jtag_read_bytes(c, 1, wait);
+#else
+    return uart_read_bytes(UART_NUM_0, c, 1, wait);
+#endif
+}
+
+// Test support (key 'F'): dump the shadow framebuffer, zlib-compressed (ROM
+// deflate) as base64 text lines, so a host script can rebuild the exact screen.
+//   FBDUMP <w> <h> ZLIB
+//   FB:<base64 of the zlib stream of the big-endian RGB565 pixels> ...
+//   FBEND <bytes> <crc32 of the zlib stream, hex>
+static const char B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static uint8_t s_dump[57];          // 57 bytes -> one 76-char base64 line
+static int s_dump_n;
+static uint32_t s_dump_crc, s_dump_total;
+static void dump_line(void)
+{
+    char out[4 + 76 + 2] = "FB:";
+    int o = 3;
+    for (int i = 0; i < s_dump_n; i += 3) {
+        uint32_t v = s_dump[i] << 16 | (i + 1 < s_dump_n ? s_dump[i + 1] << 8 : 0) |
+                     (i + 2 < s_dump_n ? s_dump[i + 2] : 0);
+        out[o++] = B64[v >> 18 & 63]; out[o++] = B64[v >> 12 & 63];
+        out[o++] = i + 1 < s_dump_n ? B64[v >> 6 & 63] : '=';
+        out[o++] = i + 2 < s_dump_n ? B64[v & 63] : '=';
+    }
+    out[o++] = '\n'; out[o] = 0;
+    fputs(out, stdout);
+    s_dump_n = 0;
+    static unsigned lines;
+    if (++lines % 64 == 0) vTaskDelay(1);            // let the idle task feed the watchdog
+}
+static void dump_bytes(const uint8_t *b, int n)
+{
+    s_dump_crc = esp_rom_crc32_le(s_dump_crc, b, n);
+    s_dump_total += n;
+    for (int i = 0; i < n; i++) {
+        s_dump[s_dump_n++] = b[i];
+        if (s_dump_n == sizeof s_dump) dump_line();
+    }
+}
+static mz_bool dump_put(const void *buf, int len, void *user)
+{
+    (void)user;
+    dump_bytes(buf, len);
+    return MZ_TRUE;
+}
+static void fb_dump(void)
+{
+    const uint16_t *fb = board_framebuffer();
+    if (!fb) { ESP_LOGW("keys", "no framebuffer on this board"); return; }
+    tdefl_compressor *z = heap_caps_malloc(sizeof *z, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!z) z = malloc(sizeof *z);
+    if (!z) { ESP_LOGE("keys", "no memory for the screen dump"); return; }
+    fflush(stdout);
+    board_fb_lock(true);
+    board_fb_sync();
+    s_dump_n = 0; s_dump_crc = 0; s_dump_total = 0;
+    printf("FBDUMP %d %d ZLIB\n", DISPLAY_W, DISPLAY_H);
+    tdefl_init(z, dump_put, NULL, TDEFL_WRITE_ZLIB_HEADER | 128);
+    const uint8_t *p = (const uint8_t *)fb;
+    size_t left = (size_t)DISPLAY_W * DISPLAY_H * 2;
+    while (left) {                                     // feed a row at a time, yielding
+        size_t n = left < DISPLAY_W * 2 ? left : DISPLAY_W * 2;
+        tdefl_compress_buffer(z, p, n, n == left ? TDEFL_FINISH : TDEFL_NO_FLUSH);
+        p += n; left -= n;
+        taskYIELD();
+    }
+    free(z);
+    if (s_dump_n) dump_line();
+    printf("FBEND %lu %08lx\n", (unsigned long)s_dump_total, (unsigned long)s_dump_crc);
+    fflush(stdout);
+    board_fb_lock(false);
+}
 
 static void serial_task(void *arg)
 {
     (void)arg;
     bool browsing = false;
+    int64_t bang_us = 0;                // '!' seen: 'Z' within 1 s wipes the patterns
     ESP_LOGI("keys", "%s", KEY_HELP);
     for (;;) {
         uint8_t c;
         TickType_t wait = browsing ? pdMS_TO_TICKS(BROWSE_IDLE_MS) : portMAX_DELAY;
-        if (uart_read_bytes(UART_NUM_0, &c, 1, wait) != 1) {
+        if (key_read(&c, wait) != 1) {
             if (browsing) { browsing = false; emit(EV_BROWSE_END); }
             continue;
         }
@@ -357,7 +462,37 @@ static void serial_task(void *arg)
             ESP_LOGI("dpad", "voltage log %s%s", s_ladder_log ? "on" : "off",
                      s_ladder_ok ? "" : " (no ladder on this board)");
             continue;
-        case '?': ESP_LOGI("keys", "%s", KEY_HELP); continue;
+        case '?': ESP_LOGI("keys", "%s", KEY_HELP); ESP_LOGI("keys", "board: %s", board_status()); continue;
+        case 'F': fb_dump(); continue;                        // test: screen dump
+        case 'B': esp_backtrace_print_all_tasks(24); continue;   // debug: every task's backtrace
+        case 'G': {                                           // bench: edge ruler
+            // 8-px stripes from each side edge inwards: red orange yellow green cyan
+            // blue magenta white (left edge x 0.., right edge x W-1..), same from the
+            // top and bottom edges in the middle third. Grey elsewhere. Any key redraws
+            // nothing; open/close the menu (m m) to get the UI back.
+            static const uint16_t C[8] = { 0xF800, 0xFC00, 0xFFE0, 0x07E0, 0x07FF, 0x001F, 0xF81F, 0xFFFF };
+            const display_ops_t *D = board_display();
+            D->fill_rect(0, 0, DISPLAY_W, DISPLAY_H, 0x4208);
+            for (int k = 0; k < 8; k++) {
+                D->fill_rect(k * 8, 0, 8, DISPLAY_H, C[k]);
+                D->fill_rect(DISPLAY_W - (k + 1) * 8, 0, 8, DISPLAY_H, C[k]);
+                D->fill_rect(DISPLAY_W / 3, k * 8, DISPLAY_W / 3, 8, C[k]);
+                D->fill_rect(DISPLAY_W / 3, DISPLAY_H - (k + 1) * 8, DISPLAY_W / 3, 8, C[k]);
+            }
+            if (D->present) D->present();
+            ESP_LOGI("keys", "edge ruler: 8 px stripes red,orange,yellow,green,cyan,blue,magenta,white from each edge");
+            continue;
+        }
+        case '!': bang_us = esp_timer_get_time(); continue;
+        case 'Z':                                             // test: "!Z" = factory reset
+            if (bang_us && esp_timer_get_time() - bang_us < 1000000) {
+                ESP_LOGW("keys", "factory reset: erasing NVS and restarting");
+                fflush(stdout);
+                nvs_flash_erase();
+                vTaskDelay(pdMS_TO_TICKS(100));
+                esp_restart();
+            }
+            continue;
         default: continue;
         }
         emit(ev);

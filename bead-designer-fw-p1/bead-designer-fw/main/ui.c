@@ -10,6 +10,8 @@
 #include "board.h"
 #include "saver.h"
 #include "esp_log.h"
+#include "esp_task_wdt.h"
+
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -124,8 +126,12 @@ void ui_run(void)
     render_full();
     int64_t last_input_us = esp_timer_get_time();
     int64_t swallow_us = 0;          // after a wake: input arriving before this is ignored
+    const display_ops_t *disp = board_display();
+    esp_task_wdt_add(NULL);                 // a stuck UI task panics with a backtrace
     for (;;) {
         event_t ev;
+        esp_task_wdt_reset();
+        if (disp->present) disp->present();   // show everything drawn in the last pass at once
         // Poll faster while a save is pending so it lands ~1.5 s after the last edit,
         // and wake for marquee frames when the name line is animating.
         int wait_ms = store_pending() ? 200 : 1000;
@@ -187,6 +193,7 @@ void ui_run(void)
                  (int)UI.mode, UI.cur_x, UI.cur_y, UI.slot);
         if (ev == EV_TEST_BARS) {           // bench colour check, any mode
             render_test_bars();
+            if (disp->present) disp->present();
             vTaskDelay(pdMS_TO_TICKS(3000));
             render_full();
             continue;

@@ -26,16 +26,19 @@
 #define PIN_ENC_A       7   // J8-13
 #define PIN_ENC_B       8   // J8-15
 #define PIN_ENC_SW      42  // J8-24
-#define PIN_BTN_MENU    (-1) // EXIO5 on the onboard I/O expander: TODO expander driver
-#define PIN_BTN_SIDE    (-1) // EXIO6 on the onboard I/O expander: TODO expander driver
-#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (control PCB D revB4 divider R13/R14). TODO expander driver; debounce ~100 ms
+#define PIN_BTN_MENU    (-1) // on the TCA9554 expander instead: EXIO_BTN_MENU
+#define PIN_BTN_SIDE    (-1) // on the TCA9554 expander instead: EXIO_BTN_SIDE
+#define EXIO_BTN_MENU   5    // TCA9554 P5 (J8-6), polled over I2C by input.c
+#define EXIO_BTN_SIDE   6    // TCA9554 P6 (J8-8)
+#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (control PCB D revB4 divider R13/R14). Not read yet; debounce ~100 ms
 #define PIN_DPAD_LADDER (-1) // D-pad uses its own GPIOs here
 #define PIN_PWR_KEY     15  // onboard PWR key (Key_BAT)
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops
 #define PIN_BAT_ADC     17  // battery voltage / 3 (200k/100k divider)
 #define HAVE_PWR_LATCH  1
-#define DISPLAY_W       450 // portrait (panel is 600x450, rotated in firmware)
-#define DISPLAY_H       600
+#define DISPLAY_W       225 // logical px, shown 2x2 each on the 450x600 RM690B0 panel (pixel doubling: CYD-sized UI)
+#define DISPLAY_ROT180  1   // panel is mounted upside down relative to the case (USB-C left): flip in the flush (checked on the board 2026-11-17)
+#define DISPLAY_H       300
 #elif CONFIG_IDF_TARGET_ESP32
 // ---- Freenove FNK0114A 2.4" ST7789 (ESP32-WROOM-32E), from Freenove's
 //      2.4inch_ESP32-32E_Display_Schematic.pdf. Only 2 free GPIOs exist. ----
@@ -53,6 +56,8 @@
 #define PIN_BTN_MENU    18   // P3 pin 3 (SPI_CLK)
 #define PIN_BTN_SIDE    0    // onboard BOOT key (10k pull-up); don't hold it during reset
 #define EXIO_USB_PRESENT (-1) // no USB sense on the Freenove
+#define EXIO_BTN_MENU   (-1) // no I/O expander on the Freenove
+#define EXIO_BTN_SIDE   (-1)
 #define PIN_PWR_KEY     (-1)
 #define PIN_PWR_LATCH   (-1)
 #define PIN_BAT_ADC     34   // 100k/100k divider (x2)
@@ -75,8 +80,26 @@ typedef struct {
     // Push a small RGB565 bitmap (glyphs, icons).
     void (*blit)(int x, int y, int w, int h, const uint16_t *px);
     void (*set_brightness)(uint8_t pct); // burn-in care: dim chrome, sleep idle
+    // Optional (NULL = draws go straight to the panel): send everything drawn since
+    // the last call in one go, so a screen change appears at once (no flicker).
+    void (*present)(void);
 } display_ops_t;
 
 const display_ops_t *board_display(void);
 void board_early_init(void);   // power latch FIRST, then rails/quirks
 int  board_battery_mv(void);   // -1 if unsupported
+int  board_exio_read(void);
+const char *board_status(void); // one-line hardware status (reprinted by serial '?')    // I/O expander input port (bit n = EXIOn), -1 if none
+// Test support: the shadow framebuffer (DISPLAY_W x DISPLAY_H, big-endian RGB565),
+// or NULL on boards without one. Hold board_fb_lock(true) while reading it.
+const uint16_t *board_framebuffer(void);
+void board_fb_lock(bool lock);
+// After writing into the framebuffer directly (screen saver): mark the area changed.
+void board_fb_dirty(int x, int y, int w, int h);
+// Two-colour bitmap mode (screen saver): returns a cleared 1-bit-per-pixel bitmap
+// ((DISPLAY_W+7)/8 bytes per row, bit x&7 of byte x>>3) shown in fg/bg, or NULL if
+// the board has none. Mark changes with board_fb_dirty (under board_fb_lock).
+uint8_t *board_mono_begin(uint16_t fg, uint16_t bg);
+void board_mono_color(uint16_t fg, uint16_t bg);
+void board_mono_end(void);
+void board_fb_sync(void);      // test dump: bring the framebuffer up to date first

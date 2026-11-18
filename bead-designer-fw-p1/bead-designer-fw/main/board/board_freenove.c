@@ -139,6 +139,16 @@ static void dsp_blit(int x, int y, int w, int h, const uint16_t *p)
 
 static void dsp_bright(uint8_t pct) { gpio_set_level(LCD_BL, pct ? 1 : 0); } // P1: LEDC PWM
 
-static const display_ops_t OPS = { dsp_init, dsp_fill, dsp_blit, dsp_bright };
+int board_exio_read(void) { return -1; }
+const char *board_status(void) { return "Freenove FNK0114A"; }        // no I/O expander
+const uint16_t *board_framebuffer(void) { return NULL; }   // no shadow framebuffer
+void board_fb_lock(bool lock) { (void)lock; }
+void board_fb_dirty(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; }
+uint8_t *board_mono_begin(uint16_t fg, uint16_t bg) { (void)fg; (void)bg; return NULL; }
+void board_mono_color(uint16_t fg, uint16_t bg) { (void)fg; (void)bg; }
+void board_mono_end(void) {}
+void board_fb_sync(void) {}
+
+static const display_ops_t OPS = { dsp_init, dsp_fill, dsp_blit, dsp_bright, NULL };
 const display_ops_t *board_display(void) { return &OPS; }
 #endif

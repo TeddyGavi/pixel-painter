@@ -18,5 +18,5 @@ idf_component_register(
         "board/board_freenove.c"
         "board/board_ws241.c"
     INCLUDE_DIRS "." "board"
-    PRIV_REQUIRES driver esp_driver_gpio esp_driver_uart esp_driver_spi esp_lcd esp_adc nvs_flash esp_wifi esp_http_server esp_timer
+    PRIV_REQUIRES driver esp_driver_gpio esp_driver_uart esp_driver_spi esp_driver_i2c esp_driver_usb_serial_jtag esp_lcd esp_adc nvs_flash esp_wifi esp_http_server esp_timer esp_psram
 )
