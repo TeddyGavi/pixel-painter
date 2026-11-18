@@ -57,6 +57,8 @@ Coordinates are front view in mm. The top side faces the front panel. KiCad Y = 
 | 16, 30, 32 | 3V3 | +3V3 | +3V3 |
 | 1, 18, 34 | GND | GND | GND |
 | 4, 33 | (GND on J8) | GND | **NC** (reversal guard: a 180-deg flipped ribbon would put pin 4 on USB_5V and pin 33 on BAT; changed 2026-11-15) |
+| 10 | EXIO7 | NC | **USB_PRESENT** (R13/R14 divider; high = USB 5 V present; added 2026-11-17) |
+| 31 | USB_5V | NC | **USB_5V** into R13 only (reversed ribbon lands it on J8-4 GND: safe) |
 | other | - | no-connect | no-connect |
 
 Signal conditioning:
@@ -92,6 +94,8 @@ Owned stock: PEC11R x5, B3F-4055 x4, B3F-1000 x4, PTS645VL31 x10, 10k x25, C317 
 | Thumbstick | C&K THB001P (Mouser 611-THB001P) | 1 | - | 0 | **1** (+1 spare suggested) |
 | 5-way switch | Alps SKQUCAA010 / Adafruit 504 | - | 1 | 0 | **1** (+1 spare, EOL) |
 | 10k 1% 0.25 W axial | YAGEO MFR-25FRF52-10K or equivalent | 8 | 12 | 20 of 25 | 0 |
+| R13 2.2k 1% 1206 SMD (D only, bottom) | YAGEO RC1206FR-072K2L | 0 | 1 | 0 | 1 (+spares) |
+| R14 4.7k 1% 1206 SMD (D only, bottom) | YAGEO RC1206FR-074K7L | 0 | 1 | 0 | 1 (+spares) |
 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET C317C103K5R5TA | 8 | 10 | 10 of 10 | **8** (+2 spare) |
 | Knob (off-board) | Kilo OEJNI-75-4-7 | 1 | 1 | 0 | 2 |
 | 34-way IDC ribbon, F/F | Assmann H3DDS-3406G (replaces discontinued H3DDH) | 1 | 1 | 0 | 1-2 (one per assembled device) |
@@ -101,6 +105,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
 
 ## Assembly order (per board)
 
+0. **D only: SMD first.** Solder R13 (2.2k) and R14 (4.7k), the two 1206 resistors on the bottom under the encoder area, before any THT part (they sit 0.67 mm from the ENC1 S1/S2 joints).
 1. **Bottom-side passives first** (R*, C*): insert from the bottom and solder on the top.
    - Trim the leads to 1.0 mm or less on the top side.
    - D only: anything under the cross cap must stay at 1.5 mm or less above the top face. The cross area is drawn on Dwgs.User.
@@ -116,6 +121,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
    - Each switch line reads about 10k to 3V3, and 0 ohm when pressed.
    - Stick wipers read 0-10k across their travel.
    - Check the ribbon with pin 1 to pin 1 continuity before connecting it to the Waveshare.
+   - D only (USB sense): J1-31 to GND reads about 6.9k (R13 + R14); J1-10 to GND reads about 4.7k; **J1-31 to J1-30 / J1-32 (3V3) must read open** before the first connection.
 
 ## Footprints
 
@@ -150,7 +156,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
 
 - 2 layers, 1.6 mm FR-4, HASL (lead-free optional), green or any colour, 1 oz copper.
 - 5 pcs of each variant: two separate orders or two designs in one cart. Do not panelise J and D together.
-- Size 49.5 x 41.0 mm. Minimum track 0.3, clearance 0.2, minimum drill 0.3 (vias) and 0.8 (THT). All standard.
+- Size 49.5 x 41.0 mm. Minimum track 0.3 (0.2 for the USB_5V / USB_PRESENT sense tracks added in revB4), clearance 0.2 (USB_5V kept ≥0.3 from 3V3), minimum drill 0.3 (vias) and 0.8 (THT). All standard.
 
 Gerber export in KiCad 10:
 

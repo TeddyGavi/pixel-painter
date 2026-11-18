@@ -28,6 +28,7 @@
 #define PIN_ENC_SW      42  // J8-24
 #define PIN_BTN_MENU    (-1) // EXIO5 on the onboard I/O expander: TODO expander driver
 #define PIN_BTN_SIDE    (-1) // EXIO6 on the onboard I/O expander: TODO expander driver
+#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (control PCB D revB4 divider R13/R14). TODO expander driver; debounce ~100 ms
 #define PIN_DPAD_LADDER (-1) // D-pad uses its own GPIOs here
 #define PIN_PWR_KEY     15  // onboard PWR key (Key_BAT)
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops
@@ -51,6 +52,7 @@
 #define PIN_ENC_SW      19   // P3 pin 2 (SPI_MISO)
 #define PIN_BTN_MENU    18   // P3 pin 3 (SPI_CLK)
 #define PIN_BTN_SIDE    0    // onboard BOOT key (10k pull-up); don't hold it during reset
+#define EXIO_USB_PRESENT (-1) // no USB sense on the Freenove
 #define PIN_PWR_KEY     (-1)
 #define PIN_PWR_LATCH   (-1)
 #define PIN_BAT_ADC     34   // 100k/100k divider (x2)

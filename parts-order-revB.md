@@ -42,6 +42,8 @@ Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you alre
 | 11 | M2 × 14 socket-head cap screw (ISO 4762), H1/H2 through back shell + PCB | generic | — | as #10 | — | as #10 | 2 per device (pack of 20) | TBV | TBV | Replaces the unused M2 × 10. Bambu packs go up to 16 mm |
 | 12 | M2 × 14 countersunk screw (ISO 10642), back-shell top corners | generic | — | Amazon.ca fallback | — | — | 2 per device (pack) | TBV | TBV | Head flush in the back shell; into the front-shell inserts |
 | 13 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET | C317C103K5R5TA | DigiKey CA | TBV (search `C317C103K5R5TA`) | — | 2 spare (D needs 10, 10 are owned; +10 per extra D board; +8 if J is revived) | TBV | TBV | Stand upright on the bottom side |
+| 14 | 2.2 kΩ 1% 1206 SMD resistor (R13, USB sense) | YAGEO | RC1206FR-072K2L | DigiKey CA | TBV (search `RC1206FR-072K2L`) | — | 5 (1 per board + spares) | TBV | TBV | Bottom side, hand-solder |
+| 15 | 4.7 kΩ 1% 1206 SMD resistor (R14, USB sense) | YAGEO | RC1206FR-074K7L | DigiKey CA | TBV (search `RC1206FR-074K7L`) | — | 5 (1 per board + spares) | TBV | TBV | Bottom side, hand-solder |
 
 ## Totals
 

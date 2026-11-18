@@ -3271,7 +3271,7 @@
 		(at 58.42 91.44)
 		(uuid "ae69b934-104a-5bec-9b4c-22216efc0858")
 	)
-	(text "(J8-10)  EXIO7"
+	(text "(J8-10)  EXIO7: USB_PRESENT (R13/R14 divider)"
 		(exclude_from_sim no)
 		(at 91.44 91.44 0)
 		(effects
@@ -3281,10 +3281,6 @@
 			(justify left)
 		)
 		(uuid "7a5ffb35-c3d4-5540-b427-039275a65d9a")
-	)
-	(no_connect
-		(at 71.12 91.44)
-		(uuid "243e3880-c563-52e2-ac23-88d6627fea70")
 	)
 	(text "IO6  (J8-11)"
 		(exclude_from_sim no)
@@ -3957,10 +3953,6 @@
 			(justify right)
 		)
 		(uuid "2cd3303e-65ef-5b18-a0bc-9ac1f3c53129")
-	)
-	(no_connect
-		(at 58.42 119.38)
-		(uuid "c5432d77-694b-5b43-b99b-59a1b8597612")
 	)
 	(text "(J8-32)  3V3"
 		(exclude_from_sim no)
@@ -11034,6 +11026,407 @@
 			(justify left top)
 		)
 		(uuid "a9ccf15f-bca8-5abf-bc8b-bb28e1d0ee0c")
+	)
+	(wire
+		(pts
+			(xy 71.12 91.44) (xy 73.66 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2d9e182c-8668-47a3-b2e5-389187f9c784")
+	)
+	(label "USB_PRESENT"
+		(at 73.66 91.44 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6e9f0b7c-5af3-4823-a96e-f443ab1b2aff")
+	)
+	(wire
+		(pts
+			(xy 58.42 119.38) (xy 55.88 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "96ff0a39-67e4-45b4-a9d1-d0811ef39209")
+	)
+	(label "USB_5V"
+		(at 55.88 119.38 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "cac2d81d-c5f8-48d2-be38-24db4f4ce5a8")
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 279.4 213.36 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "92f2a499-542b-4811-b2e5-4b7214f7488c")
+		(property "Reference" "R13"
+			(at 281.94 212.09 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2.2k"
+			(at 281.94 214.63000000000002 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "control:R_1206_3216Metric"
+			(at 279.4 213.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 213.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor 2.2 kOhm 1% 0.25 W 1206 SMD (bottom side)"
+			(at 279.4 213.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "RC1206FR-072K2L"
+			(at 279.4 213.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 279.4 213.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "eb689e75-213b-443b-a719-b86f050724c9")
+		)
+		(pin "2"
+			(uuid "5f9ffec4-f1bc-4d20-a35a-d3db7b2dd0db")
+		)
+		(instances
+			(project "control"
+				(path "/6f4e348e-e661-5ae5-90d5-8f4ef18eb6dc"
+					(reference "R13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 279.4 223.52 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ebe50a34-34f2-44f1-96fe-60d175378101")
+		(property "Reference" "R14"
+			(at 281.94 222.25 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "4.7k"
+			(at 281.94 224.79000000000002 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "control:R_1206_3216Metric"
+			(at 279.4 223.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 223.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor 4.7 kOhm 1% 0.25 W 1206 SMD (bottom side)"
+			(at 279.4 223.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "RC1206FR-074K7L"
+			(at 279.4 223.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "YAGEO"
+			(at 279.4 223.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a43860c0-1794-4bde-8946-ab43b2e909c0")
+		)
+		(pin "2"
+			(uuid "817e0b1d-df3d-4524-bcc7-afdcd0accfaa")
+		)
+		(instances
+			(project "control"
+				(path "/6f4e348e-e661-5ae5-90d5-8f4ef18eb6dc"
+					(reference "R14")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 279.4 209.55) (xy 279.4 207.01000000000002)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f4145b03-cbac-436c-86b5-9c12397f168c")
+	)
+	(label "USB_5V"
+		(at 279.4 207.01000000000002 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b6b03a61-0613-4b6e-87c0-6c9c666ba4a0")
+	)
+	(wire
+		(pts
+			(xy 279.4 217.17000000000002) (xy 279.4 219.71)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b08b4d65-0e5f-47bb-b87a-0fe1b47d87b8")
+	)
+	(wire
+		(pts
+			(xy 279.4 218.44) (xy 284.47999999999996 218.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f3db3706-9edc-4b03-8597-885847be0db4")
+	)
+	(junction
+		(at 279.4 218.44)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "188c6041-cdb5-42b2-b4a8-75649552c62a")
+	)
+	(label "USB_PRESENT"
+		(at 284.47999999999996 218.44 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "bfe2cc6e-c9d4-4649-8a7a-125c46637b1a")
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 279.4 227.33 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "53309190-fe46-4dfd-b063-de435c7b71fa")
+		(property "Reference" "#PWR39"
+			(at 279.4 233.68 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 279.4 231.14000000000001 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 279.4 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 279.4 227.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b058382e-1ffc-4dbf-ab31-e22cca543eed")
+		)
+		(instances
+			(project "control"
+				(path "/6f4e348e-e661-5ae5-90d5-8f4ef18eb6dc"
+					(reference "#PWR39")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(text "USB-present sense (added 2026-11-17): USB_5V (J8-31) -> R13 2.2k -> USB_PRESENT -> R14 4.7k -> GND."
+		(exclude_from_sim no)
+		(at 248.92 195.58 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "03ae9177-d084-4bda-ba7a-66f16f6a9578")
+	)
+	(text "4.4-5.5 V gives 3.0-3.7 V on TCA9554 EXIO7 (J8-10, 5 V tolerant, VIH 2.64). No USB: <0.6 V incl. D2 leakage (VIL 0.66)."
+		(exclude_from_sim no)
+		(at 248.92 198.12 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "447cb2a6-9de5-47ec-98de-151f06634577")
 	)
 	(sheet_instances
 		(path "/"
