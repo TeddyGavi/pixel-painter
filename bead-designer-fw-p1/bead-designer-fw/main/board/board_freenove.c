@@ -13,6 +13,7 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include <string.h>
@@ -62,12 +63,10 @@ void board_early_init(void)
     adc_oneshot_config_channel(s_adc, ADC_CHANNEL_6, &ch);
 }
 
-int board_battery_mv(void)
-{
-    int raw = 0;
-    if (adc_oneshot_read(s_adc, ADC_CHANNEL_6, &raw) != ESP_OK) return -1;
-    return (raw * 3100 / 4095) * 2;     // 100k/100k divider; calibrate later
-}
+// Battery features are off on this interim bench board: no cell is fitted, and a
+// floating, uncalibrated reading could trigger the low/critical policy (a false
+// shutdown). The ADC stays set up for bench checks.
+int board_battery_mv(void) { return -1; }
 
 static void dsp_init(void)
 {
@@ -140,6 +139,13 @@ static void dsp_blit(int x, int y, int w, int h, const uint16_t *p)
 static void dsp_bright(uint8_t pct) { gpio_set_level(LCD_BL, pct ? 1 : 0); } // P1: LEDC PWM
 
 int board_exio_read(void) { return -1; }
+void board_power_off(void)                         // no power latch: soft off
+{
+    ESP_LOGW(TAG, "power off: no latch on this board, deep sleep (reset to wake)");
+    gpio_set_level(LCD_BL, 0);
+    esp_deep_sleep_start();
+}
+void board_display_sleep(bool sleep) { gpio_set_level(LCD_BL, sleep ? 0 : 1); }
 const char *board_status(void) { return "Freenove FNK0114A"; }        // no I/O expander
 const uint16_t *board_framebuffer(void) { return NULL; }   // no shadow framebuffer
 void board_fb_lock(bool lock) { (void)lock; }

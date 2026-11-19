@@ -36,10 +36,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_timer.h"
+#include "esp_sleep.h"
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 #include <string.h>
 #include <stdio.h>
 
 static const char *TAG = "board_ws241";
+static void battery_adc_init(void);
 static char s_status[160];                          // reprinted on request (serial '?')
 const char *board_status(void) { return s_status; }
 
@@ -144,9 +149,55 @@ void board_early_init(void)
     ESP_LOGI(TAG, "Waveshare 2.41 Rev 2.0; power latch held high (GPIO%d)", PIN_PWR_LATCH);
     s_lock = xSemaphoreCreateMutex();
     expander_init();
+    battery_adc_init();
 }
 
-int board_battery_mv(void) { return -1; }           // battery sense: not implemented yet
+// ---- battery: BAT / 3 (R21 200k / R23 100k) on GPIO17 = ADC2 ------------------------
+static adc_oneshot_unit_handle_t s_adc;
+static adc_channel_t s_adc_ch;
+static adc_cali_handle_t s_cali;
+
+static void battery_adc_init(void)
+{
+    adc_unit_t unit;
+    if (adc_oneshot_io_to_channel(PIN_BAT_ADC, &unit, &s_adc_ch) != ESP_OK) return;
+    adc_oneshot_unit_init_cfg_t u = { .unit_id = unit };
+    if (adc_oneshot_new_unit(&u, &s_adc) != ESP_OK) { s_adc = NULL; return; }
+    adc_oneshot_chan_cfg_t c = { .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_12 };
+    adc_oneshot_config_channel(s_adc, s_adc_ch, &c);
+    adc_cali_curve_fitting_config_t cal = { .unit_id = unit, .chan = s_adc_ch,
+                                            .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_12 };
+    if (adc_cali_create_scheme_curve_fitting(&cal, &s_cali) != ESP_OK) s_cali = NULL;
+}
+
+// Average of 8 calibrated readings x3. -1 while Wi-Fi holds ADC2.
+int board_battery_mv(void)
+{
+    if (!s_adc) return -1;
+    int sum = 0, n = 0;
+    for (int i = 0; i < 8; i++) {
+        int raw, mv;
+        if (adc_oneshot_read(s_adc, s_adc_ch, &raw) != ESP_OK) continue;
+        if (!s_cali || adc_cali_raw_to_voltage(s_cali, raw, &mv) != ESP_OK) mv = raw * 3100 / 4095;
+        sum += mv; n++;
+    }
+    return n ? sum / n * 3 : -1;
+}
+
+void board_power_off(void)
+{
+    ESP_LOGW(TAG, "power off: dropping the latch");
+    gpio_set_level(PIN_PWR_LATCH, 0);              // on battery: off once PWR is released
+    vTaskDelay(pdMS_TO_TICKS(400));
+    // Still running: USB keeps the board powered. Soft off: wait for PWR to be
+    // released (it would wake us at once), then deep sleep until it is pressed.
+    ESP_LOGW(TAG, "still powered (USB): soft off, PWR wakes");
+    board_display_sleep(true);
+    vTaskDelay(pdMS_TO_TICKS(150));
+    while (gpio_get_level(PIN_PWR_KEY) == 0) vTaskDelay(pdMS_TO_TICKS(20));
+    esp_sleep_enable_ext0_wakeup(PIN_PWR_KEY, 0);
+    esp_deep_sleep_start();
+}
 
 // ---- RM690B0 over QSPI --------------------------------------------------------------
 // SH8601-style framing: 32-bit "command" = opcode << 24 | register << 8.
@@ -283,6 +334,7 @@ static void flush(int x0, int y0, int x1, int y1)
 }
 
 static void panel_hw_init(void);
+static volatile int s_sleep_req;                 // 1 = panel sleep, 2 = panel wake (display task)
 static volatile int s_bright = -1;                  // pending brightness (0..255), -1 = none
 static SemaphoreHandle_t s_ready;
 
@@ -296,6 +348,13 @@ static void display_task(void *arg)
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         int b = s_bright;
         if (b >= 0) { uint8_t v = (uint8_t)b; s_bright = -1; lcd_cmd(0x51, &v, 1); }
+        int sr = s_sleep_req;
+        if (sr) {
+            s_sleep_req = 0;
+            if (sr == 1) { lcd_cmd(0x28, NULL, 0); vTaskDelay(pdMS_TO_TICKS(20)); lcd_cmd(0x10, NULL, 0); }
+            else { lcd_cmd(0x11, NULL, 0); vTaskDelay(pdMS_TO_TICKS(120)); lcd_cmd(0x29, NULL, 0); }
+            xSemaphoreGive(s_ready);                  // request done
+        }
         if (s_px1 > s_px0) {
             flush(s_px0, s_py0, s_px1, s_py1);
             s_px0 = s_px1 = 0;
@@ -316,6 +375,8 @@ static const struct { uint8_t reg; uint8_t p[4]; uint8_t n; uint16_t ms; } INIT[
     { 0x11, { 0x00 }, 0, 80 },         // sleep out
     { 0x29, { 0x00 }, 0, 10 },         // display on
 };
+
+static void battery_adc_init(void);
 
 static void dsp_init(void)
 {
@@ -485,6 +546,16 @@ static void dsp_bright(uint8_t pct)
     if (pct > 100) pct = 100;
     s_bright = pct * 255 / 100;                       // sent by the display task
     xTaskNotifyGive(s_task);
+}
+
+// Panel sleep (display off + sleep in: microamps) / wake. Waits until done.
+void board_display_sleep(bool sleep)
+{
+    xSemaphoreTake(s_idle, portMAX_DELAY);            // not in the middle of a frame
+    s_sleep_req = sleep ? 1 : 2;
+    xTaskNotifyGive(s_task);
+    xSemaphoreTake(s_ready, portMAX_DELAY);
+    xSemaphoreGive(s_idle);
 }
 
 const uint16_t *board_framebuffer(void) { return s_fb; }

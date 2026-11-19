@@ -1,0 +1,5 @@
+# Low battery on the drawing screen: simulated 3640 mV (~18%, low: power saving).
+# Expected: board, name line shows the battery icon (1 segment) left of the count.
+2.0 key b
+2.3 key b
+3.2 stop

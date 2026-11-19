@@ -42,6 +42,7 @@
 #include "nvs_flash.h"
 #include "esp_system.h"
 #include "esp_rom_crc.h"
+#include "battery.h"
 #include "esp_debug_helpers.h"
 #include "miniz.h"                 // ROM deflate (tdefl) for the screen dump
 #include "esp_heap_caps.h"
@@ -58,18 +59,19 @@ static void serial_task(void *arg);
 #define LONG_PRESS_MS     600
 #define REPEAT_DELAY_MS   400
 #define REPEAT_MS         120
+#define PWR_HOLD_MS       1500  // PWR held this long: shut down
 
 const char *const EVENT_NAMES[EV__COUNT] = {
     "UP", "DOWN", "LEFT", "RIGHT", "CENTER", "CENTER_LONG",
     "ENC_CW", "ENC_CCW", "ENC_PRESS", "BROWSE_CW", "BROWSE_CCW", "BROWSE_END",
-    "MENU", "SIDE", "TICK", "TEST_BARS",
+    "MENU", "SIDE", "TICK", "TEST_BARS", "PWR", "PWR_HOLD",
 };
 
 static QueueHandle_t s_q;
 static pcnt_unit_handle_t s_enc;
 static int s_accum;
 
-typedef enum { K_DIR, K_CENTER, K_ENC, K_BTN } kind_t;
+typedef enum { K_DIR, K_CENTER, K_ENC, K_BTN, K_PWR } kind_t;
 typedef enum { L_NONE, L_CENTER, L_UP, L_DOWN, L_LEFT, L_RIGHT } ladder_t;
 typedef struct {
     int pin;
@@ -93,9 +95,13 @@ static sw_t s_sw[] = {
     { .pin = PIN_ENC_SW, .kind = K_ENC, .ev = EV_ENC_PRESS, .exio = -1 },
     { .pin = PIN_BTN_MENU, .kind = K_BTN, .ev = EV_MENU, .exio = EXIO_BTN_MENU },
     { .pin = PIN_BTN_SIDE, .kind = K_BTN, .ev = EV_SIDE, .exio = EXIO_BTN_SIDE },
+    // PWR (Waveshare): also the power-on button, so the press that switched the
+    // board on is ignored until it has been released once.
+    { .pin = PIN_PWR_KEY, .kind = K_PWR, .ev = EV_PWR, .exio = -1 },
 };
 #define N_SW (sizeof s_sw / sizeof *s_sw)
 
+static bool s_pwr_armed;    // PWR released at least once since boot
 static bool s_enc_down;     // encoder switch held
 static bool s_enc_turned;   // ...and turned since it went down
 
@@ -159,6 +165,7 @@ static void on_press(sw_t *s, int64_t now)
     case K_CENTER: s->long_fired = false; break;           // decided on hold/release
     case K_ENC:    s_enc_down = true; s_enc_turned = false; break;
     case K_BTN:    emit(s->ev); break;
+    case K_PWR:    s->long_fired = false; break;           // decided on hold/release
     }
 }
 
@@ -166,6 +173,10 @@ static void on_release(sw_t *s)
 {
     switch (s->kind) {
     case K_CENTER: if (!s->long_fired) emit(EV_CENTER); break;
+    case K_PWR:
+        if (s_pwr_armed && !s->long_fired) emit(EV_PWR);
+        s_pwr_armed = true;                     // first release: the power-on press is over
+        break;
     case K_ENC:
         s_enc_down = false;
         emit(s_enc_turned ? EV_BROWSE_END : EV_ENC_PRESS);
@@ -183,6 +194,10 @@ static void on_held(sw_t *s, int64_t now)
                now - s->since_us >= LONG_PRESS_MS * 1000) {
         s->long_fired = true;
         emit(EV_CENTER_LONG);
+    } else if (s->kind == K_PWR && s_pwr_armed && !s->long_fired &&
+               now - s->since_us >= PWR_HOLD_MS * 1000) {
+        s->long_fired = true;
+        emit(EV_PWR_HOLD);
     }
 }
 
@@ -306,6 +321,8 @@ void input_init(void)
         };
         gpio_config(&io);
     }
+    // Not held at boot (USB power, or a reset): PWR presses count from the start.
+    s_pwr_armed = PIN_PWR_KEY < 0 || gpio_get_level(PIN_PWR_KEY) != 0;
     ladder_init();
     xTaskCreate(poll_task, "input", 3072, NULL, 10, NULL);
 #if CONFIG_BEAD_SERIAL_KEYS
@@ -343,7 +360,8 @@ int input_wait(event_t *ev, uint32_t timeout_ms)
 static const char *KEY_HELP =
     "w/a/s/d=D-pad  x=centre(erase)  X=long centre(eyedropper)  j/l=encoder ccw/cw  "
     "k|p|space=encoder press(place)  J/L=press+turn(browse; a/d=family)  "
-    "m=menu  o=side  t=colour bars  v=D-pad volts  F=screen dump  !Z=factory reset  ?=help";
+    "m=menu  o=side  t=colour bars  v=D-pad volts  z=PWR(sleep)  q=PWR hold(shut down)  "
+    "b=simulated battery level  F=screen dump  !Z=factory reset  ?=help";
 
 static int key_read(uint8_t *c, TickType_t wait)
 {
@@ -457,12 +475,16 @@ static void serial_task(void *arg)
         case 'm': ev = EV_MENU; break;
         case 'o': ev = EV_SIDE; break;
         case 't': ev = EV_TEST_BARS; break;
+        case 'z': ev = EV_PWR; break;                         // PWR short press: sleep / wake
+        case 'q': ev = EV_PWR_HOLD; break;                    // PWR held: shut down
+        case 'b': battery_sim_next(); ev = EV_TICK; break;    // bench: step simulated battery level
         case 'v':                                 // toggle D-pad voltage logging
             s_ladder_log = !s_ladder_log; s_ladder_last_mv = -1000;
             ESP_LOGI("dpad", "voltage log %s%s", s_ladder_log ? "on" : "off",
                      s_ladder_ok ? "" : " (no ladder on this board)");
             continue;
-        case '?': ESP_LOGI("keys", "%s", KEY_HELP); ESP_LOGI("keys", "board: %s", board_status()); continue;
+        case '?': ESP_LOGI("keys", "%s", KEY_HELP); ESP_LOGI("keys", "board: %s", board_status());
+                  ESP_LOGI("keys", "battery: %d mV now, %d mV smoothed (%d%%)", board_battery_mv(), battery_mv(), battery_pct()); continue;
         case 'F': fb_dump(); continue;                        // test: screen dump
         case 'B': esp_backtrace_print_all_tasks(24); continue;   // debug: every task's backtrace
         case 'G': {                                           // bench: edge ruler

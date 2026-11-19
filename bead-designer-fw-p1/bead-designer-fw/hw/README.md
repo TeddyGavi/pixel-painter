@@ -41,7 +41,8 @@ hw/run.sh list                     # list scenarios
   least 30% of the screen black and at least 200 lit pixels.
 - **Marquee:** the name line scrolls in real time. The screen above it must match the golden exactly; the line itself only has to show text.
 - **Boot check:** with the fast `-O2` boot, the first log lines go out while USB re-enumerates. So `boot` also sends `?`, and the board reprints a status line (`board: Waveshare 2.41 Rev 2.0; TCA9554 ok at 0x20; RM690B0 ready ...`), which the check reads.
-- **Current result** (2026-11-17, Rev 2.0 board): 35 pass (32 exact, 1 marquee, 2 saver checks) and 4 are skipped as simulator-only.
+- **Battery and power scenarios** (`hw/scripts/`): `batt_menu`, `batt_low`, `batt_alert`, `batt_alert_dismiss` and `sleep_wake`. Shut Down and the critical level put the board into soft off (the USB port goes away), so they are checked by hand: press PWR to wake.
+- **Current result** (2026-11-17, Rev 2.0 board): 40 pass (37 exact, 1 marquee, 2 saver checks) and 4 are skipped as simulator-only (2026-11-18, after battery management).
 
 ## Firmware test hooks (CONFIG_BEAD_SERIAL_KEYS, bench builds only)
 
@@ -49,6 +50,14 @@ hw/run.sh list                     # list scenarios
   (zlib stream of big-endian RGB565, made by the ROM's deflate), then
   `FBEND <bytes> <crc32>`.
 - `!` then `Z` within 1 s: factory reset (erase NVS, restart).
+- `b`: step through simulated battery levels:
+  - off (real reading);
+  - 3950 mV (~72%);
+  - 3640 mV (~18%, low: power saving);
+  - 3560 mV (~8%, alert);
+  - 3420 mV (critical: save and switch off).
+- `z` / `q`: PWR short press (sleep / wake) / PWR held (shut down).
+- `G`: edge ruler. `B`: every task's backtrace.
 - Production builds must turn `CONFIG_BEAD_SERIAL_KEYS` off.
 
 ## Board bring-up notes (2026-11-17)
@@ -77,4 +86,15 @@ hw/run.sh list                     # list scenarios
 - **TCA9554 at 0x20** (I2C GPIO47/48):
   - MENU = EXIO5, SIDE = EXIO6, polled every 5 ms by `input.c`.
   - EXIO7 = USB_PRESENT (control PCB D revB4), not read yet.
-- **Not yet:** touch (FT6336U), battery ADC, brightness and sleep policy, RTC, IMU.
+- **Battery and power (2026-11-18):** see `main/battery.c`, plus the power section of `main/ui.c`.
+  - **Reading:** BAT/3 on GPIO17 (ADC2, curve-fit calibration, 8-sample average), polled every 10 s and smoothed. A LiPo curve gives the percentage. With no cell, the charger holds BAT at ~4.2 V, so it shows 100%.
+  - **Battery icon:** always in menu titles; on the name line at ≤20%.
+  - **Low battery:**
+    - ≤20%: brightness 60%, and a black screen instead of the saver;
+    - ≤10%: one "Battery low / Plug in soon" notice;
+    - <3.45 V for 3 readings: "Battery empty", save, switch off.
+  - **PWR key:** a short press sleeps (saved, panel sleep-in) and any button wakes. Holding 1.5 s is Shut Down (saved, latch dropped).
+    - On USB, Shut Down becomes a soft off (deep sleep, PWR wakes as a fresh boot). In deep sleep the USB port disappears.
+  - **Idle:** sleep after 10 min with no input; power off after 1 h asleep.
+  - **Not yet:** charge sense (needs control PCB D revB4 EXIO7; without the board EXIO7 floats high), true light sleep (the CPU stays awake with the panel off).
+- **Not yet:** touch (FT6336U), RTC, IMU.

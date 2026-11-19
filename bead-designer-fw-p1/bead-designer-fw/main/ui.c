@@ -9,6 +9,7 @@
 #include "board_style.h"
 #include "board.h"
 #include "saver.h"
+#include "battery.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 
@@ -118,27 +119,120 @@ static void draw_mode(event_t ev)
     }
 }
 
+// ---- power: sleep, shut down, battery policy ------------------------------------------
+#define IDLE_SLEEP_US  (10LL * 60 * 1000000)   // no input this long (saver or not): sleep
+#define SLEEP_OFF_US   (60LL * 60 * 1000000)   // asleep this long: save and switch off
+#define LOW_BRIGHTNESS 60                      // % while the battery is low
+
+static const display_ops_t *s_disp;
+static bool s_sleeping, s_alert, s_alerted, s_was_low;
+static int64_t s_sleep_us;
+static int s_batt_segs = -1;
+
+static void present(void) { if (s_disp->present) s_disp->present(); }
+
+// Sleep: pattern saved, screen off. Any button wakes (see ui_run).
+static void go_sleep(void)
+{
+    if (saver_active()) saver_stop();
+    store_flush();
+    present();
+    board_display_sleep(true);
+    s_sleeping = true;
+    s_sleep_us = esp_timer_get_time();
+    ESP_LOGI(TAG, "sleep (battery %d mV)", battery_mv());
+}
+
+static void wake_up(void)
+{
+    board_display_sleep(false);
+    s_sleeping = false;
+    render_full();
+    ESP_LOGI(TAG, "wake from sleep");
+}
+
+// Shut Down: message, save, power off (soft off when USB keeps the board powered).
+static void shut_down(const char *why)
+{
+    ESP_LOGW(TAG, "shut down: %s", why ? why : "PWR held");
+    if (saver_active()) saver_stop();
+    if (s_sleeping) { board_display_sleep(false); s_sleeping = false; }
+    render_message(why ? why : "Shutting down", "Pattern saved");
+    present();
+    store_flush();
+    vTaskDelay(pdMS_TO_TICKS(900));
+    board_power_off();
+}
+
+// After each battery reading: power saving below 20 %, one alert at 10 %, switch
+// off at the critical level, and keep the battery icon current.
+static void battery_policy(void)
+{
+    int pct = battery_pct();
+    if (battery_critical()) shut_down("Battery empty");
+    bool low = battery_low();
+    if (low != s_was_low) {
+        s_was_low = low;
+        if (s_disp->set_brightness) s_disp->set_brightness(low ? LOW_BRIGHTNESS : 100);
+        ESP_LOGI(TAG, "battery %s (%d%%)", low ? "low: power saving" : "ok", pct);
+        if (!s_sleeping && !saver_active() && !s_alert) render_full();
+    }
+    if (pct >= 0 && pct <= 10 && !s_alerted && !s_sleeping) {
+        s_alerted = true;
+        if (saver_active()) saver_stop();
+        render_message("Battery low", "Plug in soon");
+        s_alert = true;
+        ESP_LOGW(TAG, "battery low alert (%d%%)", pct);
+    }
+    if (pct > 15) s_alerted = false;
+    int segs = pct < 0 ? -1 : pct > 66 ? 3 : pct > 33 ? 2 : pct > 10 ? 1 : 0;
+    if (segs != s_batt_segs) {                 // battery icon changed: redraw menu titles
+        s_batt_segs = segs;
+        if (UI.mode == MODE_MENU && !s_sleeping && !saver_active() && !s_alert) render_full();
+    }
+}
+
 void ui_run(void)
 {
     for (unsigned i = 0; i < GRID_N * GRID_N; i++) UI.cells[i] = CELL_EMPTY;
     default_slots();
     store_load_autosave();
+    s_disp = board_display();
+    battery_init();
+    s_was_low = battery_low();
+    if (s_was_low && s_disp->set_brightness) s_disp->set_brightness(LOW_BRIGHTNESS);
     render_full();
     int64_t last_input_us = esp_timer_get_time();
     int64_t swallow_us = 0;          // after a wake: input arriving before this is ignored
-    const display_ops_t *disp = board_display();
+    int64_t next_batt_us = last_input_us + BATTERY_POLL_MS * 1000LL;
     esp_task_wdt_add(NULL);                 // a stuck UI task panics with a backtrace
     for (;;) {
         event_t ev;
         esp_task_wdt_reset();
-        if (disp->present) disp->present();   // show everything drawn in the last pass at once
+        present();                            // show everything drawn in the last pass at once
+        int64_t now = esp_timer_get_time();
+        if (now >= next_batt_us) {
+            next_batt_us = now + BATTERY_POLL_MS * 1000LL;
+            battery_poll();
+            battery_policy();
+        }
+        if (s_sleeping) {                     // asleep: wait for any input; switch off after an hour
+            if (now - s_sleep_us >= SLEEP_OFF_US) shut_down(NULL);
+            if (!input_wait(&ev, 1000)) continue;
+            if (ev == EV_TICK) { battery_policy(); continue; }
+            if (ev == EV_PWR_HOLD) shut_down(NULL);
+            wake_up();
+            last_input_us = esp_timer_get_time();
+            swallow_us = last_input_us + 300000;
+            continue;
+        }
         // Poll faster while a save is pending so it lands ~1.5 s after the last edit,
         // and wake for marquee frames when the name line is animating.
         int wait_ms = store_pending() ? 200 : 1000;
         int tick_ms = render_tick_ms();
         if (tick_ms >= 0 && tick_ms < wait_ms) wait_ms = tick_ms;
         int64_t saver_us = (int64_t)SAVER_TIMEOUT_S[UI.saver] * 1000000;
-        bool saver_may = saver_us > 0 && (UI.mode != MODE_MENU || menu_saver_allowed());
+        bool saver_may = saver_us > 0 && !s_alert && (UI.mode != MODE_MENU || menu_saver_allowed());
         if (saver_active()) {
             wait_ms = saver_next_ms();
         } else if (saver_may) {
@@ -146,13 +240,19 @@ void ui_run(void)
             if (left < wait_ms) wait_ms = left < 0 ? 0 : (int)left;
         }
         if (!input_wait(&ev, wait_ms)) {
+            now = esp_timer_get_time();
+            if (now - last_input_us >= IDLE_SLEEP_US) { go_sleep(); continue; }
             if (saver_active()) {
                 saver_frame();
-                if (esp_timer_get_time() - last_input_us >= AUTOSAVE_QUIET_US)
-                    store_autosave_if_idle();
+                if (now - last_input_us >= AUTOSAVE_QUIET_US) store_autosave_if_idle();
                 continue;
             }
-            if (saver_may && esp_timer_get_time() - last_input_us >= saver_us) {
+            if (saver_may && now - last_input_us >= saver_us) {
+                if (battery_low()) {          // saving power: a black screen instead of the saver
+                    ESP_LOGI(TAG, "battery low: sleep instead of the screen saver");
+                    go_sleep();
+                    continue;
+                }
                 ESP_LOGI(TAG, "screen saver after %u s idle", SAVER_TIMEOUT_S[UI.saver]);
                 UI.browsing = false;
                 saver_start();
@@ -176,7 +276,16 @@ void ui_run(void)
             render_idle_tick();
             continue;
         }
+        if (ev == EV_TICK) { battery_policy(); continue; }   // bench battery simulation
+        if (ev == EV_PWR_HOLD) shut_down(NULL);
+        if (ev == EV_PWR) { go_sleep(); continue; }
         last_input_us = esp_timer_get_time();
+        if (s_alert) {                        // the low-battery notice: any button dismisses
+            s_alert = false;
+            render_full();
+            swallow_us = last_input_us + 300000;
+            continue;
+        }
         // Wake from the screen saver: the input only wakes. Input that keeps coming
         // (a held D-pad repeating, a fast encoder turn) is ignored until a pause.
         if (saver_active() || last_input_us < swallow_us) {
@@ -193,7 +302,7 @@ void ui_run(void)
                  (int)UI.mode, UI.cur_x, UI.cur_y, UI.slot);
         if (ev == EV_TEST_BARS) {           // bench colour check, any mode
             render_test_bars();
-            if (disp->present) disp->present();
+            present();
             vTaskDelay(pdMS_TO_TICKS(3000));
             render_full();
             continue;

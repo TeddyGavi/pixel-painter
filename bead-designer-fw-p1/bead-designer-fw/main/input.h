@@ -14,6 +14,8 @@ typedef enum {
     EV_MENU, EV_SIDE,
     EV_TICK,                             // periodic (idle dimming, battery poll)
     EV_TEST_BARS,                        // bench: colour test pattern (serial key 't')
+    EV_PWR,                              // PWR key short press: sleep / wake
+    EV_PWR_HOLD,                         // PWR key held PWR_HOLD_MS: shut down
     EV__COUNT
 } event_t;
 

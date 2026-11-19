@@ -87,7 +87,12 @@ typedef struct {
 
 const display_ops_t *board_display(void);
 void board_early_init(void);   // power latch FIRST, then rails/quirks
-int  board_battery_mv(void);   // -1 if unsupported
+int  board_battery_mv(void);   // battery voltage (calibrated, averaged), -1 if unsupported/unreadable
+// Switch off: drop the power latch. Where that can't cut power (USB connected, or
+// a board without a latch) fall back to a "soft off": display off, deep sleep,
+// woken by the PWR key as a fresh boot. Does not return.
+void board_power_off(void);
+void board_display_sleep(bool sleep); // panel off (low power) / back on; redraw after waking
 int  board_exio_read(void);
 const char *board_status(void); // one-line hardware status (reprinted by serial '?')    // I/O expander input port (bit n = EXIOn), -1 if none
 // Test support: the shadow framebuffer (DISPLAY_W x DISPLAY_H, big-endian RGB565),

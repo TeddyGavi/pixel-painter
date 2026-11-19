@@ -20,6 +20,7 @@
 #include <string.h>
 #include "esp_timer.h"
 #include "esp_log.h"
+#include "battery.h"
 #include "sdkconfig.h"
 
 #define COL_BG       0x0000
@@ -228,6 +229,24 @@ static bool s_marquee;              // currently scrolling
 static int s_marquee_off;
 static int64_t s_info_since_us;     // label unchanged since
 
+// PowerBook-style battery icon, 15 x 8 px (body 13 x 8 + terminal nub), 3 segments,
+// on a 1 px black margin. Big-endian pixels into a row buffer.
+#define BATT_W 15
+#define BATT_H 8
+static void draw_battery(uint16_t *buf, int stride, int x, int y, int pct)
+{
+    uint16_t ink = be16(COL_TEXT), bg = be16(COL_BG);
+    for (int yy = -1; yy <= BATT_H; yy++)
+        for (int xx = -1; xx <= BATT_W; xx++) buf[(y + yy) * stride + x + xx] = bg;
+    for (int xx = 0; xx < 13; xx++) { buf[y * stride + x + xx] = ink; buf[(y + 7) * stride + x + xx] = ink; }
+    for (int yy = 0; yy < 8; yy++) { buf[(y + yy) * stride + x] = ink; buf[(y + yy) * stride + x + 12] = ink; }
+    for (int yy = 2; yy < 6; yy++) { buf[(y + yy) * stride + x + 13] = ink; buf[(y + yy) * stride + x + 14] = ink; }
+    int segs = pct > 66 ? 3 : pct > 33 ? 2 : pct > 10 ? 1 : 0;
+    for (int k = 0; k < segs; k++)
+        for (int yy = 2; yy < 6; yy++)
+            for (int xx = 0; xx < 2; xx++) buf[(y + yy) * stride + x + 2 + 3 * k + xx] = ink;
+}
+
 static void compose_info(void)
 {
     int idx = ui_color();
@@ -239,7 +258,9 @@ static void compose_info(void)
     memset(s_line, 0, sizeof s_line);
     int cw = text_width(num);
     int cx = DISPLAY_W - TEXT_PAD - cw;
-    int x0 = TEXT_PAD, x1 = cx - 8;               // label space
+    bool batt = battery_low();                    // low battery: icon left of the count
+    int bx = cx - 8 - BATT_W;
+    int x0 = TEXT_PAD, x1 = (batt ? bx : cx) - 8; // label space
     if (s_marquee) {
         int tw = text_width(s_info_label);
         text_render_clip(text, DISPLAY_W, x0 - s_marquee_off, x0, x1, s_info_label, NAME, NONE);
@@ -278,6 +299,7 @@ static void compose_info(void)
         memcpy(prev, cur, sizeof cur);
         if (next) for (int x = 0; x < DISPLAY_W; x++) cur[x] = (uint8_t)next[x];
     }
+    if (batt) draw_battery(s_line, DISPLAY_W, bx, (LINE_H - BATT_H) / 2, battery_pct());
     D->blit(0, LINE_Y, DISPLAY_W, LINE_H, s_line);
 }
 
@@ -289,7 +311,7 @@ static void draw_info(void)
     snprintf(s_info_label, sizeof s_info_label, "%s %s", bc->code, bc->name);
     char num[8];
     snprintf(num, sizeof num, "%d", count_color(ui_color()));
-    int space = DISPLAY_W - TEXT_PAD - text_width(num) - 8 - TEXT_PAD;
+    int space = DISPLAY_W - TEXT_PAD - text_width(num) - 8 - TEXT_PAD - (battery_low() ? BATT_W + 8 : 0);
     s_info_long = text_width(s_info_label) > space;
     s_marquee = false;
     s_marquee_off = 0;
@@ -339,7 +361,12 @@ static void band_text(int x, const char *str, int max_w, uint16_t fg)
 static void draw_title(const menu_view_t *v)
 {
     strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
-    band_text(8, v->title, DISPLAY_W - 16, COL_TEXT);
+    // Battery icon in menu titles, unless the title needs the room (e.g. the QR
+    // screen's "Scan with phone"): the full title wins over the icon there.
+    int pct = battery_pct();
+    bool icon = pct >= 0 && text_width(v->title) <= DISPLAY_W - 16 - (BATT_W + 8);
+    band_text(8, v->title, DISPLAY_W - 16 - (icon ? BATT_W + 8 : 0), COL_TEXT);
+    if (icon) draw_battery(s_strip, DISPLAY_W, DISPLAY_W - 8 - BATT_W, (ROW_H - BATT_H) / 2 - 1, pct);
     strip_rect(8, ROW_H - 2, DISPLAY_W - 8, ROW_H - 1, COL_DIVIDER);
     D->blit(0, 0, DISPLAY_W, ROW_H, s_strip);
 }
@@ -594,6 +621,20 @@ void render_update(void)
 void render_idle_tick(void)
 {
     // P2 TODO (AMOLED burn-in): dim after 60 s idle, sleep display after 5 min.
+}
+
+// Full-screen message (low battery, shutting down): two centred lines on black.
+void render_message(const char *l1, const char *l2)
+{
+    D->fill_rect(0, 0, DISPLAY_W, DISPLAY_H, COL_BG);
+    const char *lines[2] = { l1, l2 };
+    for (int i = 0; i < 2; i++) {
+        if (!lines[i]) continue;
+        strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
+        int w = text_width(lines[i]);
+        band_text(w < DISPLAY_W - 16 ? (DISPLAY_W - w) / 2 : 8, lines[i], DISPLAY_W - 16, i ? COL_TEXT_DIM : COL_TEXT);
+        D->blit(0, DISPLAY_H / 2 - ROW_H + i * ROW_H, DISPLAY_W, ROW_H, s_strip);
+    }
 }
 
 void render_test_bars(void)
