@@ -96,5 +96,10 @@ hw/run.sh list                     # list scenarios
   - **PWR key:** a short press sleeps (saved, panel sleep-in) and any button wakes. Holding 1.5 s is Shut Down (saved, latch dropped).
     - On USB, Shut Down becomes a soft off (deep sleep, PWR wakes as a fresh boot). In deep sleep the USB port disappears.
   - **Idle:** sleep after 10 min with no input; power off after 1 h asleep.
+  - **Real LiPo test (2026-11-18):**
+    - USB with no cell: 4.20 V. Charging: 4.09–4.11 V. On battery with the screen on: 3.96–3.98 V (~74%).
+    - On battery, holding PWR 1.5 s gives "Shutting down", and the board goes fully off on release. A 0.5 s PWR hold switches it back on.
+    - Bench key `h` prints the last 64 readings, so a run without USB can be read back afterwards.
+    - Not checked against a multimeter yet.
   - **Not yet:** charge sense (needs control PCB D revB4 EXIO7; without the board EXIO7 floats high), true light sleep (the CPU stays awake with the panel off).
 - **Not yet:** touch (FT6336U), RTC, IMU.

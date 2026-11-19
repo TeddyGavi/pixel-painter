@@ -317,7 +317,7 @@ def main():
         return 0 if ok and not probs else 1
     if args.cmd == "key":                       # hw/run.sh key G   (send raw keys)
         for k in "".join(args.names): b.key(k); time.sleep(0.15)
-        b.pump(1.0); print("\n".join(b.log[-5:])); return 0
+        b.pump(1.5); print("\n".join(b.log[-80:])); return 0
     if args.cmd == "shot":
         w, h, rgb = b.shot()
         path = args.names[0] if args.names else os.path.join(HERE, "out", "shot.png")

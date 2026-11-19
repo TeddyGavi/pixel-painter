@@ -64,7 +64,7 @@ static void serial_task(void *arg);
 const char *const EVENT_NAMES[EV__COUNT] = {
     "UP", "DOWN", "LEFT", "RIGHT", "CENTER", "CENTER_LONG",
     "ENC_CW", "ENC_CCW", "ENC_PRESS", "BROWSE_CW", "BROWSE_CCW", "BROWSE_END",
-    "MENU", "SIDE", "TICK", "TEST_BARS", "PWR", "PWR_HOLD",
+    "MENU", "SIDE", "TICK", "TEST_BARS", "PAINT", "PWR", "PWR_HOLD",
 };
 
 static QueueHandle_t s_q;
@@ -102,10 +102,25 @@ static sw_t s_sw[] = {
 #define N_SW (sizeof s_sw / sizeof *s_sw)
 
 static bool s_pwr_armed;    // PWR released at least once since boot
+static bool s_enc_painted;  // encoder held and the D-pad moved: painting (brush mode)
+static volatile bool s_ser_enc;  // bench: serial '[' holds the encoder push, ']' releases
 static bool s_enc_down;     // encoder switch held
 static bool s_enc_turned;   // ...and turned since it went down
 
 static void emit(event_t e) { xQueueSend(s_q, &e, 0); }
+
+// A D-pad move. With the encoder push held (and not turned: that is browsing) it
+// paints: the start cell first, then each cell the cursor moves onto.
+static void dpad(event_t e)
+{
+    if (s_enc_down && !s_enc_turned) {
+        if (!s_enc_painted) { emit(EV_PAINT); s_enc_painted = true; }
+        emit(e);
+        emit(EV_PAINT);
+    } else {
+        emit(e);
+    }
+}
 
 static pcnt_unit_handle_t make_encoder(int pin_a, int pin_b)
 {
@@ -161,9 +176,9 @@ static void on_press(sw_t *s, int64_t now)
 {
     s->since_us = now;
     switch (s->kind) {
-    case K_DIR:    emit(s->ev); s->next_rep_us = now + REPEAT_DELAY_MS * 1000; break;
+    case K_DIR:    dpad(s->ev); s->next_rep_us = now + REPEAT_DELAY_MS * 1000; break;
     case K_CENTER: s->long_fired = false; break;           // decided on hold/release
-    case K_ENC:    s_enc_down = true; s_enc_turned = false; break;
+    case K_ENC:    s_enc_down = true; s_enc_turned = false; s_enc_painted = false; break;
     case K_BTN:    emit(s->ev); break;
     case K_PWR:    s->long_fired = false; break;           // decided on hold/release
     }
@@ -179,7 +194,9 @@ static void on_release(sw_t *s)
         break;
     case K_ENC:
         s_enc_down = false;
-        emit(s_enc_turned ? EV_BROWSE_END : EV_ENC_PRESS);
+        if (s_enc_turned) emit(EV_BROWSE_END);
+        else if (!s_enc_painted) emit(EV_ENC_PRESS);    // painted: the release adds nothing
+        s_enc_painted = false;
         break;
     default: break;
     }
@@ -188,7 +205,7 @@ static void on_release(sw_t *s)
 static void on_held(sw_t *s, int64_t now)
 {
     if (s->kind == K_DIR && now >= s->next_rep_us) {
-        emit(s->ev);
+        dpad(s->ev);                                   // held: auto-repeat (paints a line in brush mode)
         s->next_rep_us = now + REPEAT_MS * 1000;
     } else if (s->kind == K_CENTER && !s->long_fired &&
                now - s->since_us >= LONG_PRESS_MS * 1000) {
@@ -279,7 +296,8 @@ static void poll_switches(void)
     for (unsigned i = 0; i < N_SW; i++) {
         sw_t *s = &s_sw[i];
         bool level_down;
-        if (s->pin >= 0) level_down = gpio_get_level(s->pin) == 0;  // active low
+        if (s->pin >= 0) level_down = gpio_get_level(s->pin) == 0 ||   // active low
+                                      (s->kind == K_ENC && s_ser_enc);   // bench: serial '[' holds it
         else if (s->exio >= 0) level_down = ex >= 0 && !((ex >> s->exio) & 1); // active low
         else if (s_ladder_ok && s->ladder != L_NONE) level_down = (lad == s->ladder);
         else continue;
@@ -359,9 +377,10 @@ int input_wait(event_t *ev, uint32_t timeout_ms)
 #define BROWSE_IDLE_MS 1500
 static const char *KEY_HELP =
     "w/a/s/d=D-pad  x=centre(erase)  X=long centre(eyedropper)  j/l=encoder ccw/cw  "
-    "k|p|space=encoder press(place)  J/L=press+turn(browse; a/d=family)  "
+    "k|p|space=encoder press(place)  [/]=hold/release encoder (with w/a/s/d: paint brush)  "
+    "J/L=press+turn(browse; a/d=family)  "
     "m=menu  o=side  t=colour bars  v=D-pad volts  z=PWR(sleep)  q=PWR hold(shut down)  "
-    "b=simulated battery level  F=screen dump  !Z=factory reset  ?=help";
+    "b=simulated battery level  h=battery history  F=screen dump  !Z=factory reset  ?=help";
 
 static int key_read(uint8_t *c, TickType_t wait)
 {
@@ -461,10 +480,12 @@ static void serial_task(void *arg)
         }
         event_t ev;
         switch (c) {
-        case 'w': ev = EV_UP;    break;
-        case 's': ev = EV_DOWN;  break;
-        case 'a': ev = EV_LEFT;  break;
-        case 'd': ev = EV_RIGHT; break;
+        case 'w': dpad(EV_UP);    continue;
+        case 's': dpad(EV_DOWN);  continue;
+        case 'a': if (browsing) { ev = EV_LEFT;  break; } dpad(EV_LEFT);  continue;
+        case 'd': if (browsing) { ev = EV_RIGHT; break; } dpad(EV_RIGHT); continue;
+        case '[': s_ser_enc = true;  continue;                 // bench: hold the encoder push
+        case ']': s_ser_enc = false; continue;                 //        release it
         case 'x': ev = EV_CENTER; break;
         case 'X': ev = EV_CENTER_LONG; break;
         case 'j': ev = EV_ENC_CCW; break;
@@ -478,6 +499,7 @@ static void serial_task(void *arg)
         case 'z': ev = EV_PWR; break;                         // PWR short press: sleep / wake
         case 'q': ev = EV_PWR_HOLD; break;                    // PWR held: shut down
         case 'b': battery_sim_next(); ev = EV_TICK; break;    // bench: step simulated battery level
+        case 'h': battery_history_print(); continue;          // bench: recent battery readings
         case 'v':                                 // toggle D-pad voltage logging
             s_ladder_log = !s_ladder_log; s_ladder_last_mv = -1000;
             ESP_LOGI("dpad", "voltage log %s%s", s_ladder_log ? "on" : "off",

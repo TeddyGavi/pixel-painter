@@ -90,7 +90,7 @@ static void draw_mode(event_t ev)
     case EV_LEFT: case EV_RIGHT:
         if (!UI.browsing) UI.focus = FOCUS_BOARD;    // while browsing: family jump
         break;
-    case EV_UP: case EV_DOWN: case EV_CENTER: case EV_CENTER_LONG: case EV_ENC_PRESS:
+    case EV_UP: case EV_DOWN: case EV_CENTER: case EV_CENTER_LONG: case EV_ENC_PRESS: case EV_PAINT:
         UI.focus = FOCUS_BOARD; break;
     default: break;
     }
@@ -110,6 +110,7 @@ static void draw_mode(event_t ev)
     case EV_ENC_CW:  UI.slot = (UI.slot + 1) % SLOTS;         break;
     case EV_ENC_CCW: UI.slot = (UI.slot + SLOTS - 1) % SLOTS; break;
     case EV_ENC_PRESS: set_cell((uint8_t)ui_color());         break;
+    case EV_PAINT:     set_cell((uint8_t)ui_color());         break;   // brush: paint the cell moved onto
     case EV_BROWSE_CW:  browse(+1); break;
     case EV_BROWSE_CCW: browse(-1); break;
     case EV_BROWSE_END: UI.browsing = false; break;
@@ -134,10 +135,13 @@ static void present(void) { if (s_disp->present) s_disp->present(); }
 // Sleep: pattern saved, screen off. Any button wakes (see ui_run).
 static void go_sleep(void)
 {
+    // Panel off FIRST: stopping the saver switches the display back to the normal
+    // framebuffer (the pre-saver screen), which must not be sent to a lit panel:
+    // a PWR press during the saver flashed the old screen before going dark.
+    // Whatever is drawn while asleep only reaches the panel's RAM; wake redraws.
+    board_display_sleep(true);
     if (saver_active()) saver_stop();
     store_flush();
-    present();
-    board_display_sleep(true);
     s_sleeping = true;
     s_sleep_us = esp_timer_get_time();
     ESP_LOGI(TAG, "sleep (battery %d mV)", battery_mv());

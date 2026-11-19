@@ -14,3 +14,4 @@ bool battery_critical(void);  // below the shutdown level for 3 readings in a ro
 // Bench (serial key 'b'): step through simulated levels: off, 3950, 3640 (low),
 // 3560 (alert), 3420 mV (critical). Returns the simulated mV, or -1 when off.
 int  battery_sim_next(void);
+void battery_history_print(void);   // bench (serial 'h'): recent readings

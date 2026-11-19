@@ -1,6 +1,9 @@
 #pragma once
 #include <stdint.h>
 
+// Paint brush: hold the encoder push and move with the D-pad. The start cell and
+// every cell moved onto are painted (EV_PAINT after each move); the release then
+// places nothing extra.
 // Semantic input events. The input layer turns raw switches and the encoder into
 // these, so the UI never deals with debouncing, timing or gestures.
 typedef enum {
@@ -14,6 +17,7 @@ typedef enum {
     EV_MENU, EV_SIDE,
     EV_TICK,                             // periodic (idle dimming, battery poll)
     EV_TEST_BARS,                        // bench: colour test pattern (serial key 't')
+    EV_PAINT,                            // paint brush: place at the cursor (encoder held + D-pad)
     EV_PWR,                              // PWR key short press: sleep / wake
     EV_PWR_HOLD,                         // PWR key held PWR_HOLD_MS: shut down
     EV__COUNT

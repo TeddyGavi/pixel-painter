@@ -15,3 +15,11 @@ These override spec.md and motion.md wherever they differ.
 8. **Colours:** monochrome chrome only. Warnings get no accent colour.
 9. **Strip:** still dims to 50% while placing beads.
 10. **Motion:** On/Off setting, default On.
+
+## Added later
+
+11. **Paint brush (requested and built 2026-11-18, ahead of the rest of this update).**
+    - **How it works:** hold the place button (the encoder push) and move with the D-pad. The start cell and every cell moved onto get the current colour, and holding a direction paints a line (D-pad auto-repeat). Releasing places nothing extra.
+    - **Unchanged:** a plain press still places one bead, and turning while held still browses.
+    - **Code:** `EV_PAINT` in `input.c` / `ui.c`. Bench keys `[` / `]` hold and release the encoder. Test scenario `sim/scripts/paint.txt` (simulator and board).
+    - **For the motion stage:** the brush stroke should feel continuous (no bead-drop bounce on every cell).
