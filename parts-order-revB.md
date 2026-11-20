@@ -1,6 +1,19 @@
 # Parts order rev B: Option J (thumbstick) + Option D (5-way) prototyping (2026-11-08)
 
 > **Corrected 2026-11-15.** Option D (Adafruit 504 D-pad) is the build; Option J is parked, so its lines are deferred (qty 0).
+> **2026-11-19, link rev B5 (supersedes the wire plan above it the same day):** the Waveshare J8 is a **female** socket, so the H3DDS ribbon (#5) and the AWHW box header (#6) are **not used**, and R13/R14 (#14/#15) are **not needed**: the USB-sense resistors are on the new adapter, assembled by JLC.
+>
+> **Buy instead:**
+> - **2 × JLC orders:**
+>   - `kicad-control-revB/pcb-D-revB5.zip`, with PCBA for J1;
+>   - `kicad-control-revB/pcb-adapter-J8-revA.zip`, with PCBA for J2, R1 and R2.
+>   - Upload the matching `*-BOM-jlc.csv` / `*-CPL-jlc.csv` files from `kicad-control-D-output/` and `kicad-adapter-J8-output/`.
+>   - The assembled parts are LCSC C596731 (Hirose FH12-16S-0.5SH(55), Extended), C4190 (2.2k 0603) and C23162 (4.7k 0603).
+> - **3 × FFC**, 16-way, 0.5 mm, 30 mm, **same-side contacts**: GCT 05-16-A-0030-A-4-06-4-T (DigiKey). Do **not** buy Molex 0150200162 (opposite side).
+> - **1 × 2x17 male pin header**, 2.54 mm, straight: any 2-row breakaway header cut to 2x17 (e.g. Sullins PEC17DAAN).
+> - **2 × M2 x 12** countersunk screws for the top corners (were M2 x 14).
+> - **3 × M2 x 4 pan head** (ISO 7045) screws: they hold the Waveshare by its rear M2 standoffs.
+
 > Fixes from the Rev B review: AWHW header qty 1 → 2; added the C317 10 nF line; screws now match the case-revB1 BOM
 > (2× M2×14 SHCS, 2× M2×14 countersunk, 1× M2×6 SHCS); M2×10 dropped; the 0.8 mm nylon washers are not used by case B.1.
 > IDC cable qty 1 → 2. The case is ordered only after the Waveshare and the cable are measured.
@@ -40,7 +53,7 @@ Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you alre
 | 9 | M2 heat-set insert, brass, M2 × 4 mm, Ø3.2 mm hole | ruthex | RX-M2x4 (GE-M2x04-001), 70 pcs | **Amazon.ca fallback** (none found at DigiKey or Mouser) | ASIN TBV | Spec reference: https://www.3djake.com/ruthex/threaded-insert-m2-70-pieces | 1 pack | TBV (3DJake US$8.36 ex-VAT, reference only) | TBV | L 4.0 mm, OD 3.6 mm, hole Ø3.2 mm (3DJake table, columns not labelled) |
 | 10 | M2 × 6 socket-head cap screw (ISO 4762), H3 | generic | — | **Amazon.ca or Bambu Lab CA store fallback** (no DigiKey or Mouser listing found) | — | https://us.store.bambulab.com/products/m2-socket-head-cap-machine-screws-shcs | 1 per device (pack of 20) | TBV | TBV | Bambu: 4.8-grade carbon steel, 4–30 mm lengths, packs of 20 up to 16 mm |
 | 11 | M2 × 14 socket-head cap screw (ISO 4762), H1/H2 through back shell + PCB | generic | — | as #10 | — | as #10 | 2 per device (pack of 20) | TBV | TBV | Replaces the unused M2 × 10. Bambu packs go up to 16 mm |
-| 12 | M2 × 14 countersunk screw (ISO 10642), back-shell top corners | generic | — | Amazon.ca fallback | — | — | 2 per device (pack) | TBV | TBV | Head flush in the back shell; into the front-shell inserts |
+| 12 | M2 × **12** countersunk screw (ISO 10642), back-shell top corners (was × 14; changed 2026-11-19 with the thinner case) | generic | — | Amazon.ca fallback | — | — | 2 per device (pack) | TBV | TBV | Head flush in the back shell; into the front-shell inserts |
 | 13 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET | C317C103K5R5TA | DigiKey CA | TBV (search `C317C103K5R5TA`) | — | 2 spare (D needs 10, 10 are owned; +10 per extra D board; +8 if J is revived) | TBV | TBV | Stand upright on the bottom side |
 | 14 | 2.2 kΩ 1% 1206 SMD resistor (R13, USB sense) | YAGEO | RC1206FR-072K2L | DigiKey CA | TBV (search `RC1206FR-072K2L`) | — | 5 (1 per board + spares) | TBV | TBV | Bottom side, hand-solder |
 | 15 | 4.7 kΩ 1% 1206 SMD resistor (R14, USB sense) | YAGEO | RC1206FR-074K7L | DigiKey CA | TBV (search `RC1206FR-074K7L`) | — | 5 (1 per board + spares) | TBV | TBV | Bottom side, hand-solder |
@@ -75,7 +88,7 @@ Supplier order of preference: DigiKey Canada, then Mouser Canada. Items you alre
    sockets facing the same way: confirm it with a continuity check (TBV). Consider ordering 2 cables as a spare.
 5. **Fasteners.** No M2 heat-set inserts or M2 socket-cap screws were found at DigiKey or Mouser (McMaster excluded as
    requested). Essentra nylon washers are on DigiKey. Inserts and screws fall back to Amazon.ca (ruthex RX-M2x4 70-pack;
-   M2 × 6 and M2 × 14 SHCS packs, M2 × 14 countersunk) or the Bambu Lab Canada store.
+   M2 × 6 and M2 × 14 SHCS packs, M2 × 12 countersunk) or the Bambu Lab Canada store.
 
 ## Sources
 - SKQUCAA010 NLM: https://my.element14.com/alps/skqucaa010/switch-5-way-0-05a-12vdc-tht/dp/1435775 ; EOL notice: https://www.farnell.com/datasheets/3565107.pdf

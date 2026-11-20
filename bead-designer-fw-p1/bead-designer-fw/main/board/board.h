@@ -30,7 +30,7 @@
 #define PIN_BTN_SIDE    (-1) // on the TCA9554 expander instead: EXIO_BTN_SIDE
 #define EXIO_BTN_MENU   5    // TCA9554 P5 (J8-6), polled over I2C by input.c
 #define EXIO_BTN_SIDE   6    // TCA9554 P6 (J8-8)
-#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (control PCB D revB4 divider R13/R14). Not read yet; debounce ~100 ms
+#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (R1 2.2k / R2 4.7k divider on the J8 adapter PCB, rev A). Not read yet; debounce ~100 ms
 #define PIN_DPAD_LADDER (-1) // D-pad uses its own GPIOs here
 #define PIN_PWR_KEY     15  // onboard PWR key (Key_BAT)
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops

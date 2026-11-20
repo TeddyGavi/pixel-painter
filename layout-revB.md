@@ -6,7 +6,7 @@ Units mm. TBV = verify on real parts. Waveshare data: ws241-mech/ws241-mechanica
 ## Decisions
 1. **Flat front panel**, no screen bump. Knobs/stick may protrude up to ~18 mm.
 2. **Waveshare screwed to the front shell** (its 4 M2 holes onto front-shell bosses), **glass flush** with the front face (glass sits in a pocket, retained from behind by the board/bosses).
-3. **Controls on a separate control PCB** behind the panel, below the screen; linked to the Waveshare's 2x17 2.54 mm header by a **34-way IDC ribbon** (both ends female, pin 1 to pin 1, Assmann H3DDS-3406G: HHKR34S/AE34G/HHKR34S; H3DDH-3406G is discontinued). The control PCB carries a 2x17 shrouded header (Assmann AWHW-34G-0202-T class), pin numbering identical to Waveshare J8.
+3. **Controls on a separate control PCB** behind the panel, below the screen; linked to the Waveshare's 2x17 2.54 mm header by the **J8 adapter PCB** (2x17 male header into the female J8; FH12-16S FPC connector on its back) and a **30 mm 16-way 0.5 mm same-side FFC** to J1 (FH12-16S, bottom side, top edge) on the control PCB rev B5. The IDC ribbon planned earlier can't mate with the female J8.
 4. **Two control-PCB variants**, ordered together:
    - **J**: thumbstick with push (C&K THB001P) = cursor + place/erase; PEC11R colour knob (Kilo OEJNI-75-4-7, Ø19.05); MENU (B3F-1000, 6 mm; was B3F-4055) front; SIDE (C&K PTS645VL31-2 LFS right-angle) right edge.
    - **D**: 5-way switch (Adafruit 504 = Alps SKQUCAA010 footprint; part is end-of-life, stock limited — keep the footprint replaceable) + same knob, MENU, SIDE.
@@ -19,8 +19,8 @@ Z = depth from the FRONT FACE of the case (= glass front face, flush), positive 
 ## Waveshare (unchanged geometry from Rev A)
 Holes (0,0) (36.5,0) (0,51) (36.5,51); lens X -4.11..40.61, Y -5.28..56.28; PCB rear face Z 6.0;
 rear parts to Z 9.5; keys top edge X 9.75/18.25/26.75 at Z ≈ 6.9; USB-C left edge Y 25.5, Z ≈ 7.8 (shell 6.0–9.3).
-J8 header (male, 2.54, 2x17) on the RIGHT: columns X 32.73 / 35.27, rows Y 5.18..45.82, plastic Z 6.0–8.5, pins to ≈ Z 17.6.
-IDC socket seated on the header: body ≈ Z 8.5..17.5 (TBV, ~9 mm), cable fold behind to ≈ Z 19.5.
+J8 header (**female** socket, 2.54, 2x17) on the RIGHT: columns X 32.73 / 35.27, rows Y 5.18..45.82, socket Z 6.0–11.0 (user caliper 2026-11-19; drawing 11.5).
+Link (rev B5): adapter header plastic Z 11.0..13.5, adapter PCB 13.5..15.1 (X 26.5..41.5, Y -4.6..47.5), J2 on its back 15.1..17.1, FFC Z-fold to J1 (control back face, Z 10.1..12.1, X 27.5..40.5, Y -7..-12.3). Case depth 21.5.
 
 ## Case targets
 | Item | Value |

@@ -848,7 +848,7 @@ def clearances(G):
     t = g("ins_tilt") * d2r
     add("Left-edge part inside the pocket at insertion tilt", -g("nb_over") * math.cos(t) + g("nb_conn_Z0") * math.sin(t), 0.2,
         note=f"part {g('nb_over'):.2f} past the glass; tilt {g('ins_tilt')} deg (TBV part)")
-    add("Waveshare boss/bridge to IDC socket (Z)", g("idc_Z0") - g("ws_bridge_Z1"), 0.3)
+    add("Waveshare screw head to adapter PCB (Z)", g("idc_Z0") + 2.5 - g("ws_bridge_Z1") - g("ws_screw_head_h"), 0.3)
     j8 = (g("j8_col_x")[0] - 1.27, g("j8_col_x")[1] + 1.27, g("j8_row_y0") - 1.27,
           g("j8_row_y0") + (g("j8_rows") - 1) * 2.54 + 1.27)
     add("Waveshare boss to J8 header plastic (XY)", min(rect_dist(h[0], h[1], *j8) for h in g("ws_holes")) - g("ws_boss_d") / 2, 0.3)

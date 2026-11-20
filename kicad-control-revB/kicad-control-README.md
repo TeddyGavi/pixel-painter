@@ -1,5 +1,38 @@
 # Bead Designer control PCB Rev B: variants J and D (KiCad 10.0.7)
 
+> **Rev B5 (variant D) + J8 adapter rev A, 2026-11-19: upload these.** The Waveshare J8 is a female socket, so the 2x17 ribbon link was replaced. Upload `pcb-D-revB5.zip` and `pcb-adapter-J8-revA.zip`; older zips are marked `-OLD-do-not-upload`.
+>
+> **Control PCB D rev B5**
+> - J1 is now a Hirose FH12-16S-0.5SH(55) FPC connector (LCSC C596731, JLC-assembled) on the BOTTOM side, slot at the top edge. KiCad (134.0, 71.45).
+> - R13/R14 and the AWHW header are removed.
+> - FFC pin order, lowest X first (control J1 pin 1..16):
+>
+>   | Pins | Signal (J8 pin) |
+>   |---|---|
+>   | 1 | GND |
+>   | 2 | NAV_C (3) |
+>   | 3, 4 | ENC_A (13), ENC_B (15) |
+>   | 5, 6 | UP (19), DOWN (21) |
+>   | 7, 8 | LEFT (23), RIGHT (25) |
+>   | 9, 10 | GND |
+>   | 11 | ENC_SW (24) |
+>   | 12 | 3V3 (16) |
+>   | 13, 14 | SIDE/EXIO6 (8), MENU/EXIO5 (6) |
+>   | 15, 16 | GND |
+>
+> **J8 adapter rev A** (`kicad-adapter-J8/`, no schematic; the netlist is in this note and the board)
+> - Size 15 x 52.1 mm, case X 26.5..41.5, Y -4.6..47.5.
+> - **J1:** 2x17 male header on the F side, into J8; pin n = J8 pin n, pin 1 at the keys end. You solder it.
+> - **J2:** FH12-16S on the B side, slot at the bottom edge, pin 1 at the highest X. Adapter J2 pin k = control J1 pin 17-k, because the cable keeps each conductor's X.
+> - **R1/R2:** 2.2k / 4.7k (0603, B side): J8-31 USB 5 V → J8-10 EXIO7. No 5 V goes on the cable.
+> - J8-2 BAT, 4, 30, 32 and 33 are not connected.
+> - **Keying:** pull pin 33 out of the header and push a cut-off pin into J8-33 (GND), so the adapter can't go in reversed.
+>
+> **Cable and assembly**
+> - **Cable:** 30 mm 16-way 0.5 mm **same-side** FFC (GCT 05-16-A-0030-A-4-06-4-T). FH12 is bottom-contact: insert with the contacts toward each board. Insert into J1 first, then J2.
+> - **JLC:** check the assembly preview. Each FH12 actuator/slot must sit at the board edge with the pads inboard; fix any rotation offset in JLC's editor. Edge rails may be needed (the connectors are flush with the edges).
+> - **Review:** electronics-engineer review 2026-11-19: no blocking findings.
+
 Generated 2026-11-08 from `layout-revB.md`, including the case-final section "Control PCB mounting holes (from case)".
 The files are hand-written KiCad s-expressions: schematic version 20260306, board and footprints 20260206, symbol library 20251024, generator_version "10.0", project version 3.
 Generators and checkers are in `scratchpad/kc-tools-revB/`.

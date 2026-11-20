@@ -71,12 +71,12 @@ ws_pcb_h      = 57.7;    // TBV
 ws_pcb_t      = 1.2;     // TBV (ghost + pin length)
 ws_pcb_rear_Z = 6.0;     // lens front -> PCB rear face (dimensioned)
 ws_rear_parts_h = 3.5;   // dimensioned
-hdr_h         = 2.5;     // TBV: J8 male header plastic
+hdr_h         = 5.0;     // J8 is a FEMALE 2x17 socket: PCB rear -> socket top (user caliper: top at Z 11; drawing 11.5)
 j8_col_x      = [32.73, 35.27];
 j8_row_y0     = 5.18;
 j8_rows       = 17;
 j8_pitch      = 2.54;
-j8_pin_Z1     = 17.6;    // TBV: J8 pin tips
+j8_pin_Z1     = 11.0;    // J8 socket top (female: no pins stand up)
 key_x         = [9.75, 18.25, 26.75];
 key_tip_y     = 54.8;    // TBV
 key_Z         = 6.9;     // TBV (rear-side keys, Rev A.1 re-measure)
@@ -98,11 +98,21 @@ nb_conn_Z0    = 6.0;     // TBV: assumed on the rear side (Z 6.0 ..)
 lens_clr      = 0.15;    // glass to pocket wall, per side
 lens_gasket_t = 0.2;     // TBV: thin PSA/foam gasket on the ledge (also bonds the glass)
 win_clr       = 0.3;     // ledge window around the PCB outline / edge parts
-ws_boss_d     = 4.0;     // boss face Dia (annular ring ~3.6)
-ws_pin_d      = 1.9;     // locating pin in the 2.2 hole
-ws_pin_len    = 1.0;     // < PCB thickness: nothing reaches the display side
+// The Waveshare has M2 female standoffs on its rear (user: 4.0 tall, M2 thread), so
+// the bosses sit behind the standoff tips and M2 screws go in from the back (2026-11-19).
+// Hole 2 (36.5, 0) is NOT screwed: the FFC Z-fold passes right there.
+ws_standoff_h = 4.0;     // user caliper: PCB rear face -> standoff tip
+ws_standoff_d = 3.5;     // TBV: standoff outside diameter (ghost only)
+ws_screw      = [true, false, true, true];   // per ws_holes
+ws_boss_d     = 5.0;     // boss Dia around the screw
+ws_boss_t     = 1.5;     // boss / bridge thickness (Z)
+ws_screw_hole_d = 2.4;   // M2 clearance
+ws_screw_len  = 4;       // M2 x 4 pan head (ISO 7045): 2.5 thread into the standoff
+ws_screw_head_h = 1.6;   // ISO 7045 M2 head height
+ws_screw_head_d = 4.0;
 ws_bridge_w   = 3.0;     // bridge from boss to the nearest side wall (Y width)
-ws_bridge_Z1  = 8.2;     // bridge/boss rear face (IDC socket starts at Z 8.5)
+ws_boss_Z0    = 6.0 + ws_standoff_h;          // boss face = standoff tip (10.0)
+ws_bridge_Z1  = ws_boss_Z0 + ws_boss_t;       // boss rear face (11.5)
 ins_tilt      = 12;      // deg: insert the module right side raised (left edge part clears the pocket)
 
 /* [4. Control PCB -- layout-revB "Control PCB"] */
@@ -118,11 +128,11 @@ cur_xy  = [5.0, -34.0];   // cursor control (stick or 5-way) axis
 enc_xy  = [31.5, -34.0];  // colour knob encoder
 menu_xy = [18.25, -18.1];  // B3F-1000 centre (KiCad SW1, Rev B.1); the cap axis is offset, see menu_cap_xy
 side_y  = -23.0;            // SW2 actuator centre (KiCad, Rev B.1; was -24.0)
-cp_hdr_xc  = 18.25;       // 2x17 shrouded header J1 on the PCB BOTTOM side (KiCad: pins -2.07..38.57 at Y -9.23/-11.77)
-cp_hdr_yc  = -10.5;
-cp_hdr_len = 50.8;        // AWHW-34: 16 x 2.54 + 10.16 (TBV)
-cp_hdr_w   = 8.9;         // TBV
-cp_hdr_h   = 9.0;         // TBV: PCB bottom -> top of the mated IDC socket (layout: to Z ~19.1)
+cp_hdr_xc  = 34.0;        // J1 = FH12-16S-0.5SH on the PCB BOTTOM side, slot at the top edge (rev B5)
+cp_hdr_yc  = -10.5;       // body Y -7.0 .. -12.3, pads to -13.95
+cp_hdr_len = 13.1;        // FH12-16 incl. the mounting tabs (X 27.45 .. 40.55)
+cp_hdr_w   = 7.0;         // Y extent incl. the signal pads
+cp_hdr_h   = 2.0;         // FH12 height (TBV) + the FFC entering at its slot
 cp_stub    = 1.8;         // THT lead stubs below the control PCB
 cp_top_keep = 6.0;        // layout: top-side part height budget
 
@@ -272,7 +282,7 @@ screw_engage    = 3.5;   // control-PCB screws into their inserts
 screw_len_shell = 14;    // M2 x 14 SHCS: back shell + control PCB -> front-shell insert
 screw_len_cp    = 6;     // M2 x 6 SHCS: control PCB -> insert (third hole)
 back_column_wall = 1.0;
-screw_len_top   = 14;    // M2 x 14 countersunk at the two top corners, head flush
+screw_len_top   = 12;    // M2 x 12 countersunk at the two top corners, head flush (case now ~21.5 deep)
 csk_d           = 4.0;
 top_column_wall = 1.2;
 
@@ -284,16 +294,25 @@ batt_x0      = 4.0;      // layout: X 4..24
 batt_y0      = 0.0;      // layout: Y 0..50
 batt_gap     = 0.3;      // Waveshare rear parts -> cell (0.3 foam tape on Kapton)
 batt_clr     = 0.5;      // XY bay clearance (total)
-batt_clr_z   = 0.15;     // cell back -> ribbon
+batt_clr_z   = 0.5;      // cell back -> back wall (swell allowance; no ribbon behind the cell now)
 batt_fence_t = 1.2;
 batt_fence_h = 3.0;
-idc_w        = 6.0;      // TBV: IDC socket width (X) on J8
-idc_len      = 50.8;     // TBV: 17 x 2.54 + 7.62
-idc_h        = 9.0;      // TBV: HHKR34S socket incl. strain relief (H3DDS-3406G; layout: Z 8.5 .. 17.5)
-idc_fold_Z   = 19.5;     // layout: cable fold behind the socket
-ribbon_t     = 0.9;      // TBV: AE34G 1.27 mm pitch grey ribbon (H3DDS-3406G)
-ribbon_layers = 2;       // 45 deg crease: the run to -X and the run to -Y overlap behind the cell
-ribbon_w     = 34 * 1.27;
+// Link (rev B5, 2026-11-19): J8 on the Waveshare is a FEMALE socket. The J8 adapter PCB
+// (kicad-adapter-J8) plugs into it with a 2x17 male header (plastic 2.5, PCB 1.6); its
+// BACK face carries J2, a Hirose FH12-16S-0.5SH (2.0 tall), slot at the adapter's bottom
+// edge. A 30 mm 16-way 0.5 mm same-side FFC (6 mm stiffeners) Z-folds between the two
+// facing slots: a U over J1, a run at Z ~12.3 under the adapter's front face, a U at
+// Y ~0, into J1 (same connector) on the control PCB's rear face, slot at its top edge
+// (electronics review 2026-11-19). The idc_* names are kept for the adapter stack.
+idc_w        = 15.0;     // adapter PCB width (X 26.5 .. 41.5)
+idc_len      = 52.1;     // adapter PCB length (Y -4.6 .. 47.5)
+idc_dy       = -4.05;    // adapter centre Y relative to the J8 centre (25.5 -> 21.45)
+idc_h        = 6.1;      // header plastic 2.5 + PCB 1.6 + FH12 2.0 (TBV) above the J8 socket top
+adp_back_Z   = 11.0 + 2.5 + 1.6;  // adapter PCB back face (15.1); the ribs stop 0.2 short of it
+idc_fold_Z   = 17.4;     // FFC leaving J2 + header pin stubs (trim to <= 1.4 above the back face)
+ribbon_t     = 0.3;      // FFC 0.1 + bend allowance
+ribbon_layers = 0;       // nothing runs behind the cell
+ribbon_w     = 8.5;      // 16 x 0.5 FFC
 
 // =====================================================================
 // Derived values (never edit)
@@ -329,23 +348,23 @@ win_y0 = ws_pcb_y0 - win_clr;
 win_y1 = max(ws_pcb_y1, key_tip_y) + win_clr;
 ledge_min = min(win_x0 - lens_x0, lens_x1 - win_x1, win_y0 - lens_y0, lens_y1 - win_y1); // glass on ledge
 nb_over   = lens_x0 - nb_conn_x0;                   // left-edge part beyond the glass edge
-ws_glass_front_Z = ws_pcb_rear_Z - 6.0;             // boss face sets the glass: must be 0
+ws_glass_front_Z = ws_boss_Z0 - ws_standoff_h - 6.0; // boss face (standoff tip) sets the glass: must be 0
 ledge_glass_front_Z = pocket_Z1 - lens_gasket_t - lens_t; // ledge sets the glass: must be 0
 ws_bridge_side = [for (h = ws_holes) h[0] < lens_cx ? -1 : 1];
 
 // control PCB stack
 cp_top_Z = panel_t + enc_body_h;                   // 8.5
 cp_bot_Z = cp_top_Z + cp_t;                        // 10.1
-cp_hdr_Z1 = cp_bot_Z + cp_hdr_h;                   // 19.1
+cp_hdr_Z1 = cp_bot_Z + cp_hdr_h;                   // 12.1
 cp_boss_d = insert_hole_d + 2 * cp_boss_wall;      // 5.6
 
 // battery / IDC / ribbon / depth
 batt_Z0   = ws_pcb_rear_Z + ws_rear_parts_h + batt_gap;   // 9.8
 batt_Z1   = batt_Z0 + batt_t;                             // 19.8
-idc_Z0    = ws_pcb_rear_Z + hdr_h;                        // 8.5
-idc_Z1    = idc_Z0 + idc_h;                               // 17.5
+idc_Z0    = ws_pcb_rear_Z + hdr_h;                        // 11.0 (J8 socket top)
+idc_Z1    = idc_Z0 + idc_h;                               // 17.1 (adapter J2 top)
 idc_xc    = (j8_col_x[0] + j8_col_x[1]) / 2;
-idc_yc    = j8_row_y0 + (j8_rows - 1) * j8_pitch / 2;
+idc_yc    = j8_row_y0 + (j8_rows - 1) * j8_pitch / 2 + idc_dy;
 idc_x0    = idc_xc - idc_w / 2;
 idc_x1    = idc_xc + idc_w / 2;
 idc_y0    = idc_yc - idc_len / 2;
@@ -453,7 +472,8 @@ dp_sink      = (dp_span / 2) * sin(dp_act_deg) - dp_proud; // pressed arm tip be
 // ---------------- design-rule checks (re-run by validate_case.py for both variants) ----------------
 assert(ctrl == "J" || ctrl == "D", "ctrl must be \"J\" or \"D\"");
 assert(abs(ws_glass_front_Z) < 0.001 && abs(ledge_glass_front_Z) < 0.001, "glass not flush with Z 0");
-assert(ws_bridge_Z1 <= idc_Z0 - 0.3, "Waveshare boss bridges reach the IDC socket");
+assert(ws_bridge_Z1 + ws_screw_head_h <= idc_Z0 + 2.5 - 0.3, "Waveshare screw heads reach the adapter PCB");
+assert(ws_screw_len - ws_boss_t >= 2.0, "Waveshare screws engage less than 2.0 in the standoffs");
 assert(win_x0 > pk_x0 && win_x1 < pk_x1 && win_y0 > pk_y0 && win_y1 < pk_y1, "ledge window outside the glass pocket");
 assert(ledge_min >= 0.6, "glass rests on less than 0.6 mm of ledge");
 assert(-nb_over * cos(ins_tilt) + nb_conn_Z0 * sin(ins_tilt) >= 0.2, "left-edge part hits the pocket wall at the insertion tilt");
@@ -523,15 +543,19 @@ module cross2d() {
 // =====================================================================
 // FRONT SHELL
 // =====================================================================
-module ws_bosses() {
-    for (i = [0 : len(ws_holes) - 1]) {
+module ws_bosses() {   // bosses behind the M2 standoff tips, screwed from the back
+    for (i = [0 : len(ws_holes) - 1]) if (ws_screw[i]) {
         h = ws_holes[i];
-        zcyl(h[0], h[1], ws_boss_d, ws_pcb_rear_Z, ws_bridge_Z1);
-        zcyl(h[0], h[1], ws_pin_d, ws_pcb_rear_Z - ws_pin_len, ws_pcb_rear_Z + eps);
-        if (ws_bridge_side[i] < 0)
-            zbox(cav_x0 - eps, h[0], h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_pcb_rear_Z, ws_bridge_Z1);
-        else
-            zbox(h[0], cav_x1 + eps, h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_pcb_rear_Z, ws_bridge_Z1);
+        difference() {
+            union() {
+                zcyl(h[0], h[1], ws_boss_d, ws_boss_Z0, ws_bridge_Z1);
+                if (ws_bridge_side[i] < 0)
+                    zbox(cav_x0 - eps, h[0], h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Z0, ws_bridge_Z1);
+                else
+                    zbox(h[0], cav_x1 + eps, h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Z0, ws_bridge_Z1);
+            }
+            zcyl(h[0], h[1], ws_screw_hole_d, ws_boss_Z0 - 1, ws_bridge_Z1 + 1);
+        }
     }
 }
 module front_bosses() {
@@ -609,13 +633,16 @@ module skirt() {
             zext(Z_split - eps, Z_split + 0.8) difference() { cav2d(-0.05); cav2d(lip_clr + lip_t); }
         }
         for (p = top_boss_xy) zcyl(p[0], p[1], insert_boss_d + 4 * lip_clr, Z_split - lip_h - 1, Z_split + 1);
-        // USB duct (left wall) and control-PCB header ends (both walls)
+        // USB duct (left wall). (The cut across both walls for the old 2x17 header ends was removed in rev B5.)
         zbox(cav_x0 - 1, usb_floor_x1 + 0.5, usb_y - usb_duct_hw - 0.5, usb_y + usb_duct_hw + 0.5, Z_split - lip_h - 1, Z_split + 1);
-        zbox(cav_x0 - 1, cav_x1 + 1, cp_hdr_yc - cp_hdr_w / 2 - 0.5, cp_hdr_yc + cp_hdr_w / 2 + 0.5, Z_split - lip_h - 1, Z_split + 1);
     }
 }
 module batt_fence() {   // top-end fence only: the ribbon crosses the other sides of the cell
     zbox(bay_x0 - batt_fence_t, bay_x1 + batt_fence_t, bay_y1, bay_y1 + batt_fence_t, batt_Z1 - batt_fence_h, back_in_Z + eps);
+}
+module adapter_ribs() {   // hold the J8 adapter seated (stop 0.2 short of its back face)
+    for (yr = [[24.0, 25.5], [45.8, 47.2]]) for (xr = [[27.0, 31.0], [37.0, 41.0]])
+        zbox(xr[0], xr[1], yr[0], yr[1], adp_back_Z + 0.2, back_in_Z + eps);
 }
 module back_shell() {
     difference() {
@@ -632,6 +659,7 @@ module back_shell() {
                         zcyl(mount_holes[i][0], mount_holes[i][1], back_column_d, cp_bot_Z, back_in_Z + eps);
                     for (p = top_boss_xy) zcyl(p[0], p[1], top_column_d, Z_split, back_in_Z + eps);
                     batt_fence();
+                    adapter_ribs();
                 }
             }
         }
@@ -752,13 +780,23 @@ module ghost_waveshare() {
     color([0.15, 0.15, 0.15], ghost_alpha)
         zbox(j8_col_x[0] - j8_pitch / 2, j8_col_x[1] + j8_pitch / 2, j8_row_y0 - j8_pitch / 2,
              j8_row_y0 + (j8_rows - 1) * j8_pitch + j8_pitch / 2, ws_pcb_rear_Z, idc_Z0);
+    color([0.85, 0.7, 0.3], ghost_alpha) for (k = [0 : len(ws_holes) - 1]) {
+        h = ws_holes[k];
+        zcyl(h[0], h[1], ws_standoff_d, ws_pcb_rear_Z, ws_boss_Z0);
+        if (ws_screw[k]) zcyl(h[0], h[1], ws_screw_head_d, ws_bridge_Z1, ws_bridge_Z1 + ws_screw_head_h);
+    }
 }
 module ghost_idc_ribbon() {
     color([0.25, 0.25, 0.25], ghost_alpha) zbox(idc_x0, idc_x1, idc_y0, idc_y1, idc_Z0, idc_Z1);
     color([0.7, 0.7, 0.75], ghost_alpha) {
-        zbox(idc_x0, idc_x1, idc_yc - ribbon_w / 2, idc_yc + ribbon_w / 2, idc_Z1, idc_fold_Z);
-        // flat run behind the cell and the 45 deg crease (2 layers), then down to the control header
-        zbox(cp_hdr_xc - ribbon_w / 2, idc_x1, cp_hdr_yc, idc_yc + ribbon_w / 2, rib_Z0, rib_Z1);
+        // FFC Z-fold: J2 stiffener (Z 15.6) -> U over J1 down to Z 12.3 -> run under the
+        // adapter to Y ~-0.7 -> U down to Z 10.6 -> J1 stiffener into the control slot
+        fx0 = 34 - ribbon_w / 2; fx1 = 34 + ribbon_w / 2;
+        zbox(fx0, fx1, -7.1, -4.6, 15.45, 15.75);
+        zbox(fx0, fx1, -8.8, -7.1, 12.3, 15.75);
+        zbox(fx0, fx1, -7.1, -0.7, 12.15, 12.45);
+        zbox(fx0, fx1, -1.5, -0.7, 10.6, 12.45);
+        zbox(fx0, fx1, -7.0, -1.5, 10.45, 10.75);
     }
 }
 module ghost_control() {
