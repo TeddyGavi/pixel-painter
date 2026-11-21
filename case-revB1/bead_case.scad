@@ -71,12 +71,12 @@ ws_pcb_h      = 57.7;    // TBV
 ws_pcb_t      = 1.2;     // TBV (ghost + pin length)
 ws_pcb_rear_Z = 6.0;     // lens front -> PCB rear face (dimensioned)
 ws_rear_parts_h = 3.5;   // dimensioned
-hdr_h         = 5.0;     // J8 is a FEMALE 2x17 socket: PCB rear -> socket top (user caliper: top at Z 11; drawing 11.5)
+hdr_h         = 5.5;     // J8 is a FEMALE 2x17 socket: PCB rear -> socket top (Waveshare drawing 11.50 from the glass front; user confirmed 2026-11-19)
 j8_col_x      = [32.73, 35.27];
 j8_row_y0     = 5.18;
 j8_rows       = 17;
 j8_pitch      = 2.54;
-j8_pin_Z1     = 11.0;    // J8 socket top (female: no pins stand up)
+j8_pin_Z1     = 11.5;    // J8 socket top (female: no pins stand up)
 key_x         = [9.75, 18.25, 26.75];
 key_tip_y     = 54.8;    // TBV
 key_Z         = 6.9;     // TBV (rear-side keys, Rev A.1 re-measure)
@@ -101,16 +101,20 @@ win_clr       = 0.3;     // ledge window around the PCB outline / edge parts
 // The Waveshare has M2 female standoffs on its rear (user: 4.0 tall, M2 thread), so
 // the bosses sit behind the standoff tips and M2 screws go in from the back (2026-11-19).
 // Hole 2 (36.5, 0) is NOT screwed: the FFC Z-fold passes right there.
-ws_standoff_h = 4.0;     // user caliper: PCB rear face -> standoff tip
-ws_standoff_d = 3.5;     // TBV: standoff outside diameter (ghost only)
+ws_standoff_h = 3.5;     // PCB rear face -> standoff tip (drawing 3.50; user re-measured ~3.5)
+ws_standoff_d = 3.5;     // user caliper
 ws_screw      = [true, false, true, true];   // per ws_holes
-ws_boss_d     = 5.0;     // boss Dia around the screw
-ws_boss_t     = 1.5;     // boss / bridge thickness (Z)
+ws_boss_d     = 6.5;     // boss Dia: cup around the standoff tip + screw seat
+ws_boss_Zb    = 9.7;     // boss front face: 0.2 behind the tallest rear parts (3.5: RTC / BAT connectors and the CHG LED sit within 3 mm of the holes)
+ws_foot_d     = 4.3;     // foot ring that meets the Dia 3.5 standoff tip (Z 9.5 .. 9.7); XY location comes from the glass pocket (+-0.15)
+ws_free_t     = 0.6;     // hole 2 (no screw, under the FFC Z-fold): body 9.7 .. 10.3
+ws_pillar_w   = 5.0;        // pillar from the front panel to the boss, between the side wall and the PCB window (Y width)
+ws_boss_t     = 2.0;     // standoff tip -> boss rear face (foot 0.2 + body 1.8)
 ws_screw_hole_d = 2.4;   // M2 clearance
 ws_screw_len  = 4;       // M2 x 4 pan head (ISO 7045): 2.5 thread into the standoff
 ws_screw_head_h = 1.6;   // ISO 7045 M2 head height
 ws_screw_head_d = 4.0;
-ws_bridge_w   = 3.0;     // bridge from boss to the nearest side wall (Y width)
+ws_bridge_w   = 5.0;     // bridge from boss to the nearest side wall (Y width)
 ws_boss_Z0    = 6.0 + ws_standoff_h;          // boss face = standoff tip (10.0)
 ws_bridge_Z1  = ws_boss_Z0 + ws_boss_t;       // boss rear face (11.5)
 ins_tilt      = 12;      // deg: insert the module right side raised (left edge part clears the pocket)
@@ -308,8 +312,8 @@ idc_w        = 15.0;     // adapter PCB width (X 26.5 .. 41.5)
 idc_len      = 52.1;     // adapter PCB length (Y -4.6 .. 47.5)
 idc_dy       = -4.05;    // adapter centre Y relative to the J8 centre (25.5 -> 21.45)
 idc_h        = 6.1;      // header plastic 2.5 + PCB 1.6 + FH12 2.0 (TBV) above the J8 socket top
-adp_back_Z   = 11.0 + 2.5 + 1.6;  // adapter PCB back face (15.1); the ribs stop 0.2 short of it
-idc_fold_Z   = 17.4;     // FFC leaving J2 + header pin stubs (trim to <= 1.4 above the back face)
+adp_back_Z   = ws_pcb_rear_Z + hdr_h + 2.5 + 1.6;  // adapter PCB back face (15.6); the ribs stop 0.2 short of it
+idc_fold_Z   = 17.9;     // FFC leaving J2 + header pin stubs (trim to <= 1.4 above the back face)
 ribbon_t     = 0.3;      // FFC 0.1 + bend allowance
 ribbon_layers = 0;       // nothing runs behind the cell
 ribbon_w     = 8.5;      // 16 x 0.5 FFC
@@ -361,8 +365,8 @@ cp_boss_d = insert_hole_d + 2 * cp_boss_wall;      // 5.6
 // battery / IDC / ribbon / depth
 batt_Z0   = ws_pcb_rear_Z + ws_rear_parts_h + batt_gap;   // 9.8
 batt_Z1   = batt_Z0 + batt_t;                             // 19.8
-idc_Z0    = ws_pcb_rear_Z + hdr_h;                        // 11.0 (J8 socket top)
-idc_Z1    = idc_Z0 + idc_h;                               // 17.1 (adapter J2 top)
+idc_Z0    = ws_pcb_rear_Z + hdr_h;                        // 11.5 (J8 socket top)
+idc_Z1    = idc_Z0 + idc_h;                               // 17.6 (adapter J2 top)
 idc_xc    = (j8_col_x[0] + j8_col_x[1]) / 2;
 idc_yc    = j8_row_y0 + (j8_rows - 1) * j8_pitch / 2 + idc_dy;
 idc_x0    = idc_xc - idc_w / 2;
@@ -473,6 +477,7 @@ dp_sink      = (dp_span / 2) * sin(dp_act_deg) - dp_proud; // pressed arm tip be
 assert(ctrl == "J" || ctrl == "D", "ctrl must be \"J\" or \"D\"");
 assert(abs(ws_glass_front_Z) < 0.001 && abs(ledge_glass_front_Z) < 0.001, "glass not flush with Z 0");
 assert(ws_bridge_Z1 + ws_screw_head_h <= idc_Z0 + 2.5 - 0.3, "Waveshare screw heads reach the adapter PCB");
+assert(ws_boss_Zb >= ws_pcb_rear_Z + ws_rear_parts_h + 0.2, "Waveshare bosses reach the rear parts (3.5 tall)");
 assert(ws_screw_len - ws_boss_t >= 2.0, "Waveshare screws engage less than 2.0 in the standoffs");
 assert(win_x0 > pk_x0 && win_x1 < pk_x1 && win_y0 > pk_y0 && win_y1 < pk_y1, "ledge window outside the glass pocket");
 assert(ledge_min >= 0.6, "glass rests on less than 0.6 mm of ledge");
@@ -543,18 +548,28 @@ module cross2d() {
 // =====================================================================
 // FRONT SHELL
 // =====================================================================
-module ws_bosses() {   // bosses behind the M2 standoff tips, screwed from the back
-    for (i = [0 : len(ws_holes) - 1]) if (ws_screw[i]) {
+// Four bosses meet the standoff tips with a small foot (glass-flush stop); the body clears
+// the 3.5 rear parts by 0.2. Three are screwed (M2 x 4 from the back); hole 2 (36.5, 0) is
+// a support only, kept 0.3 below the FFC Z-fold.
+// Each boss: cup + bridge to the side wall + a solid pillar down to the front panel
+// in the strip between the side wall and the PCB window (stiffness, 2026-11-19).
+module ws_bosses() {
+    for (i = [0 : len(ws_holes) - 1]) {
         h = ws_holes[i];
+        Zt = ws_screw[i] ? ws_bridge_Z1 : ws_boss_Zb + ws_free_t;
         difference() {
             union() {
-                zcyl(h[0], h[1], ws_boss_d, ws_boss_Z0, ws_bridge_Z1);
-                if (ws_bridge_side[i] < 0)
-                    zbox(cav_x0 - eps, h[0], h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Z0, ws_bridge_Z1);
-                else
-                    zbox(h[0], cav_x1 + eps, h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Z0, ws_bridge_Z1);
+                zcyl(h[0], h[1], ws_boss_d, ws_boss_Zb, Zt);
+                zcyl(h[0], h[1], ws_foot_d, ws_boss_Z0, ws_boss_Zb + eps);   // foot on the standoff tip
+                if (ws_bridge_side[i] < 0) {
+                    zbox(cav_x0 - eps, h[0], h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Zb, Zt);
+                    zbox(cav_x0 - eps, win_x0, h[1] - ws_pillar_w / 2, h[1] + ws_pillar_w / 2, panel_t - eps, Zt);
+                } else {
+                    zbox(h[0], cav_x1 + eps, h[1] - ws_bridge_w / 2, h[1] + ws_bridge_w / 2, ws_boss_Zb, Zt);
+                    zbox(win_x1, cav_x1 + eps, h[1] - ws_pillar_w / 2, h[1] + ws_pillar_w / 2, panel_t - eps, Zt);
+                }
             }
-            zcyl(h[0], h[1], ws_screw_hole_d, ws_boss_Z0 - 1, ws_bridge_Z1 + 1);
+            if (ws_screw[i]) zcyl(h[0], h[1], ws_screw_hole_d, ws_boss_Z0 - 1, Zt + 1);
         }
     }
 }
@@ -792,8 +807,8 @@ module ghost_idc_ribbon() {
         // FFC Z-fold: J2 stiffener (Z 15.6) -> U over J1 down to Z 12.3 -> run under the
         // adapter to Y ~-0.7 -> U down to Z 10.6 -> J1 stiffener into the control slot
         fx0 = 34 - ribbon_w / 2; fx1 = 34 + ribbon_w / 2;
-        zbox(fx0, fx1, -7.1, -4.6, 15.45, 15.75);
-        zbox(fx0, fx1, -8.8, -7.1, 12.3, 15.75);
+        zbox(fx0, fx1, -7.1, -4.6, adp_back_Z + 0.35, adp_back_Z + 0.65);
+        zbox(fx0, fx1, -8.8, -7.1, 12.3, adp_back_Z + 0.65);
         zbox(fx0, fx1, -7.1, -0.7, 12.15, 12.45);
         zbox(fx0, fx1, -1.5, -0.7, 10.6, 12.45);
         zbox(fx0, fx1, -7.0, -1.5, 10.45, 10.75);

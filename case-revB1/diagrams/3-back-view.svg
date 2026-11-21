@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200"><defs><marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c00"/></marker></defs><rect width="800" height="1200" fill="white"/><text x="20.0" y="32.0" font-family="DejaVu Sans, Arial" font-size="20" text-anchor="start" fill="#111" font-weight="bold">3 · Looking into the front shell from the back (back shell off)</text>
+<text x="20.0" y="56.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">Left/right are mirrored compared to looking at the screen. USB-C is on the right in this view.</text>
+<rect x="110.0" y="90.0" width="405.0" height="827.2" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="119.0" y="105.0" width="387.0" height="803.2" fill="#f6e3cf" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="152.4" y="134.6" width="320.2" height="432.8" fill="#2f8f4a" fill-opacity="0.9" stroke="#000" stroke-width="0.8"/>
+<rect x="269.4" y="167.2" width="150.0" height="375.0" fill="#4a64c8" fill-opacity="0.85" stroke="#000" stroke-width="0.8"/>
+<text x="344.4" y="339.8" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="middle" fill="white">battery</text>
+<text x="344.4" y="362.2" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="middle" fill="white">(taped on)</text>
+<rect x="126.9" y="594.8" width="371.2" height="307.5" fill="#2f8f4a" fill-opacity="0.9" stroke="#000" stroke-width="0.8"/>
+<rect x="138.1" y="186.0" width="112.5" height="390.8" fill="#1f6f8f" fill-opacity="0.9" stroke="#000" stroke-width="0.8"/>
+<circle cx="203.9" cy="503.4" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="484.4" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="465.3" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="446.2" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="427.2" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="408.1" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="389.1" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="370.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="351.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="332.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="312.9" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="293.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="274.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="255.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="236.7" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="217.6" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="203.9" cy="198.6" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="503.4" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="484.4" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="465.3" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="446.2" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="427.2" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="408.1" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="389.1" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="370.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="351.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="332.0" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="312.9" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="293.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="274.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="255.8" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="236.7" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="217.6" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<circle cx="184.8" cy="198.6" r="2.2" fill="#ddd" stroke="#000" stroke-width="0.4"/>
+<rect x="216.9" y="351.0" width="30.0" height="11.2" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8" stroke-dasharray="2,2"/>
+<rect x="141.9" y="351.0" width="30.0" height="11.2" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8" stroke-dasharray="2,2"/>
+<rect x="216.9" y="188.2" width="30.0" height="10.5" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8" stroke-dasharray="2,2"/>
+<rect x="141.9" y="188.2" width="30.0" height="10.5" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8" stroke-dasharray="2,2"/>
+<rect x="145.6" y="594.8" width="97.5" height="48.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="153.9" y="534.8" width="81.0" height="40.5" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="162.5" y="547.5" width="63.8" height="54.0" fill="#c58b00" fill-opacity="0.9" stroke="#000" stroke-width="0.8"/>
+<circle cx="449.4" cy="542.2" r="24.4" fill="#d08a3a" stroke="#000" stroke-width="0.8"/>
+<circle cx="449.4" cy="542.2" r="13.1" fill="#888" stroke="#000" stroke-width="0.8"/>
+<polyline points="441.4,542.2 457.4,542.2" fill="none" stroke="#222" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.6" cy="542.2" r="24.4" fill="#d08a3a" stroke="#000" stroke-width="0.8"/>
+<circle cx="175.6" cy="542.2" r="13.1" fill="#c9a54a" stroke="#000" stroke-width="0.8"/>
+<circle cx="449.4" cy="159.8" r="24.4" fill="#d08a3a" stroke="#000" stroke-width="0.8"/>
+<circle cx="449.4" cy="159.8" r="13.1" fill="#888" stroke="#000" stroke-width="0.8"/>
+<polyline points="441.4,159.8 457.4,159.8" fill="none" stroke="#222" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="175.6" cy="159.8" r="24.4" fill="#d08a3a" stroke="#000" stroke-width="0.8"/>
+<circle cx="175.6" cy="159.8" r="13.1" fill="#888" stroke="#000" stroke-width="0.8"/>
+<polyline points="167.6,159.8 183.6,159.8" fill="none" stroke="#222" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="479.4" cy="692.2" r="10.0" fill="#bbb" stroke="#000" stroke-width="0.8"/>
+<circle cx="149.4" cy="876.0" r="10.0" fill="#bbb" stroke="#000" stroke-width="0.8"/>
+<circle cx="312.5" cy="729.8" r="10.0" fill="#bbb" stroke="#000" stroke-width="0.8"/>
+<circle cx="213.1" cy="797.2" r="37.5" fill="none" stroke="#ddd" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="449.4" cy="133.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="449.4" y="138.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<circle cx="175.6" cy="516.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="175.6" y="521.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<circle cx="194.4" cy="272.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="194.4" y="277.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<circle cx="194.4" cy="198.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="194.4" y="203.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<circle cx="231.9" cy="356.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="231.9" y="361.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<circle cx="194.4" cy="572.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="194.4" y="577.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<circle cx="194.4" cy="624.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="194.4" y="629.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<circle cx="153.1" cy="554.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="153.1" y="559.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<circle cx="344.4" cy="452.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="344.4" y="457.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<circle cx="51.0" cy="973.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="978.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<text x="68.0" y="978.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">M2x4 screw into the standoff (3 corners)</text>
+<circle cx="51.0" cy="998.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1003.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<text x="68.0" y="1003.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">support pad, no screw</text>
+<circle cx="51.0" cy="1022.7" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1027.7" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<text x="68.0" y="1027.7" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">adapter, header pins down into J8</text>
+<circle cx="51.0" cy="1047.3" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1052.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<text x="68.0" y="1052.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J8 pin 1 end (GND/BAT) is at the TOP, by the keys</text>
+<circle cx="51.0" cy="1072.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1077.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<text x="68.0" y="1077.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">ribs in the back shell press on the adapter</text>
+<circle cx="51.0" cy="1096.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1101.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<text x="68.0" y="1101.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">FFC (Z-folded, on top of everything here)</text>
+<circle cx="51.0" cy="1121.5" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1126.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<text x="68.0" y="1126.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J1 on the control PCB</text>
+<circle cx="51.0" cy="1146.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1151.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<text x="68.0" y="1151.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J2 on the adapter back (under the FFC end)</text>
+<circle cx="51.0" cy="1170.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1175.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<text x="68.0" y="1175.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">battery, taped to the Waveshare rear</text>
+<text x="314.4" y="767.2" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="middle" fill="white">control PCB</text>
+<text x="314.4" y="789.8" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="middle" fill="white">(screws at 3 holes)</text>
+<text x="456.9" y="138.5" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111"></text>
+<text x="314.4" y="82.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#111">TOP of device (PWR / BOOT / RST keys)</text>
+<text x="314.4" y="935.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#111">BOTTOM</text></svg>

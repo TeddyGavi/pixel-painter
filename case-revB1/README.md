@@ -33,7 +33,7 @@ Coordinates follow `layout-revB.md`. Waveshare data comes from `ws241-mechanical
 
 | `show =` | Part | Qty |
 |---|---|---|
-| `"front"` | Front shell: panel, glass pocket + ledge window, cursor opening (J round / D cross), encoder + MENU holes, SIDE hole + counterbore, USB-C duct, key-plate slot, 4 Waveshare bosses with pins, 3 control-PCB insert bosses, 2 top-corner insert bosses | 1 |
+| `"front"` | Front shell: panel, glass pocket + ledge window, cursor opening (J round / D cross), encoder + MENU holes, SIDE hole + counterbore, USB-C duct, key-plate slot, 4 Waveshare bosses (3 with Ø2.4 screw holes into the module's M2 standoffs, 1 seat only at (36.5, 0)), 3 control-PCB insert bosses, 2 top-corner insert bosses | 1 |
 | `"back"` | Back shell: locating lip, 2 screw columns (H1/H2), 2 top countersunk columns, battery top fence | 1 |
 | `"key_plate"` | Slide-in top-wall section holding the 3 key pins | 1 |
 | `"key_cap"` | Key pin for PWR/BOOT/RST | 3 (+2) |
@@ -41,7 +41,7 @@ Coordinates follow `layout-revB.md`. Waveshare data comes from `ws241-mechanical
 | `"side_cap"` | SIDE cap Ø3.6, 0.8 flange | 1 (+2) |
 | `"dpad_cap"` | **ctrl D only**: cross cap 23.2 x 7.2, flange ring, square 3.3 socket onto the 5-way stem | 1 (+1) |
 | `"print_plate"` | Every printed part of the selected variant laid flat | overview |
-| `"assembly"` | Shells + ghosts (Waveshare + glass, control PCB with the chosen cursor part, knob, battery, J8 plug + wire bundle). F5. | n/a |
+| `"assembly"` | Shells + ghosts (Waveshare + glass, control PCB with the chosen cursor part, knob, battery, J8 adapter + Z-folded FFC). F5. | n/a |
 
 ```sh
 for c in J D; do
@@ -55,6 +55,8 @@ python3 validate_case.py bead_case.scad      # same checks without OpenSCAD, bot
 Only the **front shell** differs between J and D (round Ø14.15 opening or cross opening). The back shell and the small parts are shared. The D variant adds `dpad_cap`.
 
 ## 3. Print settings (JLCPCB 3D printing)
+
+For a quick PLA fit test on an FDM printer (Bambu Lab) first, see [PRINT-TEST-PLA.md](PRINT-TEST-PLA.md).
 
 | Part | Process / material | Notes |
 |---|---|---|
@@ -82,27 +84,47 @@ Total shell screws: 4 (2 top countersunk + 2 through the control PCB at H1/H2), 
 
 ## 5. Assembly order
 
+Figures for steps 6–8 are in [`diagrams/`](diagrams/): `1-side-section.png` (the stack), `2-ffc-fold-zoom.png` (the cable fold), `3-back-view.png` (where everything sits) and `4-assembly-order.png` (steps 6–8 as cartoons).
+
+**Before you start (bench):**
+- Solder the 2x17 male header onto the J8 adapter. The header goes on the side **without** J2, and the plastic sits flat on the board. Trim the pins on the J2 side to ≤ 1.4 above the board: the back-shell ribs press on that face.
+- Check the adapter with a meter: header pin 16 (3V3) to pin 1 (GND) must read **> 1 kΩ**, and nothing may be shorted to pin 2 (BAT) or pin 31 (USB 5 V).
+- Practise the FH12 latch once on the bench with a spare cable. The latch is the dark flap on the slot side: lift it about 90° to open, slide the cable in fully, then press the flap down. Pull only on the latch, never on the cable.
+
+**Assembly:**
 1. Press the 5 inserts into the front shell (iron at 220–240 °C for PA12).
 2. From inside the front shell, fit the MENU cap (flange inside, flat towards the H3 boss) and the SIDE cap (flange into the right-wall counterbore). **D:** place the cross cap through the cross opening, flange inside.
 3. **Control PCB** from the back. The encoder bushing goes through the panel and the PCB rests on the 3 bosses. **D:** the 5-way stem enters the cap socket (press + a drop of glue). Fit the M2 x 6 at H3. Fit the washer and nut on the front (≤ 10 kgf·cm).
-4. Prepare the Waveshare: re-terminate the battery lead to J7 (Y 12.8 or 37.5, TBV). Tape the cell (Kapton + 0.3 foam) to the board rear at X 4..24, Y 0..50. Solder the wires to the male header's trimmed tails (sleeve J8-31 USB 5 V on its own; heat-shrink/Kapton + hot-melt over all tails), plug it into J8 **with pin 1 to pin 1** (it fits either way round), and lay the bundle down −Y beside the cell, not behind it. Before first power: J8-16 to GND must read > 1 kΩ.
-5. Lay the 0.2 PSA gasket on the pocket ledge, liner still on top. Dry-fit the module, then remove the liner.
-6. **Front-load the Waveshare**: feed the wire bundle through the window first. Lower the module **left (USB) edge first with the right side raised about 12°**. The left-edge part next to the USB-C (X −4.9, TBV) stands 0.79 past the glass and only clears the pocket wall when tilted. Then lower the right side. The 4 boss pins enter the Waveshare holes and the glass seats flush on the gasket. Press for 30 s.
-7. Solder the wires into the control PCB's J1 holes, pin n to pin n (J1 not fitted).
-8. Put the 3 key pins into the key plate and slide the plate into the top-wall slot from the back.
-9. Close with the back shell: 2 x M2 x 12 countersunk at the top, 2 x M2 x 14 SHCS at H1/H2.
-10. Fit the knob 0.5 above the face. Tighten the set screw on the flat (3.8 from the shaft tip; flat length TBV).
+4. Lay the 0.2 PSA gasket on the pocket ledge, liner still on top. Dry-fit the Waveshare, then remove the liner.
+5. **Front-load the Waveshare**, glass outwards. Lower the module **left (USB) edge first with the right side raised about 12°**: the left-edge part next to the USB-C (X −4.9, TBV) stands 0.79 past the glass and only clears the pocket wall when tilted. Then lower the right side so the glass seats flush on the gasket. Press for 30 s.
+   Turn the shell over. From the back, fit **3 × M2 x 4** through the bosses into the Waveshare's standoffs at the two top corners and the bottom-right corner (seen from the back; the bottom-left one, next to J8, is the support pad with no screw). Snug only: they thread into brass, 2 mm deep.
+6. **Battery:** re-terminate the battery lead to J7 (Y 12.8 or 37.5, TBV). Tape the cell (Kapton + 0.3 foam) to the Waveshare rear at X 4..24, Y 0..50, beside J8, not over it.
+7. **Flat cable (FFC) into J1 first** (on the control PCB's back, top edge). Open the latch, slide one end in with its **bare contacts toward the control PCB** (silk: "FFC CONTACTS TO BOARD"), push fully home, close the latch. The free end points toward the top of the device.
+8. **Cable into the adapter's J2, then the adapter onto J8.**
+   - Hold the adapter above the cable, J2 side down (header pins up). Open J2's latch, slide the free cable end in with its **bare contacts toward the adapter** (silk: "CONTACTS TO PCB"), close the latch. The cable must not be twisted.
+   - Flip the adapter over so its header points down into J8. The cable folds into an **S** by itself (`2-ffc-fold-zoom.png`). Guide the bends so they are smooth curves, not creases.
+   - **Pin 1 to the top:** the "PIN1 ^" arrow on the adapter points to the top of the device (PWR / BOOT / RST end), and J2 is at the bottom, next to the control PCB. Rotated 180° the header still fits, but the cable will not reach; if it does not reach, the adapter is the wrong way round.
+   - Press the adapter fully home in J8 (header plastic touching the socket).
+9. Put the 3 key pins into the key plate and slide the plate into the top-wall slot from the back.
+10. Close with the back shell: its 4 ribs press on the adapter and hold it in J8. Fit 2 x M2 x 12 countersunk at the top and 2 x M2 x 14 SHCS at H1/H2. If the back shell rocks or will not close, the adapter is not fully home, or a header pin tail is too long: open up and check.
+11. Fit the knob 0.5 above the face. Tighten the set screw on the flat (3.8 from the shaft tip; flat length TBV).
+
+**Taking it apart:** remove the back shell, pull the adapter straight out of J8 (rock it gently end to end), then open the J1 and J2 latches before you pull the cable. The FH12 is good for about 20 insertions, and the 3 spare cables cover a few creased ones.
 
 ## 6. Design decisions and deviations from the brief
 
 - **Waveshare retention (2026-11-19): front-loaded, then screwed from the back into its own M2 standoffs.**
-  - **Standoffs:** the module has 4 female M2 standoffs on its rear, 4.0 mm tall (user caliper).
-  - **Bosses:** front-shell bosses on bridges to the side walls sit behind the standoff tips at Z 10.0–11.5, so the standoff tips set the glass exactly flush (10.0 − 4.0 − 6.0 = 0).
-  - **Screws:** 3 × M2 × 4 pan head (ISO 7045) go through Ø2.4 holes into the standoffs, giving 2.5 mm of thread.
+  - **Standoffs:** the module has 4 female M2 standoffs on its rear, Ø3.5 × 3.5 mm tall (drawing; user re-measured).
+  - **Bosses:** four Ø6.5 front-shell bosses (body Z 9.7–11.5) meet each Ø3.5 standoff tip with a Ø4.3 × 0.2 foot (Z 9.5–9.7).
+    - **Location:** the glass pocket (±0.15) locates the module in XY. The feet (Z 9.5) set the glass exactly flush (9.5 − 3.5 − 6.0 = 0).
+    - **Stiffness:** each boss has a 5 mm-wide bridge to the side wall and a solid pillar from the front panel (Z 2) up to the boss, in the strip between the side wall and the PCB window.
+    - **Hole (36.5, 0):** a support only (body Z 9.7–10.3), 0.3 under the FFC Z-fold.
+    - **Rear parts:** the boss bodies start 3.7 mm off the PCB rear face, 0.2 above the tallest rear parts; only the Ø4.3 feet reach the standoff tips. The RTC and battery connectors and the CHG LED sit within 3 mm of the holes (user, 2026-11-19).
+  - **Screws:** 3 × M2 × 4 pan head (ISO 7045) go through Ø2.4 holes into the standoffs, giving 2.0 mm of thread.
   - **Hole (36.5, 0) is not screwed:** the FFC Z-fold passes there.
   - **Clearances:** the screw heads end at Z 13.1, 0.4 below the J8 adapter.
   - **Glass:** it still sits on the 0.2 gasket on the ledge; a light adhesive is optional.
-  - **Assembly:** front-load the module, fit the 3 screws from the back, then tape on the battery, fit the adapter, the FFC, and close.
+  - **Assembly:** front-load the module, fit the 3 screws from the back, then tape on the battery, fit the FFC (J1 first, then J2), the adapter, and close (section 5).
 - **Front loading needs a ledge window**: PCB outline + 0.3 per side (X −3.4..39.9, Y −3.65..55.1, which includes the keys at Y 54.8). The window is notched at the USB-C and at the neighbour part. The glass then rests on 0.71 (left/right) to 1.6 (bottom) of ledge, and on no ledge along the two notches. The validator warns about this (adhesive land < 1.0).
 - **Depth 21.5** = cell back 19.8 + 0.5 swell allowance + back wall 1.2. Nothing runs behind the cell: the J8 plug and wire bend top out at Z 16.6 (3.7 in front of the back wall), and the wires along the control PCB at Z ~11.4. (Before 2026-11-19 the IDC ribbon gave 22.95, and it could not mate with the female J8 anyway.) The two top screws are now **M2 x 12** (were 14).
 - **Control-PCB holes:** H1 moved from the preferred (−3.5, −44.5) to (−4.0, −20.0). The preferred spot sits on the corner of the THB001P body envelope (17 x 21, TBV). The two outer holes double as shell screws because there is no room for a separate column beside the control PCB (0.8–1.05 clearance to the walls). Positions are written to `layout-revB.md`.
@@ -110,7 +132,7 @@ Total shell screws: 4 (2 top countersunk + 2 through the control PCB at H1/H2), 
 - **MENU cap (B.1):** the B3F-1000 sits at (18.25, -18.1), only 6.9 from the H3 boss (Ø5.6 at (18.25, -25.0)). A Ø9 cap centred on the switch would put its panel hole and flange on that boss. The cap axis is therefore moved +Y to **(18.25, -16.6)**. The axis is derived (`menu_cap_xy`) so the flange flat (5.3 from the axis, 0.6 beyond the hole) is 0.3 from the boss, and the boss also keys the cap against rotation. A Ø3.0 nub, offset 1.5 to -Y, lands on the centre of the Ø3.5 plunger (top Z 4.2 = PCB top 8.5 − 4.3, Omron B3F table) with a 0.1 gap, so the nub is 1.1 long. The flange rear (Z 3.0) is 2.0 in front of the switch body. The 1.5 offset puts a small moment on the cap. If it feels rocky, shorten the proud height or drop to a Ø8 cap (offset 1.0).
 - **J opening Ø14.15 (fallback Ø16).** The THB001P drawing is an image the tools could not read. The datasheet text gives 26° max tilt and a 7.75 plastic shaft. The 19.45 height and the Ø13.15 and Ø4 callouts come from the earlier parts survey and are interpreted as stick top, dome Ø and shaft Ø (TBV). The dome Ø13.15 + 2 x 0.5 sets the opening. At 26° the Ø4 shaft sweeps only r 2.96 across the panel band (pivot assumed 8.0 above the PCB, TBV). The stick top stands 10.95 above the face without a cap. The tilted tip clears the knob by 9.4. If the dome turns out to be larger, set `thb_hole_d` directly or use the 16 fallback.
 - **D cross cap (updated 2026-11-15 to the Alps SKQUCAA010 drawing, confirmed with calipers on the Adafruit 504).** Stem top 10.0 above the PCB (Z −1.5, so the stem stands 1.5 in front of the panel face), square stem 3.2 from the collar top at 5.8, housing 3.15, pivot 1.23 above the PCB, 0.4 travel measured 2.9 below the top, so actuation is atan(0.4/5.87) = 3.9°; centre push 0.2. The cap covers the stem with 0.8 skin, so the cross stands **2.3** proud. Set `skqu_stem_trim` (mm cut off the stem) to lower it; the socket must keep ≥ 2.0 of grip. The socket grips 3.4 of the stem; the cap rear stops 0.8 in front of the collar with a Ø8.0 relief (collar Ø7.0 TBV, not dimensioned). Side shift at the face is 0.49 at actuation against `dp_clr` 0.7. The span and arm were reduced to 23.2 x 7.2 so the panel opening stays 24.6 x 8.6. The flange gap is 1.06 and it stops the tilt 0.15 after actuation. Cap length 6.2. A pressed arm tip stays 1.5 in front of the face.
-- **Battery:** held by tape on the Waveshare rear plus a top-end fence on the back shell. The wire bundle runs down its right side, so there are no full bay ribs.
+- **Battery:** held by tape on the Waveshare rear plus a top-end fence on the back shell. The J8 adapter sits beside it, so there are no full bay ribs.
 
 ## 7. TBV parameters (update after measuring, then rerun the validator)
 

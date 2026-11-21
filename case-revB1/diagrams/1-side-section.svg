@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="530" viewBox="0 0 1180 530"><defs><marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c00"/></marker></defs><rect width="1180" height="530" fill="white"/><text x="20.0" y="32.0" font-family="DejaVu Sans, Arial" font-size="20" text-anchor="start" fill="#111" font-weight="bold">1 · Side section through the cable (cut at X 34, looking from the right side)</text>
+<text x="20.0" y="56.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">Front (glass) at the top, back of the case at the bottom. Scale ≈ 9 px per mm. Top of the device is on the right.</text>
+<rect x="58.0" y="110.0" width="402.5" height="18.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="1014.5" y="110.0" width="36.2" height="18.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="58.0" y="110.0" width="10.8" height="117.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="1032.7" y="110.0" width="18.0" height="117.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="58.0" y="227.0" width="10.8" height="76.5" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="1032.7" y="227.0" width="18.0" height="76.5" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="58.0" y="292.7" width="992.7" height="10.8" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="724.0" y="252.2" width="13.5" height="40.5" fill="#9a9aa6" fill-opacity="0.5" stroke="#000" stroke-width="0.8" stroke-dasharray="3,2"/>
+<rect x="920.2" y="252.2" width="12.6" height="40.5" fill="#9a9aa6" fill-opacity="0.5" stroke="#000" stroke-width="0.8" stroke-dasharray="3,2"/>
+<rect x="460.5" y="110.0" width="554.0" height="6.3" fill="#9cc8f0" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="477.8" y="116.3" width="519.3" height="36.9" fill="#333" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="477.8" y="153.2" width="519.3" height="10.8" fill="#2f8f4a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="504.8" y="164.0" width="273.2" height="31.5" fill="#777" fill-opacity="0.35" stroke="#000" stroke-width="0.8" stroke-dasharray="3,2"/>
+<rect x="492.2" y="164.0" width="31.5" height="31.5" fill="#c9a54a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="488.7" y="195.5" width="38.7" height="1.8" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="478.8" y="197.3" width="58.5" height="5.4" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="951.2" y="164.0" width="31.5" height="31.5" fill="#c9a54a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="947.6" y="195.5" width="38.7" height="1.8" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="937.8" y="197.3" width="58.5" height="16.2" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="949.9" y="213.5" width="34.2" height="14.4" fill="#888" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="543.2" y="164.0" width="388.6" height="49.5" fill="#222" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="543.2" y="213.5" width="388.6" height="22.5" fill="#555" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="466.6" y="236.0" width="468.9" height="14.4" fill="#1f6f8f" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="468.4" y="250.4" width="48.6" height="18.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="76.0" y="186.5" width="369.0" height="14.4" fill="#2f8f4a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="387.4" y="200.9" width="57.6" height="18.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<path d="M439.6,205.4 L498.1,205.4 A7.7,7.7 0 0 1 498.1,220.7 L436.9,220.7 A17.1,17.1 0 0 0 436.9,254.9 L472.0,254.9 " fill="none" stroke="#c58b00" stroke-width="2.6999999999999997" stroke-linecap="round"/>
+<circle cx="778.0" cy="113.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="778.0" y="118.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<circle cx="688.0" cy="134.3" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="688.0" y="139.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<circle cx="940.0" cy="158.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="940.0" y="163.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<circle cx="733.0" cy="188.3" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="733.0" y="193.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<circle cx="733.0" cy="224.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="733.0" y="229.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<circle cx="733.0" cy="243.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="733.0" y="248.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<circle cx="967.0" cy="205.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="967.0" y="210.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<circle cx="508.0" cy="191.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="508.0" y="196.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<circle cx="238.0" cy="193.7" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="238.0" y="198.7" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<circle cx="416.2" cy="209.9" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="416.2" y="214.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">10</text>
+<circle cx="492.7" cy="259.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="492.7" y="264.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">11</text>
+<circle cx="476.5" cy="220.7" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="476.5" y="225.7" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">12</text>
+<circle cx="926.5" cy="272.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="926.5" y="277.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">13</text>
+<circle cx="51.0" cy="339.5" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<text x="68.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">glass, flush with the front face</text>
+<circle cx="51.0" cy="364.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<text x="68.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">Waveshare display</text>
+<circle cx="51.0" cy="388.9" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<text x="68.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">Waveshare PCB</text>
+<circle cx="51.0" cy="413.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="418.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<text x="68.0" y="418.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J8 female socket (on the Waveshare)</text>
+<circle cx="51.0" cy="438.3" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="443.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<text x="68.0" y="443.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">2x17 male header (you solder it to the adapter)</text>
+<circle cx="431.0" cy="339.5" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="431.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<text x="448.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J8 adapter PCB</text>
+<circle cx="431.0" cy="364.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="431.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<text x="448.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">screw boss + M2x4 screw (3 corners)</text>
+<circle cx="431.0" cy="388.9" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="431.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<text x="448.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">support pad, no screw (sits under the FFC)</text>
+<circle cx="431.0" cy="413.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="431.0" y="418.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<text x="448.0" y="418.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">control PCB rev B5</text>
+<circle cx="431.0" cy="438.3" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="431.0" y="443.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">10</text>
+<text x="448.0" y="443.3" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J1 FH12 on the control PCB back</text>
+<circle cx="811.0" cy="339.5" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="811.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">11</text>
+<text x="828.0" y="344.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">J2 FH12 on the adapter back</text>
+<circle cx="811.0" cy="364.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="811.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">12</text>
+<text x="828.0" y="369.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">30 mm FFC, Z-folded (zoom in figure 2)</text>
+<circle cx="811.0" cy="388.9" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="811.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">13</text>
+<text x="828.0" y="393.9" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">ribs in the back shell press the adapter into J8</text>
+<rect x="40.0" y="495.0" width="16.0" height="12.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="62.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">front shell</text>
+<rect x="190.0" y="495.0" width="16.0" height="12.0" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="212.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">back shell</text>
+<rect x="340.0" y="495.0" width="16.0" height="12.0" fill="#2f8f4a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="362.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">PCBs</text>
+<rect x="490.0" y="495.0" width="16.0" height="12.0" fill="#1f6f8f" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="512.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">adapter PCB</text>
+<rect x="640.0" y="495.0" width="16.0" height="12.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="662.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">FH12 connector</text>
+<rect x="790.0" y="495.0" width="16.0" height="12.0" fill="#c58b00" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="812.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">FFC cable</text>
+<rect x="940.0" y="495.0" width="16.0" height="12.0" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<text x="962.0" y="506.0" font-family="DejaVu Sans, Arial" font-size="12" text-anchor="start" fill="#111">standoff / boss</text></svg>

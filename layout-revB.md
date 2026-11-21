@@ -19,7 +19,7 @@ Z = depth from the FRONT FACE of the case (= glass front face, flush), positive 
 ## Waveshare (unchanged geometry from Rev A)
 Holes (0,0) (36.5,0) (0,51) (36.5,51); lens X -4.11..40.61, Y -5.28..56.28; PCB rear face Z 6.0;
 rear parts to Z 9.5; keys top edge X 9.75/18.25/26.75 at Z ≈ 6.9; USB-C left edge Y 25.5, Z ≈ 7.8 (shell 6.0–9.3).
-J8 header (**female** socket, 2.54, 2x17) on the RIGHT: columns X 32.73 / 35.27, rows Y 5.18..45.82, socket Z 6.0–11.0 (user caliper 2026-11-19; drawing 11.5).
+J8 header (**female** socket, 2.54, 2x17) on the RIGHT: columns X 32.73 / 35.27, rows Y 5.18..45.82, socket Z 6.0–11.5 (Waveshare drawing, user confirmed 2026-11-19).
 Link (rev B5): adapter header plastic Z 11.0..13.5, adapter PCB 13.5..15.1 (X 26.5..41.5, Y -4.6..47.5), J2 on its back 15.1..17.1, FFC Z-fold to J1 (control back face, Z 10.1..12.1, X 27.5..40.5, Y -7..-12.3). Case depth 21.5.
 
 ## Case targets
