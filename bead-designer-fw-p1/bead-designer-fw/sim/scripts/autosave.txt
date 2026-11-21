@@ -1,0 +1,12 @@
+# Autosave survives a reset. Place White (slot 0) at (4,4) and, after moving right
+# twice, at (6,4). The save runs once input has paused (1 s quiet, 1.5 s after the
+# last edit); then a software reset (RTC_CNTL SW_SYS_RST; no `reset` script command).
+# Expected after reboot: White at (4,4) and (6,4), cursor back at (4,4).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 press sw 150
+2.4 uart0 d
+2.6 uart0 d
+2.8 press sw 150
+6.0 poke 3ff48000 80000000
+9.0 stop

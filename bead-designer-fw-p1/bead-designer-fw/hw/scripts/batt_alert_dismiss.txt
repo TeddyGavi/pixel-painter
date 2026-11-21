@@ -1,0 +1,7 @@
+# The alert is dismissed by any button (the button does nothing else): board with
+# the low-battery icon, cursor still at the centre.
+2.0 key b
+2.3 key b
+2.6 key b
+3.2 key d
+4.0 stop

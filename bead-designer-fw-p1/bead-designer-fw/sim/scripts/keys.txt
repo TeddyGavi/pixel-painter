@@ -1,0 +1,18 @@
+# Keyboard (UART0) control, as typed into `idf.py monitor`; each `uart0` line also
+# sends a newline, which the firmware ignores. l/j = encoder cw/ccw (slot), p = place,
+# w/a/s/d = D-pad, x = erase. Slot 3 (S27 Yellow): place at (4,4), (5,4), (6,4), then
+# back to (5,4) and erase it.
+# Expected: Yellow at (4,4) and (6,4), (5,4) empty with the cursor; "S27 Yellow 2".
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 l
+2.6 uart0 p
+2.8 uart0 d
+3.0 uart0 p
+3.2 uart0 d
+3.4 uart0 p
+3.6 uart0 a
+3.8 uart0 x
+4.5 stop

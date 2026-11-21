@@ -1,0 +1,227 @@
+# Artkal S series (5 mm midi, hard). Order = Artkal chart order. See README.md.
+code	r	g	b	name	source	note
+S01	255	255	255	White	label	
+S77	239	239	239	Light Grey	label	
+S78	209	209	209	Light Grey	label	
+S79	187	188	188	Light Grey	label	
+S07	155	155	155	Grey	label	
+S159	136	139	141	Grey	label	
+S43	118	119	119	Grey	label	
+S156	68	80	91	Dark Sky	label	
+S89	72	73	85	Dark Grey	label	
+S157	62	73	85	Dark Sky	label	
+S69	35	40	43	Charcoal	label	
+S158	32	40	48	Deep Sky	label	
+S13	0	0	0	Black	label	
+S93	218	182	152	Peach	label	
+S154	249	200	152	Light Orange	label	
+S67	243	207	179	Pale Orange	label	
+S18	204	153	102	Tan	label	
+S155	195	144	105	Tan	label	
+S83	184	97	37	Orange	label	
+S57	164	73	61	Red	label	
+S15	122	62	44	Dark Vermilion	label	
+S85	92	19	27	Deep Red	label	
+S41	154	85	22	Brown	label	
+S42	160	159	157	Grey	label	
+S63	88	87	53	Olive	label	
+S51	252	251	205	Pale Yellow	label	
+S149	237	211	158	Light Amber	label	
+S32	255	231	128	Light Yellow	label	
+S92	222	185	71	Amber	label	
+S68	225	192	120	Light Amber	label	
+S81	205	178	119	Sand	label	
+S82	181	129	80	Tan	label	
+S47	180	126	0	Brown	label	
+S17	123	77	53	Brown	label	
+S148	99	67	56	Brown	label	
+S16	92	71	56	Brown	label	
+SE17	93	42	44	Dark Red	label	
+S52	242	240	161	Light Yellow	label	
+S29	246	235	97	Light Yellow	label	
+S14	250	224	83	Yellow	label	
+S27	255	209	0	Yellow	label	
+S48	255	199	44	Amber	label	
+S86	234	170	0	Amber	label	
+S90	255	197	110	Light Orange	label	
+S03	246	176	76	Orange	label	
+S39	237	139	0	Orange	label	
+S97	212	114	42	Orange	label	
+S66	244	99	58	Vermilion	label	
+S04	255	103	31	Vermilion	label	
+S56	255	106	19	Vermilion	label	
+S50	250	170	114	Light Orange	label	
+S02	255	163	139	Light Vermilion	label	
+S94	244	169	153	Light Red	label	
+S95	238	125	103	Light Red	label	
+S96	240	134	97	Light Vermilion	label	
+S87	255	109	106	Light Red	label	
+S84	170	87	97	Dusty Red	label	
+S130	222	84	121	Rose	label	
+S36	201	128	158	Pink	label	
+S19	252	191	169	Pale Vermilion	label	
+SE16	245	182	205	Pale Rose	label	
+S35	247	206	215	Pale Rose	label	
+S129	230	140	163	Light Rose	label	
+S127	217	182	214	Light Magenta	label	
+S28	234	184	228	Light Magenta	label	
+S40	241	167	220	Light Magenta	label	
+S06	236	134	208	Light Magenta	label	
+S25	255	52	179	Pink	label	
+S26	219	33	82	Rose	label	
+S132	232	65	107	Rose	label	
+S88	218	24	132	Pink	label	
+S128	173	98	164	Dusty Magenta	label	
+S133	183	56	143	Pink	label	
+S134	88	31	126	Dark Purple	label	
+S05	225	6	0	Red	label	
+S34	186	12	47	Rose	label	
+S58	165	0	52	Dark Rose	label	
+S146	81	9	24	Deep Rose	label	
+S38	171	37	86	Rose	label	
+S49	114	25	95	Dark Magenta	label	
+SE07	191	165	184	Light Magenta	label	
+SE08	155	119	147	Dusty Magenta	label	
+SE09	105	60	94	Dark Magenta	label	
+SE10	201	100	207	Magenta	label	
+SE11	173	26	172	Magenta	label	
+S33	197	180	227	Light Violet	label	
+S153	184	189	224	Light Indigo	label	
+S152	151	145	197	Light Indigo	label	
+S150	105	99	171	Dusty Indigo	label	
+S131	158	130	186	Dusty Purple	label	
+S60	167	123	202	Purple	label	
+S12	160	94	181	Purple	label	
+S23	100	53	155	Violet	label	
+S59	74	31	135	Dark Violet	label	
+S22	51	0	114	Dark Violet	label	
+S64	5	8	73	Deep Indigo	label	
+S136	154	154	204	Light Indigo	label	
+S135	140	163	212	Light Blue	label	
+S137	89	129	193	Blue	label	
+S138	65	102	176	Blue	label	
+S139	71	95	171	Blue	label	
+S141	61	86	165	Blue	label	
+S140	55	69	147	Blue	label	
+S142	41	66	135	Dark Blue	label	
+S143	37	38	138	Dark Indigo	label	
+S44	170	220	235	Light Cyan	label	
+S10	65	182	230	Cyan	label	
+S101	49	150	221	Sky	label	
+S24	20	123	209	Sky	label	
+S102	27	108	182	Sky	label	
+S103	8	57	128	Dark Blue	label	
+S11	0	51	153	Dark Blue	label	
+S144	26	47	111	Dark Blue	label	
+S54	0	144	218	Sky	label	
+S53	105	179	231	Sky	label	
+S98	100	172	223	Sky	label	
+S99	100	194	220	Cyan	label	
+S100	79	159	179	Cyan	label	
+S73	72	169	197	Cyan	label	
+S74	0	174	214	Cyan	label	
+S75	0	133	173	Dark Cyan	label	
+S107	0	85	116	Dark Cyan	label	
+S106	0	78	120	Dark Sky	label	
+SE01	209	221	230	Pale Sky	label	
+SE02	155	184	227	Light Blue	label	
+SE03	94	138	180	Sky	label	
+SE04	106	209	227	Cyan	label	
+SE05	44	213	196	Teal	label	
+SE06	20	123	209	Sky	label	chart label identical to S24
+S30	153	214	234	Light Cyan	label	
+S37	113	216	191	Mint	label	
+S72	89	213	216	Teal	label	
+S45	0	178	169	Dark Teal	label	
+S76	0	174	199	Cyan	label	
+S104	10	102	139	Dark Cyan	label	
+S105	8	91	110	Dark Cyan	label	
+S31	158	229	176	Light Green	label	
+S119	113	196	82	Green	label	chart label (green) disagrees with chart photo (pale mint); label kept
+S120	102	204	153	Green	label	
+S147	100	179	158	Dusty Mint	label	
+S121	86	154	131	Dusty Mint	label	
+S55	173	220	145	Light Lime	label	
+S21	135	216	57	Lime	label	
+S123	24	168	24	Green	label	
+S122	20	194	91	Green	label	
+S20	36	158	107	Green	label	
+S71	0	133	43	Dark Green	label	
+S124	4	85	46	Deep Green	label	
+S125	19	107	90	Dark Teal	label	
+S62	0	124	88	Dark Mint	label	
+S126	5	70	65	Deep Teal	label	
+S09	0	104	94	Deep Teal	label	
+S145	211	201	93	Yellow	label	
+S61	206	220	0	Chartreuse	label	
+S70	155	188	17	Chartreuse	label	
+S80	153	155	48	Olive	label	
+S108	204	190	128	Sand	label	
+S109	164	147	80	Tan	label	
+S110	158	136	60	Brown	label	
+S111	118	108	43	Olive	label	
+S112	121	95	38	Brown	label	
+SE12	255	178	91	Light Orange	label	
+SE13	230	166	93	Orange	label	
+SE14	211	130	53	Orange	label	
+SE15	193	108	24	Orange	label	
+S113	186	184	162	Light Yellow	label	
+S114	114	140	84	Dusty Lime	label	
+S115	126	124	68	Olive	label	
+S116	100	105	46	Olive	label	
+S117	78	88	44	Olive	label	
+S118	74	94	45	Dark Lime	label	
+S151	43	63	31	Deep Lime	label	
+S91	24	48	40	Deep Mint	label	
+S65	243	234	93	Yellow	label	
+S46	115	211	60	Lime	label	
+S08	36	222	91	Green	label	
+ST1	213	212	218	Clear Light Grey	photo	no RGB on chart; sampled from swatch photo, approximate
+ST2	250	136	186	Clear Light Pink	photo	no RGB on chart; sampled from swatch photo, approximate
+ST3	251	159	101	Clear Light Vermilion	photo	no RGB on chart; sampled from swatch photo, approximate
+ST4	208	228	156	Clear Light Chartreuse	photo	no RGB on chart; sampled from swatch photo, approximate
+ST5	39	210	165	Clear Mint	photo	no RGB on chart; sampled from swatch photo, approximate
+ST6	146	149	225	Clear Light Indigo	photo	no RGB on chart; sampled from swatch photo, approximate
+ST7	112	112	112	Clear Grey	photo	no RGB on chart; sampled from swatch photo, approximate
+ST8	132	52	50	Clear Dark Red	photo	no RGB on chart; sampled from swatch photo, approximate
+SL1	94	193	228	Glitter Cyan	photo	no RGB on chart; sampled from swatch photo, approximate
+SL2	13	158	128	Glitter Dark Mint	photo	no RGB on chart; sampled from swatch photo, approximate
+SL3	201	30	32	Glitter Red	photo	no RGB on chart; sampled from swatch photo, approximate
+SL4	215	182	23	Glitter Yellow	photo	no RGB on chart; sampled from swatch photo, approximate
+SL5	134	98	196	Glitter Violet	photo	no RGB on chart; sampled from swatch photo, approximate
+SL6	199	198	210	Glitter Light Grey	photo	no RGB on chart; sampled from swatch photo, approximate
+SG1	211	211	212	Glow Light Grey	photo	no RGB on chart; sampled from swatch photo, approximate
+SG2	219	197	210	Glow Light Pink	photo	no RGB on chart; sampled from swatch photo, approximate
+SG3	99	199	233	Glow Cyan	photo	no RGB on chart; sampled from swatch photo, approximate
+SG4	165	143	224	Glow Light Violet	photo	no RGB on chart; sampled from swatch photo, approximate
+SG5	245	180	161	Glow Light Vermilion	photo	no RGB on chart; sampled from swatch photo, approximate
+SG6	177	221	172	Glow Light Green	photo	no RGB on chart; sampled from swatch photo, approximate
+SG7	221	78	86	Glow Red	photo	no RGB on chart; sampled from swatch photo, approximate
+SN1	253	132	42	Neon Orange	photo	no RGB on chart; sampled from swatch photo, approximate
+SN2	37	232	139	Neon Green	photo	no RGB on chart; sampled from swatch photo, approximate
+SN3	218	240	111	Neon Light Chartreuse	photo	no RGB on chart; sampled from swatch photo, approximate
+SN4	252	94	130	Neon Light Rose	photo	no RGB on chart; sampled from swatch photo, approximate
+SP1	156	220	181	Pearl Light Green	photo	no RGB on chart; sampled from swatch photo, approximate
+SP2	252	148	96	Pearl Light Vermilion	photo	no RGB on chart; sampled from swatch photo, approximate
+SP3	238	171	92	Pearl Orange	photo	no RGB on chart; sampled from swatch photo, approximate
+SP4	219	155	172	Pearl Light Rose	photo	no RGB on chart; sampled from swatch photo, approximate
+SP5	225	57	68	Pearl Red	photo	no RGB on chart; sampled from swatch photo, approximate
+SP6	51	64	147	Pearl Blue	photo	no RGB on chart; sampled from swatch photo, approximate
+SP7	89	52	124	Pearl Dark Purple	photo	no RGB on chart; sampled from swatch photo, approximate
+SP8	206	205	206	Pearl Light Grey	photo	no RGB on chart; sampled from swatch photo, approximate
+SUV1	247	191	220	UV Pale Pink	photo	no RGB on chart; sampled from swatch photo, approximate
+SUV2	234	219	124	UV Light Yellow	photo	no RGB on chart; sampled from swatch photo, approximate
+SUV3	202	204	254	UV Pale Indigo	photo	no RGB on chart; sampled from swatch photo, approximate
+SUV4	254	179	254	UV Pale Magenta	photo	no RGB on chart; sampled from swatch photo, approximate
+SD1	53	57	69	Stripe Dark Blue	photo	two-colour striped bead; dominant colour sampled, approximate
+SD2	128	133	141	Stripe Grey	photo	two-colour striped bead; dominant colour sampled, approximate
+SD3	84	182	233	Stripe Sky	photo	two-colour striped bead; dominant colour sampled, approximate
+SD4	104	171	225	Stripe Sky	photo	two-colour striped bead; dominant colour sampled, approximate
+SD5	84	185	141	Stripe Green	photo	two-colour striped bead; dominant colour sampled, approximate
+SD6	78	201	204	Stripe Teal	photo	two-colour striped bead; dominant colour sampled, approximate
+SD7	199	84	101	Stripe Rose	photo	two-colour striped bead; dominant colour sampled, approximate
+SD8	246	122	192	Stripe Light Pink	photo	two-colour striped bead; dominant colour sampled, approximate
+SD9	164	138	192	Stripe Dusty Violet	photo	two-colour striped bead; dominant colour sampled, approximate
+SD10	222	183	75	Stripe Amber	photo	two-colour striped bead; dominant colour sampled, approximate
+SD11	243	140	120	Stripe Light Red	photo	two-colour striped bead; dominant colour sampled, approximate
+SD12	52	136	119	Stripe Mint	photo	two-colour striped bead; dominant colour sampled, approximate

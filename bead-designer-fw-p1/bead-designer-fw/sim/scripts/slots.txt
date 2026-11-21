@@ -1,0 +1,15 @@
+# The shortlist is saved with the pattern. Select slot 3 (l x3), browse it 2 steps
+# (L L; the next key ends the browse), place at (4,4), then pause so the autosave runs
+# and software-reset the chip.
+# Expected after reboot: slot 3 still the browsed colour and selected, its bead at
+# (4,4), count 1 (the other slots back as saved: White, Black, Red, Blue).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 l
+2.6 uart0 L
+2.8 uart0 L
+3.0 uart0 p
+6.0 poke 3ff48000 80000000
+9.0 stop

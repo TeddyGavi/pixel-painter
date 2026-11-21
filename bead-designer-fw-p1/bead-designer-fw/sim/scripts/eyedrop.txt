@@ -1,0 +1,14 @@
+# Eyedropper: place Red (slot 2) at (4,4), move right, select slot 0 (White), move back
+# left onto the red bead and long-press the D-pad centre (X): slot 0 becomes Red.
+# Expected: slot 0 and slot 2 both red in the strip, slot 0 framed; "S05 Red 1".
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 p
+2.6 uart0 d
+2.8 uart0 j
+3.0 uart0 j
+3.2 uart0 a
+3.4 uart0 X
+4.0 stop

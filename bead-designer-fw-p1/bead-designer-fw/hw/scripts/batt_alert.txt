@@ -1,0 +1,5 @@
+# Low-battery alert: simulated 3560 mV (~8%): one notice, "Battery low / Plug in soon".
+2.0 key b
+2.3 key b
+2.6 key b
+3.4 stop

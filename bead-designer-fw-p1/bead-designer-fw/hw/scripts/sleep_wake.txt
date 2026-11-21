@@ -1,0 +1,7 @@
+# PWR short press = sleep (pattern saved, panel off); any button wakes and is
+# swallowed: place a bead, sleep, press d to wake. Expected: the bead at the
+# centre, cursor still on it (the waking d did not move it).
+2.0 key p
+2.4 key z
+3.4 key d
+4.2 stop

@@ -1,0 +1,19 @@
+# Unsaved warning: place a bead, save to slot 1, place another (now unsaved), then
+# Menu > Pattern > Load > slot 1.
+# Expected: "Discard board?" with "Not saved yet", "Discard + load"
+# (highlighted) and "Cancel".
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 p
+2.2 uart0 m
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.2 uart0 d
+3.4 uart0 p
+3.6 uart0 m
+3.8 uart0 k
+4.0 uart0 s
+4.2 uart0 k
+4.4 uart0 k
+5.0 stop

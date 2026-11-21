@@ -1,0 +1,8 @@
+# Require ESP32 silicon rev >= v3.0 (ECO3). Needed so esp32sim, which models the
+# ECO3 mask ROM, can boot the image; the real FNK0114A uses ESP32-WROOM-32E (rev3),
+# so this is fine on hardware too.
+CONFIG_ESP32_REV_MIN_3=y
+CONFIG_ESP32_REV_MIN_FULL=300
+
+# FNK0114A uses ESP32-WROOM-32E (4 MB flash); also esp32sim --flash-mb default for classic
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y

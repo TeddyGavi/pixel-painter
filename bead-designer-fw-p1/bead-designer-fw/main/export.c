@@ -1,9 +1,13 @@
-// Wi-Fi export: SoftAP + tiny HTTP server. The PHONE renders the PNG:
-// /            -> embedded page (canvas) with Save-image button
-// /grid.json   -> {"n":9,"brand":"Artkal","palette":[{name,code,rgb}],"cells":[...]}
-// Flat square pixels + colour legend + per-colour bead counts (spec decision).
-// P1 TODO: qrcodegen (Nayuki, single C file) for the on-screen QR; random
-// 8-char AP password shown beside it; captive-portal redirect (DNS) optional.
+// Export, two ways:
+// 1. QR (default, no network on the device): export_qr() encodes a URL to the static
+//    export page (CONFIG_BEAD_EXPORT_URL, source in web/index.html) with the whole
+//    pattern in the fragment. The phone opens it with its own internet connection;
+//    the fragment never leaves the phone. Format (v1):
+//      <base>#1.<brand key>.<n>.<code>:<rrggbb>,<code>:<rrggbb>,...<.><cells>
+//    cells = n*n chars, row-major: '0' = empty, CELL_CHARS[k] = k-th listed colour.
+// 2. Wi-Fi fallback: SoftAP + tiny HTTP server; the phone joins and renders the page.
+//    /            -> embedded page (canvas) with Save-image button
+//    /grid.json   -> {"n":9,"brand":"Miyuki","palette":[{name,code,rgb}],"cells":[...]}
 #include "export.h"
 #include "ui.h"
 #include "palettes.h"
@@ -12,6 +16,8 @@
 #include "esp_log.h"
 #include <string.h>
 #include <stdio.h>
+#include "qrcodegen.h"
+#include "sdkconfig.h"
 
 static const char *TAG = "export";
 static httpd_handle_t s_httpd;
@@ -40,22 +46,28 @@ static esp_err_t h_index(httpd_req_t *r)
 
 static esp_err_t h_grid(httpd_req_t *r)
 {
+    // Streamed in chunks: a full palette (254 entries, ~70 B each) is far larger
+    // than any sensible static buffer. Each piece below is bounded by `buf`.
     const palette_t *p = &PALETTES[UI.palette];
-    static char buf[2048];
-    int n = snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", GRID_N, p->brand);
+    char buf[128];
+    httpd_resp_set_type(r, "application/json");
+    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", GRID_N, p->brand);
+    if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     for (int i = 0; i < p->count; i++) {
         uint16_t c = p->colors[i].rgb565;
-        n += snprintf(buf + n, sizeof buf - n, "%s{\"name\":\"%s\",\"code\":\"%s\",\"rgb\":\"#%02x%02x%02x\"}",
-                      i ? "," : "", p->colors[i].name, p->colors[i].code,
-                      (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3);
+        snprintf(buf, sizeof buf, "%s{\"name\":\"%s\",\"code\":\"%s\",\"rgb\":\"#%02x%02x%02x\"}",
+                 i ? "," : "", p->colors[i].name, p->colors[i].code,
+                 (c >> 11) << 3, ((c >> 5) & 0x3F) << 2, (c & 0x1F) << 3);
+        if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     }
-    n += snprintf(buf + n, sizeof buf - n, "],\"cells\":[");
-    for (int i = 0; i < GRID_N * GRID_N; i++)
-        n += snprintf(buf + n, sizeof buf - n, "%s%d", i ? "," : "",
-                      UI.cells[i] == CELL_EMPTY ? -1 : UI.cells[i]);
-    n += snprintf(buf + n, sizeof buf - n, "]}");
-    httpd_resp_set_type(r, "application/json");
-    return httpd_resp_send(r, buf, n);
+    if (httpd_resp_sendstr_chunk(r, "],\"cells\":[") != ESP_OK) return ESP_FAIL;
+    for (int i = 0; i < GRID_N * GRID_N; i++) {
+        snprintf(buf, sizeof buf, "%s%d", i ? "," : "",
+                 UI.cells[i] == CELL_EMPTY ? -1 : UI.cells[i]);
+        if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
+    }
+    if (httpd_resp_sendstr_chunk(r, "]}") != ESP_OK) return ESP_FAIL;
+    return httpd_resp_sendstr_chunk(r, NULL);   // end of chunked response
 }
 
 void export_start(void)
@@ -88,4 +100,55 @@ void export_stop(void)
     if (s_httpd) { httpd_stop(s_httpd); s_httpd = NULL; }
     esp_wifi_stop();
     ESP_LOGI(TAG, "export AP down");
+}
+
+// ---- QR export ------------------------------------------------------------------
+
+static const char CELL_CHARS[] =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_";   // 64
+
+int export_url(char *out, size_t cap)
+{
+    const palette_t *p = &PALETTES[UI.palette];
+    int used[256];                     // palette index -> list position + 1, 0 = unused
+    memset(used, 0, sizeof used);
+    int k = 0;
+    for (int i = 0; i < GRID_N * GRID_N; i++)
+        if (UI.cells[i] != CELL_EMPTY && !used[UI.cells[i]]) used[UI.cells[i]] = -1;
+    size_t n = (size_t)snprintf(out, cap, "%s#1.%s.%d.", CONFIG_BEAD_EXPORT_URL, p->key, GRID_N);
+    if (n >= cap) return -1;
+    for (int idx = 0; idx < p->count; idx++) {       // list in palette order
+        if (!used[idx]) continue;
+        if (++k >= (int)sizeof CELL_CHARS - 1) return -1;       // more colours than chars
+        used[idx] = k;
+        uint16_t c = p->colors[idx].rgb565;
+        n += (size_t)snprintf(out + n, cap - n, "%s%s:%02x%02x%02x", k > 1 ? "," : "",
+                              p->colors[idx].code, ((c >> 11) & 0x1F) * 255 / 31,
+                              ((c >> 5) & 0x3F) * 255 / 63, (c & 0x1F) * 255 / 31);
+        if (n >= cap) return -1;                                 // truncated
+    }
+    if (n + 1 + GRID_N * GRID_N + 1 > cap) return -1;
+    out[n++] = '.';
+    for (int i = 0; i < GRID_N * GRID_N; i++)
+        out[n++] = UI.cells[i] == CELL_EMPTY ? '0' : CELL_CHARS[used[UI.cells[i]]];
+    out[n] = 0;
+    return (int)n;
+}
+
+#define QR_MAX_VERSION 20                // 97 modules: still >= 2 px each on 240 px
+static uint8_t s_qr[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+static uint8_t s_qr_tmp[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+
+const uint8_t *export_qr(void)
+{
+    static char url[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+    int len = export_url(url, sizeof url);
+    if (len < 0) { ESP_LOGW(TAG, "pattern too large for a QR code"); return NULL; }
+    if (!qrcodegen_encodeText(url, s_qr_tmp, s_qr, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN,
+                              QR_MAX_VERSION, qrcodegen_Mask_AUTO, true)) {
+        ESP_LOGW(TAG, "URL (%d chars) does not fit QR version %d", len, QR_MAX_VERSION);
+        return NULL;
+    }
+    ESP_LOGI(TAG, "QR %d modules, %d chars: %s", qrcodegen_getSize(s_qr), len, url);
+    return s_qr;
 }

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1260" viewBox="0 0 1100 1260"><defs><marker id="arr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#c00"/></marker></defs><rect width="1100" height="1260" fill="white"/><text x="20.0" y="32.0" font-family="DejaVu Sans, Arial" font-size="20" text-anchor="start" fill="#111" font-weight="bold">2 · Zoom: how the FFC folds (same cut, 4x larger)</text>
+<text x="20.0" y="56.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="start" fill="#111">The cable never twists. It makes an S (Z-fold) between the two connectors, whose slots face each other.</text>
+<rect x="170.0" y="100.0" width="407.4" height="76.0" fill="#e3a165" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="170.0" y="871.4" width="912.0" height="45.6" fill="#9a9aa6" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="577.4" y="100.0" width="504.6" height="26.6" fill="#9cc8f0" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="650.7" y="126.6" width="431.3" height="155.8" fill="#333" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="650.7" y="282.4" width="431.3" height="45.6" fill="#2f8f4a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="764.7" y="328.0" width="317.3" height="133.0" fill="#777" fill-opacity="0.35" stroke="#000" stroke-width="0.8" stroke-dasharray="3,2"/>
+<rect x="711.5" y="328.0" width="133.0" height="133.0" fill="#c9a54a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="696.3" y="461.0" width="163.4" height="7.6" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="654.5" y="468.6" width="247.0" height="22.8" fill="#d08a3a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="926.6" y="328.0" width="155.4" height="209.0" fill="#222" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="926.6" y="537.0" width="155.4" height="95.0" fill="#555" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="603.2" y="632.0" width="478.8" height="60.8" fill="#1f6f8f" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="610.8" y="692.8" width="205.2" height="76.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="170.0" y="423.0" width="342.0" height="60.8" fill="#2f8f4a" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<rect x="268.8" y="483.8" width="243.2" height="76.0" fill="#d9d9d9" fill-opacity="1" stroke="#000" stroke-width="0.8"/>
+<path d="M489.2,502.8 L736.2,502.8 A32.3,32.3 0 0 1 736.2,567.4 L477.8,567.4 A72.2,72.2 0 0 0 477.8,711.8 L626.0,711.8 " fill="none" stroke="#c58b00" stroke-width="11.4" stroke-linecap="round"/>
+<circle cx="390.4" cy="533.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="390.4" y="538.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<circle cx="607.0" cy="502.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="607.0" y="507.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<circle cx="736.2" cy="535.1" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="736.2" y="540.1" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<circle cx="607.0" cy="567.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="607.0" y="572.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<circle cx="477.8" cy="639.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="477.8" y="644.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<circle cx="550.0" cy="711.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="550.0" y="716.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<circle cx="713.4" cy="742.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="713.4" y="747.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<circle cx="930.0" cy="662.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="930.0" y="667.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<circle cx="1025.0" cy="584.5" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="1025.0" y="589.5" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<circle cx="1025.0" cy="430.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="1025.0" y="435.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">10</text>
+<circle cx="778.0" cy="480.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="778.0" y="485.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">11</text>
+<circle cx="322.0" cy="453.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="322.0" y="458.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">12</text>
+<circle cx="930.0" cy="305.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="930.0" y="310.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">13</text>
+<circle cx="51.0" cy="963.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="968.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">1</text>
+<text x="68.0" y="968.0" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">J1 on the control PCB: plug the cable in here FIRST</text>
+<circle cx="51.0" cy="989.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="994.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">2</text>
+<text x="68.0" y="994.6" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">run 1: leaves J1 toward the top of the device</text>
+<circle cx="51.0" cy="1016.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1021.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">3</text>
+<text x="68.0" y="1021.2" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">bend 1: U-turn (gentle curve, don't crease it)</text>
+<circle cx="51.0" cy="1042.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1047.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">4</text>
+<text x="68.0" y="1047.8" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">run 2: back toward the bottom</text>
+<circle cx="51.0" cy="1069.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1074.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">5</text>
+<text x="68.0" y="1074.4" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">bend 2: U-turn</text>
+<circle cx="51.0" cy="1096.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1101.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">6</text>
+<text x="68.0" y="1101.0" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">run 3: into J2 (contacts face the adapter)</text>
+<circle cx="51.0" cy="1122.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="51.0" y="1127.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">7</text>
+<text x="68.0" y="1127.6" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">J2 on the adapter: plug in second</text>
+<circle cx="571.0" cy="963.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="968.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">8</text>
+<text x="588.0" y="968.0" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">adapter PCB</text>
+<circle cx="571.0" cy="989.6" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="994.6" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">9</text>
+<text x="588.0" y="994.6" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">2x17 male header</text>
+<circle cx="571.0" cy="1016.2" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="1021.2" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">10</text>
+<text x="588.0" y="1021.2" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">J8 female socket</text>
+<circle cx="571.0" cy="1042.8" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="1047.8" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">11</text>
+<text x="588.0" y="1047.8" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">support pad (no screw)</text>
+<circle cx="571.0" cy="1069.4" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="1074.4" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">12</text>
+<text x="588.0" y="1074.4" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">control PCB</text>
+<circle cx="571.0" cy="1096.0" r="11.0" fill="white" stroke="#c00" stroke-width="2"/>
+<text x="571.0" y="1101.0" font-family="DejaVu Sans, Arial" font-size="13" text-anchor="middle" fill="#c00" font-weight="bold">13</text>
+<text x="588.0" y="1101.0" font-family="DejaVu Sans, Arial" font-size="14" text-anchor="start" fill="#111">Waveshare PCB</text>
+<polyline points="170.0,100.0 160.0,100.0" fill="none" stroke="#999" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="158.0" y="104.0" font-family="DejaVu Sans, Arial" font-size="11" text-anchor="end" fill="#111">Z 0 front face</text>
+<polyline points="170.0,328.0 160.0,328.0" fill="none" stroke="#999" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="158.0" y="332.0" font-family="DejaVu Sans, Arial" font-size="11" text-anchor="end" fill="#111">Z 6 Waveshare rear</text>
+<polyline points="170.0,483.8 160.0,483.8" fill="none" stroke="#999" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="158.0" y="487.8" font-family="DejaVu Sans, Arial" font-size="11" text-anchor="end" fill="#111">Z 10.1</text>
+<polyline points="170.0,692.8 160.0,692.8" fill="none" stroke="#999" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="158.0" y="696.8" font-family="DejaVu Sans, Arial" font-size="11" text-anchor="end" fill="#111">Z 15.6 adapter back</text>
+<polyline points="170.0,871.4 160.0,871.4" fill="none" stroke="#999" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="158.0" y="875.4" font-family="DejaVu Sans, Arial" font-size="11" text-anchor="end" fill="#111">Z 20.3 back wall</text></svg>

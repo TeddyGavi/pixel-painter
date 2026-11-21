@@ -1,0 +1,29 @@
+menu "Bead designer"
+
+config BEAD_SERIAL_KEYS
+    bool "Keyboard control over the UART0 console (bench testing)"
+    default y
+    help
+        Read single keys from the serial console (idf.py monitor) and inject them
+        as input events, so the full UI can be driven without encoders or buttons.
+        Keys: a/d = left knob CCW/CW, w/s = right knob CCW/CW, space or p = place
+        (right push), x = erase (left push), m = MENU (colour picker), o = SIDE/settings,
+        t = colour test bars, ? = print key help.
+        Disable for production builds.
+
+config BEAD_PERF_LOG
+    bool "Log redraw and autosave timing per input event"
+    default n
+    help
+        Bench diagnostics: logs how long each redraw and autosave takes (in us),
+        and every full-screen redraw. Off by default.
+
+config BEAD_EXPORT_URL
+    string "Base URL of the export page (QR export)"
+    default "https://teddygavi.github.io/pixel-painter-export/"
+    help
+        The Export screen shows a QR code for <this URL>#<pattern>. The page is the
+        static web/index.html; the pattern itself travels in the URL fragment, so
+        the device needs no network and the phone only fetches the static page.
+
+endmenu

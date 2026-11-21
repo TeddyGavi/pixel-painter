@@ -1,0 +1,22 @@
+# Screen saver: Menu > Screensaver pressed 3x (1m -> 5m -> Off -> 5s), close the menu,
+# place a bead (slot 3) so the saver has a colour, then stay idle. At 12.0 the encoder press only wakes (no bead placed); 12.2 'd' is ignored too (within 300 ms). Expected: the board with the one bead, cursor at (4,4).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 l
+2.2 uart0 l
+2.4 uart0 p
+2.6 uart0 m
+2.8 uart0 s
+3.0 uart0 s
+3.2 uart0 s
+3.4 uart0 s
+3.6 uart0 s
+3.8 uart0 s
+4.0 uart0 s
+4.2 uart0 k
+4.4 uart0 k
+4.6 uart0 k
+4.8 uart0 m
+12.0 uart0 k
+12.2 uart0 d
+14.0 stop

@@ -1,0 +1,20 @@
+# Menu > Edit shortlist > slot 1 > Enter code: dial S, 9, 3 (only characters that can
+# continue a real code are offered; letters first, then digits). Captured before OK:
+# "Code: S93[OK]" + "match", and the matching colour listed below.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.10 uart0 s
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 s
+3.0 uart0 k
+3.2 uart0 k
+3.4 uart0 j
+3.6 uart0 k
+3.8 uart0 l
+4.0 uart0 l
+4.2 uart0 l
+4.4 uart0 k
+5.0 stop

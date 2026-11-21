@@ -1,0 +1,24 @@
+# Board look: black beads (4,4) (5,4) (5,5), white (4,5); cursor on empty (3,5).
+# Menu > Beads: Flat (no bevel) on the Pegboard.
+0   adc 34 1.95
+0   adc 27 3.3
+2.00 uart0 l
+2.20 uart0 p
+2.40 uart0 d
+2.60 uart0 p
+2.80 uart0 s
+3.00 uart0 p
+3.20 uart0 j
+3.40 uart0 a
+3.60 uart0 p
+3.80 uart0 a
+4.00 uart0 m
+4.10 uart0 s
+4.20 uart0 s
+4.40 uart0 s
+4.60 uart0 s
+4.80 uart0 s
+5.00 uart0 s
+5.20 uart0 k
+5.40 uart0 m
+6.20 stop

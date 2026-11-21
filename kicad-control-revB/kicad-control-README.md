@@ -1,5 +1,38 @@
 # Bead Designer control PCB Rev B: variants J and D (KiCad 10.0.7)
 
+> **Rev B5 (variant D) + J8 adapter rev A, 2026-11-19: upload these.** The Waveshare J8 is a female socket, so the 2x17 ribbon link was replaced. Upload `pcb-D-revB5.zip` and `pcb-adapter-J8-revA.zip`; older zips are marked `-OLD-do-not-upload`.
+>
+> **Control PCB D rev B5**
+> - J1 is now a Hirose FH12-16S-0.5SH(55) FPC connector (LCSC C596731, JLC-assembled) on the BOTTOM side, slot at the top edge. KiCad (134.0, 71.45).
+> - R13/R14 and the AWHW header are removed.
+> - FFC pin order, lowest X first (control J1 pin 1..16):
+>
+>   | Pins | Signal (J8 pin) |
+>   |---|---|
+>   | 1 | GND |
+>   | 2 | NAV_C (3) |
+>   | 3, 4 | ENC_A (13), ENC_B (15) |
+>   | 5, 6 | UP (19), DOWN (21) |
+>   | 7, 8 | LEFT (23), RIGHT (25) |
+>   | 9, 10 | GND |
+>   | 11 | ENC_SW (24) |
+>   | 12 | 3V3 (16) |
+>   | 13, 14 | SIDE/EXIO6 (8), MENU/EXIO5 (6) |
+>   | 15, 16 | GND |
+>
+> **J8 adapter rev A** (`kicad-adapter-J8/`, no schematic; the netlist is in this note and the board)
+> - Size 15 x 52.1 mm, case X 26.5..41.5, Y -4.6..47.5.
+> - **J1:** 2x17 male header on the F side, into J8; pin n = J8 pin n, pin 1 at the keys end. You solder it.
+> - **J2:** FH12-16S on the B side, slot at the bottom edge, pin 1 at the highest X. Adapter J2 pin k = control J1 pin 17-k, because the cable keeps each conductor's X.
+> - **R1/R2:** 2.2k / 4.7k (0603, B side): J8-31 USB 5 V → J8-10 EXIO7. No 5 V goes on the cable.
+> - J8-2 BAT, 4, 30, 32 and 33 are not connected.
+> - **Keying:** pull pin 33 out of the header and push a cut-off pin into J8-33 (GND), so the adapter can't go in reversed.
+>
+> **Cable and assembly**
+> - **Cable:** 30 mm 16-way 0.5 mm **same-side** FFC (GCT 05-16-A-0030-A-4-06-4-T). FH12 is bottom-contact: insert with the contacts toward each board. Insert into J1 first, then J2.
+> - **JLC:** check the assembly preview. Each FH12 actuator/slot must sit at the board edge with the pads inboard; fix any rotation offset in JLC's editor. Edge rails may be needed (the connectors are flush with the edges).
+> - **Review:** electronics-engineer review 2026-11-19: no blocking findings.
+
 Generated 2026-11-08 from `layout-revB.md`, including the case-final section "Control PCB mounting holes (from case)".
 The files are hand-written KiCad s-expressions: schematic version 20260306, board and footprints 20260206, symbol library 20251024, generator_version "10.0", project version 3.
 Generators and checkers are in `scratchpad/kc-tools-revB/`.
@@ -55,7 +88,10 @@ Coordinates are front view in mm. The top side faces the front panel. KiCad Y = 
 | 24 | GPIO42 | BTN_SIDE | ENC_SW |
 | 25 | GPIO41 | BTN_MENU | NAV_RIGHT |
 | 16, 30, 32 | 3V3 | +3V3 | +3V3 |
-| 1, 4, 18, 33, 34 | GND | GND | GND |
+| 1, 18, 34 | GND | GND | GND |
+| 4, 33 | (GND on J8) | GND | **NC** (reversal guard: a 180-deg flipped ribbon would put pin 4 on USB_5V and pin 33 on BAT; changed 2026-11-15) |
+| 10 | EXIO7 | NC | **USB_PRESENT** (R13/R14 divider; high = USB 5 V present; added 2026-11-17) |
+| 31 | USB_5V | NC | **USB_5V** into R13 only (reversed ribbon lands it on J8-4 GND: safe) |
 | other | - | no-connect | no-connect |
 
 Signal conditioning:
@@ -63,7 +99,7 @@ Signal conditioning:
 - **Switches** (encoder push, MENU, SIDE, stick push, every 5-way line): 10k pull-up to 3V3 and 10 nF to GND. Each switch closes to GND.
 - **Stick (J):** pot ends go to 3V3 (pins 1 and 1'/4) and GND (pins 3 and 3'/6). Wipers (pins 2 and 2'/5) go to the ADC pins, each with 10 nF to GND.
 - **Stick push (J):** pads a (7) and d (10) are the diagonal pins of the 4-pin switch, which are opposite contacts on any 4-pin tact switch. Pads b and c are left open.
-- **5-way (D):** A=UP, B=RIGHT, C=DOWN, D=LEFT, 6=centre, and 4=COM to GND. The physical A..D direction is TBV; firmware can remap it.
+- **5-way (D):** physical directions per the Alps top view: A (pin 1) = UP, B (pin 2) = LEFT, C (pin 3) = DOWN, D (pin 5) = RIGHT, 6 = centre, 4 = COM to GND. The PCB net names on pins 2 and 5 are crossed (pin 2 = NAV_RIGHT, pin 5 = NAV_LEFT); firmware `board.h` swaps them (2026-11-15), so the board was not respun.
 
 Resistor and capacitor references:
 
@@ -91,19 +127,22 @@ Owned stock: PEC11R x5, B3F-4055 x4, B3F-1000 x4, PTS645VL31 x10, 10k x25, C317 
 | Thumbstick | C&K THB001P (Mouser 611-THB001P) | 1 | - | 0 | **1** (+1 spare suggested) |
 | 5-way switch | Alps SKQUCAA010 / Adafruit 504 | - | 1 | 0 | **1** (+1 spare, EOL) |
 | 10k 1% 0.25 W axial | YAGEO MFR-25FRF52-10K or equivalent | 8 | 12 | 20 of 25 | 0 |
+| R13 2.2k 1% 1206 SMD (D only, bottom) | YAGEO RC1206FR-072K2L | 0 | 1 | 0 | 1 (+spares) |
+| R14 4.7k 1% 1206 SMD (D only, bottom) | YAGEO RC1206FR-074K7L | 0 | 1 | 0 | 1 (+spares) |
 | 10 nF 50 V X7R radial, 5.08 mm leads | KEMET C317C103K5R5TA | 8 | 10 | 10 of 10 | **8** (+2 spare) |
 | Knob (off-board) | Kilo OEJNI-75-4-7 | 1 | 1 | 0 | 2 |
-| 34-way IDC ribbon, F/F | Assmann H3DDH-3406G | 1 | 1 | 0 | 1-2 (one per assembled device) |
+| 34-way IDC ribbon, F/F | Assmann H3DDS-3406G (replaces discontinued H3DDH) | 1 | 1 | 0 | 1-2 (one per assembled device) |
 | M2 screws | M2x14 SHCS (H1, H2), M2x6 SHCS (H3) | 2 + 1 | 2 + 1 | 0 | per case BOM |
 
 The 4 owned B3F-4055 are no longer used (see deviation 1).
 
 ## Assembly order (per board)
 
+0. **D only: SMD first.** Solder R13 (2.2k) and R14 (4.7k), the two 1206 resistors on the bottom under the encoder area, before any THT part (they sit 0.67 mm from the ENC1 S1/S2 joints).
 1. **Bottom-side passives first** (R*, C*): insert from the bottom and solder on the top.
    - Trim the leads to 1.0 mm or less on the top side.
    - D only: anything under the cross cap must stay at 1.5 mm or less above the top face. The cross area is drawn on Dwgs.User.
-   - Seat the C317s flat. Their height (up to about 6.6 mm) is fine on the bottom.
+   - Stand the C317s upright, body flush to the board (do not bend them over). Their height (up to about 6.6 mm) is fine on the bottom.
 2. Top-side low parts: TP1/TP2 are bare pads, so nothing to fit.
 3. MENU SW1 (B3F-1000). Trim its bottom-side leads flush, because they sit under the J1 shroud edge.
 4. SIDE SW2. Push it against the board so the actuator tip ends at X 43.20.
@@ -115,6 +154,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
    - Each switch line reads about 10k to 3V3, and 0 ohm when pressed.
    - Stick wipers read 0-10k across their travel.
    - Check the ribbon with pin 1 to pin 1 continuity before connecting it to the Waveshare.
+   - D only (USB sense): J1-31 to GND reads about 6.9k (R13 + R14); J1-10 to GND reads about 4.7k; **J1-31 to J1-30 / J1-32 (3V3) must read open** before the first connection.
 
 ## Footprints
 
@@ -149,7 +189,7 @@ The 4 owned B3F-4055 are no longer used (see deviation 1).
 
 - 2 layers, 1.6 mm FR-4, HASL (lead-free optional), green or any colour, 1 oz copper.
 - 5 pcs of each variant: two separate orders or two designs in one cart. Do not panelise J and D together.
-- Size 49.5 x 41.0 mm. Minimum track 0.3, clearance 0.2, minimum drill 0.3 (vias) and 0.8 (THT). All standard.
+- Size 49.5 x 41.0 mm. Minimum track 0.3 (0.2 for the USB_5V / USB_PRESENT sense tracks added in revB4), clearance 0.2 (USB_5V kept ≥0.3 from 3V3), minimum drill 0.3 (vias) and 0.8 (THT). All standard.
 
 Gerber export in KiCad 10:
 

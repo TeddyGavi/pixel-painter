@@ -1,0 +1,4 @@
+# Boot to Draw mode: empty 9x9 grid, cursor at the centre cell (4,4).
+0   adc 34 1.95
+0   adc 27 3.3
+3.0 stop

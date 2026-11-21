@@ -6,35 +6,58 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "sdkconfig.h"   // CONFIG_IDF_TARGET_* used below
 
+// Inputs (all switches active low): a 5-way D-pad (cursor; centre = erase,
+// long-press = eyedropper), one push-encoder (turn = colour slot, press = place,
+// press-and-turn = browse the catalogue), MENU and SIDE. -1 = not wired.
 #if CONFIG_IDF_TARGET_ESP32S3
-// ---- Waveshare 2.41 V2, header J8 ----
-#define PIN_ENC_L_A     1   // J8-3
-#define PIN_ENC_L_B     7   // J8-13
-#define PIN_ENC_L_SW    8   // J8-15, active low
-#define PIN_ENC_R_A     38  // J8-19
-#define PIN_ENC_R_B     39  // J8-21 (MTCK: no external JTAG while in use)
-#define PIN_ENC_R_SW    40  // J8-23, active low
-#define PIN_BTN_MENU    41  // J8-25, active low
-#define PIN_BTN_SIDE    42  // J8-24, active low
+// ---- Waveshare 2.41 V2 + Rev B control board, D variant (layout-revB.md),
+//      via header J8 ----
+#define PIN_DPAD_UP     38  // J8-19
+#define PIN_DPAD_DOWN   39  // J8-21 (MTCK: no external JTAG while in use)
+// LEFT/RIGHT are deliberately crossed against the PCB net names. Alps SKQUCAA010
+// top view: B (pin 2) = LEFT, D (pin 5) = RIGHT, but control PCB Rev B wires
+// pad 2 to net NAV_RIGHT (J8-25) and pad 5 to NAV_LEFT (J8-23). Fixed here
+// rather than respinning the board (2026-11-15).
+#define PIN_DPAD_LEFT   41  // J8-25, net NAV_RIGHT = SW3 pin 2 (B, physical left)
+#define PIN_DPAD_RIGHT  40  // J8-23, net NAV_LEFT  = SW3 pin 5 (D, physical right)
+#define PIN_DPAD_CENTER 1   // J8-3
+#define PIN_ENC_A       7   // J8-13
+#define PIN_ENC_B       8   // J8-15
+#define PIN_ENC_SW      42  // J8-24
+#define PIN_BTN_MENU    (-1) // on the TCA9554 expander instead: EXIO_BTN_MENU
+#define PIN_BTN_SIDE    (-1) // on the TCA9554 expander instead: EXIO_BTN_SIDE
+#define EXIO_BTN_MENU   5    // TCA9554 P5 (J8-6), polled over I2C by input.c
+#define EXIO_BTN_SIDE   6    // TCA9554 P6 (J8-8)
+#define EXIO_USB_PRESENT 7   // TCA9554 P7 (J8-10): high = USB 5 V present (R1 2.2k / R2 4.7k divider on the J8 adapter PCB, rev A). Not read yet; debounce ~100 ms
+#define PIN_DPAD_LADDER (-1) // D-pad uses its own GPIOs here
 #define PIN_PWR_KEY     15  // onboard PWR key (Key_BAT)
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops
 #define PIN_BAT_ADC     17  // battery voltage / 3 (200k/100k divider)
 #define HAVE_PWR_LATCH  1
-#define DISPLAY_W       450 // portrait (panel is 600x450, rotated in firmware)
-#define DISPLAY_H       600
+#define DISPLAY_W       225 // logical px, shown 2x2 each on the 450x600 RM690B0 panel (pixel doubling: CYD-sized UI)
+#define DISPLAY_ROT180  1   // panel is mounted upside down relative to the case (USB-C left): flip in the flush (checked on the board 2026-11-17)
+#define DISPLAY_H       300
 #elif CONFIG_IDF_TARGET_ESP32
 // ---- Freenove FNK0114A 2.4" ST7789 (ESP32-WROOM-32E), from Freenove's
 //      2.4inch_ESP32-32E_Display_Schematic.pdf. Only 2 free GPIOs exist. ----
-#define PIN_ENC_L_A     35   // P4 pin 2 ("IO port"); input-only, EXTERNAL 10k pull-up required
-#define PIN_ENC_L_B     27   // P3 pin 4 ("SPI port"); free, not strapping
-#define PIN_ENC_L_SW    (-1)
-#define PIN_ENC_R_A     (-1) // not wired on interim board
-#define PIN_ENC_R_B     (-1)
-#define PIN_ENC_R_SW    0    // BOOT key = "place" (onboard 10k pull-up); don't hold during reset
-#define SINGLE_ENCODER  1    // one knob walks the grid row by row
-#define PIN_BTN_MENU    (-1) // optional: IO19 (P3 pin 2) if the SD card is not used
-#define PIN_BTN_SIDE    (-1)
+// Breadboard bench wiring (BENCH.md). Only 5 GPIOs reach connectors, so the
+// 5-way D-pad is a resistor ladder on one ADC pin. P3 = the SD-card bus: no card.
+#define PIN_DPAD_UP     (-1) // all 5 directions: ladder on PIN_DPAD_LADDER
+#define PIN_DPAD_DOWN   (-1)
+#define PIN_DPAD_LEFT   (-1)
+#define PIN_DPAD_RIGHT  (-1)
+#define PIN_DPAD_CENTER (-1)
+#define PIN_DPAD_LADDER 27   // P3 pin 4: ADC2_CH7 (unreadable while Wi-Fi runs)
+#define PIN_ENC_A       35   // P4 pin 2; input-only, EXTERNAL 10k pull-up required
+#define PIN_ENC_B       23   // P3 pin 1 (SPI_MOSI)
+#define PIN_ENC_SW      19   // P3 pin 2 (SPI_MISO)
+#define PIN_BTN_MENU    18   // P3 pin 3 (SPI_CLK)
+#define PIN_BTN_SIDE    0    // onboard BOOT key (10k pull-up); don't hold it during reset
+#define EXIO_USB_PRESENT (-1) // no USB sense on the Freenove
+#define EXIO_BTN_MENU   (-1) // no I/O expander on the Freenove
+#define EXIO_BTN_SIDE   (-1)
 #define PIN_PWR_KEY     (-1)
 #define PIN_PWR_LATCH   (-1)
 #define PIN_BAT_ADC     34   // 100k/100k divider (x2)
@@ -57,8 +80,31 @@ typedef struct {
     // Push a small RGB565 bitmap (glyphs, icons).
     void (*blit)(int x, int y, int w, int h, const uint16_t *px);
     void (*set_brightness)(uint8_t pct); // burn-in care: dim chrome, sleep idle
+    // Optional (NULL = draws go straight to the panel): send everything drawn since
+    // the last call in one go, so a screen change appears at once (no flicker).
+    void (*present)(void);
 } display_ops_t;
 
 const display_ops_t *board_display(void);
 void board_early_init(void);   // power latch FIRST, then rails/quirks
-int  board_battery_mv(void);   // -1 if unsupported
+int  board_battery_mv(void);   // battery voltage (calibrated, averaged), -1 if unsupported/unreadable
+// Switch off: drop the power latch. Where that can't cut power (USB connected, or
+// a board without a latch) fall back to a "soft off": display off, deep sleep,
+// woken by the PWR key as a fresh boot. Does not return.
+void board_power_off(void);
+void board_display_sleep(bool sleep); // panel off (low power) / back on; redraw after waking
+int  board_exio_read(void);
+const char *board_status(void); // one-line hardware status (reprinted by serial '?')    // I/O expander input port (bit n = EXIOn), -1 if none
+// Test support: the shadow framebuffer (DISPLAY_W x DISPLAY_H, big-endian RGB565),
+// or NULL on boards without one. Hold board_fb_lock(true) while reading it.
+const uint16_t *board_framebuffer(void);
+void board_fb_lock(bool lock);
+// After writing into the framebuffer directly (screen saver): mark the area changed.
+void board_fb_dirty(int x, int y, int w, int h);
+// Two-colour bitmap mode (screen saver): returns a cleared 1-bit-per-pixel bitmap
+// ((DISPLAY_W+7)/8 bytes per row, bit x&7 of byte x>>3) shown in fg/bg, or NULL if
+// the board has none. Mark changes with board_fb_dirty (under board_fb_lock).
+uint8_t *board_mono_begin(uint16_t fg, uint16_t bg);
+void board_mono_color(uint16_t fg, uint16_t bg);
+void board_mono_end(void);
+void board_fb_sync(void);      // test dump: bring the framebuffer up to date first

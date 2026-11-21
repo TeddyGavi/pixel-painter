@@ -1,0 +1,15 @@
+# Paint brush: hold the encoder push ('[' on the serial bench keys) and move with the
+# D-pad: the start cell (4,4) and every cell moved onto get the current colour
+# (slot 0, S01 White): (4,4) (5,4) (6,4) (6,5). Releasing (']') places nothing more.
+# Then a plain press at (6,6) still places a single bead.
+# Expected: white beads at (4,4) (5,4) (6,4) (6,5) (6,6), cursor at (6,6).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 [
+2.3 uart0 d
+2.5 uart0 d
+2.7 uart0 s
+2.9 uart0 ]
+3.2 uart0 s
+3.4 uart0 p
+4.2 stop

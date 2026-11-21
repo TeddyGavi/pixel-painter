@@ -1,0 +1,5 @@
+# Battery icon in the menu title: simulated 3950 mV (~72%, 3 segments), then MENU.
+# Expected: main menu, battery icon with 3 segments at the right of the title.
+2.0 key b
+2.4 key m
+3.2 stop

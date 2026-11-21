@@ -1,0 +1,10 @@
+# Browse with family jump (keyboard): L = press+turn one step, then d = next colour
+# family (while still "held"), d again = the family after. Captured mid-browse.
+# Expected: slot 0 = first colour of the 3rd family in browse order (Reds), strip
+# bright with the catalogue window, cursor dimmed.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 L
+2.2 uart0 d
+2.4 uart0 d
+2.8 stop

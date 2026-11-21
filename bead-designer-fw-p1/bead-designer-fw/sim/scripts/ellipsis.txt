@@ -1,0 +1,30 @@
+# Long name: put SP8 ("SP8 Pearl Light Grey") into slot 1 via Menu > Edit shortlist >
+# slot 1 > Enter code (S, P, 8, OK), close the menu. 1 s later the bottom line shows
+# the label shortened with "..." (the marquee starts after 5 s unchanged).
+0   adc 34 1.95
+0   adc 27 3.3
+2.00 uart0 m
+2.08 uart0 s
+2.15 uart0 s
+2.30 uart0 k
+2.45 uart0 k
+2.60 uart0 s
+2.75 uart0 k
+2.90 uart0 k
+3.05 uart0 l
+3.20 uart0 l
+3.35 uart0 l
+3.50 uart0 l
+3.65 uart0 l
+3.80 uart0 k
+3.95 uart0 l
+4.10 uart0 l
+4.25 uart0 l
+4.40 uart0 l
+4.55 uart0 l
+4.70 uart0 l
+4.85 uart0 l
+5.00 uart0 k
+5.15 uart0 k
+5.30 uart0 m
+6.45 stop

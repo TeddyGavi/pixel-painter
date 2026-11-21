@@ -260,7 +260,7 @@
 		(uuid "65199095-f65c-5e85-aaaa-aa87eda51815")
 	)
 	(pad "MP" thru_hole oval
-		(at -5.45 0)
+		(at -5.7 0)
 		(size 3 3.6)
 		(drill oval 2.2 2.8)
 		(layers "*.Cu" "*.Mask")
@@ -268,7 +268,7 @@
 		(uuid "c93ac0dc-f871-5553-b180-9683f26c1385")
 	)
 	(pad "MP" thru_hole oval
-		(at 5.45 0)
+		(at 5.7 0)
 		(size 3 3.6)
 		(drill oval 2.2 2.8)
 		(layers "*.Cu" "*.Mask")

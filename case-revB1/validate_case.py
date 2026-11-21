@@ -848,7 +848,7 @@ def clearances(G):
     t = g("ins_tilt") * d2r
     add("Left-edge part inside the pocket at insertion tilt", -g("nb_over") * math.cos(t) + g("nb_conn_Z0") * math.sin(t), 0.2,
         note=f"part {g('nb_over'):.2f} past the glass; tilt {g('ins_tilt')} deg (TBV part)")
-    add("Waveshare boss/bridge to IDC socket (Z)", g("idc_Z0") - g("ws_bridge_Z1"), 0.3)
+    add("Waveshare screw head to adapter PCB (Z)", g("idc_Z0") + 2.5 - g("ws_bridge_Z1") - g("ws_screw_head_h"), 0.3)
     j8 = (g("j8_col_x")[0] - 1.27, g("j8_col_x")[1] + 1.27, g("j8_row_y0") - 1.27,
           g("j8_row_y0") + (g("j8_rows") - 1) * 2.54 + 1.27)
     add("Waveshare boss to J8 header plastic (XY)", min(rect_dist(h[0], h[1], *j8) for h in g("ws_holes")) - g("ws_boss_d") / 2, 0.3)
@@ -974,7 +974,7 @@ def clearances(G):
         a_act = g("dp_act_deg") * d2r
         a_max = g("dp_max_deg") * d2r
         Zp = g("skqu_pivot_Z")
-        add("D: actuation tilt (deg)", g("dp_act_deg"), note="atan(0.4 / 2.9), pivot 2.9 below the stem top (TBV)")
+        add("D: actuation tilt (deg)", g("dp_act_deg"), note="Alps: 0.4 travel 2.9 below the top, pivot 1.23 above the PCB")
         gap = g("dp_fl_Z0") - g("panel_t")
         r = g("dp_fl_r")
         rise = lambda a: r * math.sin(a) - (Zp - g("panel_t")) * (1 - math.cos(a))
@@ -989,9 +989,12 @@ def clearances(G):
             return aa * (1 - math.cos(a)) + rr * math.sin(a)
         add("D: cap rear (r 7.07, body corners) to switch body at max tilt",
             g("skqu_body_Z0") - (g("dp_fl_Z0") + back_move(g("dp_fl_Z0"), rc, a_max)), 0.05)
-        add("D: socket boss rear to switch body at max tilt",
-            g("skqu_body_Z0") - (g("dp_sock_Z1") + back_move(g("dp_sock_Z1"), g("dp_sock_od") / 2, a_max)), 0.05)
-        add("D: socket depth over the stem", g("dp_sock_Z1") - g("skqu_top_Z"), 1.0, note="stem joint TBV")
+        add("D: cap rear to collar top at max tilt + centre push",
+            g("skqu_collar_Z") - (g("dp_sock_Z1") + back_move(g("dp_sock_Z1"), g("dp_sock_od") / 2, a_max) + g("skqu_push")), 0.05,
+            note="assumes the collar is fixed; if it moves with the stem this is pure margin")
+        add("D: socket depth over the stem", g("dp_sock_Z1") - g("skqu_top_Z"), 2.0, note="square 3.2 stem, press fit + glue")
+        add("D: socket corner wall (arm half-width - socket half-diagonal)",
+            g("dp_arm") / 2 - (g("skqu_stem_w") + g("dp_sock_fit")) / 2 * math.sqrt(2), 0.8)
         add("D: top-side part height limit under the flange", g("cp_top_Z") - (g("dp_fl_Z1") + back_move(g("dp_fl_Z1"), r, a_max)),
             note="keep-out height for the control PCB under the cross + lip")
         add("D: cross opening to left case face (skin)", (cx - g("dp_span") / 2 - g("dp_clr")) - g("case_x0"), MW)

@@ -1,0 +1,19 @@
+# Slot list scrolling: save one bead to slot 1, then open Menu > Pattern > Save and move
+# down five rows (slot 6).
+# Expected: rows 3-6 visible (4 double-height rows), slot 6 framed; all "Empty".
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 p
+2.2 uart0 m
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.2 uart0 m
+3.4 uart0 k
+3.6 uart0 k
+3.8 uart0 s
+4.0 uart0 s
+4.2 uart0 s
+4.4 uart0 s
+4.6 uart0 s
+5.2 stop

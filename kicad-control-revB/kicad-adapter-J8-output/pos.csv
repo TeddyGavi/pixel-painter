@@ -1,0 +1,5 @@
+Ref,Val,Package,PosX,PosY,Rot,Side
+"J2","FH12-16S-0.5SH(55)","Hirose_FH12-16S-0.5SH_1x16-1MP_P0.50mm_Horizontal",134.000000,-60.149999,180.000000,bottom
+"R1","2.2k","R_0603_1608Metric",139.600000,-49.000000,90.000000,bottom
+"R2","4.7k","R_0603_1608Metric",139.600000,-44.000000,90.000000,bottom
+"J1","2x17 male 2.54 (into Waveshare J8)","PinHeader_2x17_P2.54mm_Vertical",132.729999,-14.180000,0.000000,top

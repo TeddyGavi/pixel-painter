@@ -1,0 +1,21 @@
+# Breadboard input path on the real pins (no serial keys): D-pad ladder voltages on
+# GPIO27, encoder push on GPIO19 (sw), MENU on GPIO18, SIDE = BOOT (GPIO0).
+# right (2.20 V) x2 -> cursor (6,4); down (1.10 V) -> (6,5); push = place White;
+# centre (0 V) held 0.8 s = eyedropper (no change: same colour); MENU opens the menu,
+# up/down not needed: MENU closes it; SIDE opens "Colours used".
+# Expected: title "In pattern: 1", row "S01 White 1".
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 adc 27 2.2
+2.1 adc 27 3.3
+2.3 adc 27 2.2
+2.4 adc 27 3.3
+2.6 adc 27 1.1
+2.7 adc 27 3.3
+2.9 press sw 150
+3.3 adc 27 0
+4.1 adc 27 3.3
+4.4 press menu 150
+4.8 press menu 150
+5.2 press boot 150
+5.8 stop
