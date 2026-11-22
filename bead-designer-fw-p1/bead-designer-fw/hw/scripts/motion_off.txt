@@ -1,0 +1,11 @@
+# Menu > Motion (Waveshare only, 9th row: two up from Pattern, past Export) toggled
+# to Off, then MENU closes and a bead is placed with no animation.
+# Expected: the board with a white bead at the centre cell, cursor on it.
+# (Run on the board: the Freenove has no Motion row.)
+2.0 key m
+2.4 key w
+2.8 key w
+3.6 key k
+4.6 key m
+5.2 key p
+6.0 stop

@@ -15,7 +15,7 @@ Keys stand in for the final controls (D-pad + push-encoder + MENU/SIDE):
 | `l` / `j` | encoder turn | next / previous shortlist slot (5 slots on the strip) |
 | `k`, `p` or space | encoder press | place a bead in the selected slot's colour |
 | `L` / `J` | encoder press + turn | browse the whole catalogue for the selected slot; any other key (or 1.5 s) = release |
-| `m` | MENU | menu: Pattern (Save / Load / Reset board, 8 slots), Brand (only while the board is empty), Edit shortlist (browse list or dial a code), Colours used, Board/Texture/Beads (device-wide look), Screensaver (Off/5s/30s/1m/5m idle), Export. In menus: `w`/`s` or `j`/`l` move, `k` selects, `x` goes back, `m` closes |
+| `m` | MENU | menu: Pattern (Save / Load / Grid size 9-12-15 / Reset board, 8 slots), Brand (only while the board is empty), Edit shortlist (browse list or dial a code), Colours used, Board/Texture/Beads (device-wide look), Screensaver (Off/5s/30s/1m/5m idle), Export. In menus: `w`/`s` or `j`/`l` move, `k` selects, `x` goes back, `m` closes |
 | `o` | SIDE | colours used in the pattern, with counts (`k` on a row loads it into the selected slot) |
 | `t` | - | colour test bars for 3 s |
 | `v` | - | log the D-pad ladder voltage on every change (breadboard check) |

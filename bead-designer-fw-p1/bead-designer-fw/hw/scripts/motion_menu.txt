@@ -1,0 +1,6 @@
+# Menu > Motion toggled to Off: the row shows "Off" (Waveshare only).
+2.0 key m
+2.4 key w
+2.8 key w
+3.6 key k
+4.6 stop

@@ -10,6 +10,7 @@ idf_component_register(
         "qrcodegen.c" "saver.c"
         "text.c"
         "menu.c"
+        "grid.c"
         "battery.c"
         "board_style.c"
         "font_chicago.c"

@@ -10,14 +10,14 @@
 //   (EXIO0), not a GPIO. The panel sits upside down in the case (DISPLAY_ROT180) and
 //   its visible columns start at RAM column 16 (LCD_X_GAP).
 //
-// Pixel doubling: the UI is drawn at DISPLAY_W x DISPLAY_H = 225 x 300 logical
-//   pixels and each one is shown as a 2x2 block, so the 2.41" looks like the 2.4"
-//   CYD (same physical pixel size, ~0.16 mm) with crisp, chunky pixels. Doubling
-//   also makes every panel window even-aligned, which the controller requires.
-//   Draws go into a logical shadow framebuffer (PSRAM, big-endian RGB565, also used
-//   by the test dump) and grow a dirty rectangle; present() expands and sends it
-//   band by band through two internal DMA buffers, filling one while the other is
-//   on the bus.
+// Native resolution (UI update stage 1, 2026-11-20): the UI is drawn at the panel's
+//   450 x 600. Draws go into a shadow framebuffer (PSRAM, big-endian RGB565, also
+//   used by the test dump) and grow a dirty rectangle; present() sends it band by
+//   band through two internal DMA buffers, filling one while the other is on the
+//   bus. Every panel window is widened to even columns and rows, which the
+//   controller requires. (Until 2026-11-20 the UI was 225 x 300, pixel-doubled.)
+//   The screen saver's two-colour bitmap stays 225 x 300 (SAVER_W x SAVER_H) and is
+//   still shown 2x2.
 //
 // I2C (GPIO47 SDA / GPIO48 SCL) carries the TCA9554 at 0x20:
 //   P0 OLED reset (out), P1 touch reset (out, held high: touch not used yet),
@@ -68,9 +68,11 @@ const char *board_status(void) { return s_status; }
 #define LCD_RAM_W   480                             // RM690B0 column RAM; 450 columns are visible
 #define LCD_X_GAP   16                              // RAM column = native column + gap (mod 480); 16 = Waveshare CASET start 0x10, confirmed with the G ruler 2026-11-17
 
-#define SCALE       2                               // logical px -> SCALE x SCALE panel px
-#define PANEL_W     (DISPLAY_W * SCALE)             // 450
-#define PANEL_H     (DISPLAY_H * SCALE)             // 600
+#define PANEL_W     DISPLAY_W                       // 450
+#define PANEL_H     DISPLAY_H                       // 600
+#define MSCALE      (PANEL_W / SAVER_W)             // saver bitmap px -> MSCALE x MSCALE panel px
+_Static_assert(SAVER_W * MSCALE == PANEL_W && SAVER_H * MSCALE == PANEL_H && MSCALE == 2,
+               "the saver bitmap is expanded 2x2");
 #define BAND_ROWS   24                              // panel rows per DMA transfer (even); 2 x 21.6 KB internal
 #define BAND_PX     (PANEL_W * BAND_ROWS)
 
@@ -234,17 +236,16 @@ static void set_window(int c0, int r0, int c1, int r1)
     lcd_cmd(0x2B, r, 4);
 }
 
-// Expand native panel rows [y, y+n) x columns [nx0, nx0+w) from the logical buffer.
-// nx0 and w are even (SCALE 2), so each logical pixel becomes one 32-bit store of
-// two panel pixels; each logical row is first copied out of PSRAM in one burst, and
-// the second panel row of a logical row is a memcpy of the first.
-static uint16_t s_row[DISPLAY_W];                     // internal copy of one logical row
+// Fill native panel rows [y, y+n) x columns [nx0, nx0+w) from the snapshot (or the
+// saver bitmap, expanded 2x2). nx0 and w are even. Each snapshot row is copied out
+// of PSRAM in one burst.
+static uint16_t s_row[DISPLAY_W];                     // internal copy of one snapshot row
 
-// Two-colour (1 bit per logical pixel) mode for the screen saver: it draws into
+// Two-colour (1 bit per saver pixel) mode for the screen saver: it draws into
 // s_mono_draw in internal RAM; present() copies that 8.4 KB bitmap instead of
-// 135 KB of RGB565, and the display task expands bits to the two colours.
-#define MONO_STRIDE ((DISPLAY_W + 7) / 8)
-#define MONO_BYTES  (MONO_STRIDE * DISPLAY_H)
+// 540 KB of RGB565, and the display task expands bits to the two colours.
+#define MONO_STRIDE ((SAVER_W + 7) / 8)
+#define MONO_BYTES  (MONO_STRIDE * SAVER_H)
 static uint8_t *s_mono_draw, *s_mono_snap[2];
 static uint8_t *s_mono_job;                           // bitmap the display task sends (NULL = RGB565 job)
 static bool s_mono_on;
@@ -252,35 +253,34 @@ static uint16_t s_mono_fg, s_mono_bg;                 // RGB565 (native order)
 static uint32_t s_job_fg, s_job_bg;                   // the job's colours, doubled big-endian pixels
 static void fill_band(uint16_t *dst, int nx0, int w, int y, int n)
 {
-    int lw = w / SCALE;
     for (int r = 0; r < n; r++) {
         int ny = y + r;
         uint16_t *out = dst + r * w;
-        if (r > 0 && ((ny ^ (ny - 1)) & ~1) == 0) {   // same logical row as the line above
-            memcpy(out, out - w, w * sizeof(uint16_t));
-            continue;
-        }
-        uint32_t *o = (uint32_t *)out;
-        if (s_mono_job) {                             // two-colour job: expand bits
+        if (s_mono_job) {                             // two-colour job: expand bits 2x2
+            if (r > 0 && ((ny ^ (ny - 1)) & ~1) == 0) {   // same bitmap row as the line above
+                memcpy(out, out - w, w * sizeof(uint16_t));
+                continue;
+            }
+            uint32_t *o = (uint32_t *)out;
+            int lw = w / MSCALE;
 #if DISPLAY_ROT180
-            int ly = (PANEL_H - 1 - ny) / SCALE, lx = (PANEL_W - 1 - nx0) / SCALE;
+            int ly = (PANEL_H - 1 - ny) / MSCALE, lx = (PANEL_W - 1 - nx0) / MSCALE;
             const uint8_t *row = s_mono_job + ly * MONO_STRIDE;
             for (int i = 0; i < lw; i++, lx--) o[i] = (row[lx >> 3] >> (lx & 7) & 1) ? s_job_fg : s_job_bg;
 #else
-            int ly = ny / SCALE, lx = nx0 / SCALE;
+            int ly = ny / MSCALE, lx = nx0 / MSCALE;
             const uint8_t *row = s_mono_job + ly * MONO_STRIDE;
             for (int i = 0; i < lw; i++, lx++) o[i] = (row[lx >> 3] >> (lx & 7) & 1) ? s_job_fg : s_job_bg;
 #endif
             continue;
         }
 #if DISPLAY_ROT180
-        // Panel mounted upside down: native (x, y) shows logical ((W2-1-x)/2, (H2-1-y)/2).
-        int ly = (PANEL_H - 1 - ny) / SCALE, lx_hi = (PANEL_W - 1 - nx0) / SCALE;
-        memcpy(s_row, s_snap + ly * DISPLAY_W + (lx_hi - lw + 1), lw * sizeof(uint16_t));
-        for (int i = 0; i < lw; i++) { uint32_t v = s_row[lw - 1 - i]; o[i] = v | v << 16; }
+        // Panel mounted upside down: native (x, y) shows framebuffer (W-1-x, H-1-y).
+        int ly = PANEL_H - 1 - ny, lx_hi = PANEL_W - 1 - nx0;
+        memcpy(s_row, s_snap + ly * DISPLAY_W + (lx_hi - w + 1), w * sizeof(uint16_t));
+        for (int i = 0; i < w; i++) out[i] = s_row[w - 1 - i];
 #else
-        memcpy(s_row, s_snap + (ny / SCALE) * DISPLAY_W + nx0 / SCALE, lw * sizeof(uint16_t));
-        for (int i = 0; i < lw; i++) { uint32_t v = s_row[i]; o[i] = v | v << 16; }
+        memcpy(out, s_snap + ny * DISPLAY_W + nx0, w * sizeof(uint16_t));
 #endif
     }
 }
@@ -312,17 +312,21 @@ static void send_native(int nx0, int nx1, int py0, int py1)
     wait_inflight(0);
 }
 
-// Copy logical rectangle [x0,x1) x [y0,y1) to the panel.
+// Copy framebuffer rectangle [x0,x1) x [y0,y1) to the panel, widened to even
+// columns and rows (the controller needs even-aligned windows; W and H are even).
 static void flush(int x0, int y0, int x1, int y1)
 {
     if (x1 > DISPLAY_W) x1 = DISPLAY_W;
     if (y1 > DISPLAY_H) y1 = DISPLAY_H;
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
     if (x1 <= x0 || y1 <= y0) return;
+    x0 &= ~1; y0 &= ~1; x1 = (x1 + 1) & ~1; y1 = (y1 + 1) & ~1;
 #if DISPLAY_ROT180
-    int nx0 = PANEL_W - x1 * SCALE, nx1 = PANEL_W - x0 * SCALE;
-    int py0 = PANEL_H - y1 * SCALE, py1 = PANEL_H - y0 * SCALE;
+    int nx0 = PANEL_W - x1, nx1 = PANEL_W - x0;
+    int py0 = PANEL_H - y1, py1 = PANEL_H - y0;
 #else
-    int nx0 = x0 * SCALE, nx1 = x1 * SCALE, py0 = y0 * SCALE, py1 = y1 * SCALE;
+    int nx0 = x0, nx1 = x1, py0 = y0, py1 = y1;
 #endif
     int wrap = LCD_X_GAP < 0 ? -LCD_X_GAP : LCD_RAM_W - LCD_X_GAP;   // native column where RAM wraps to 0
     if (nx0 < wrap && nx1 > wrap) {
@@ -439,11 +443,10 @@ static void panel_hw_init(void)
     lcd_cmd(0x51, &full, 1);
     int64_t t0 = esp_timer_get_time();
     flush(0, 0, DISPLAY_W, DISPLAY_H);
-    ESP_LOGI(TAG, "RM690B0 ready: %dx%d shown as %dx%d (x%d), QSPI %d MHz, full frame %lld us",
-             DISPLAY_W, DISPLAY_H, PANEL_W, PANEL_H, SCALE, LCD_PCLK_HZ / 1000000,
-             (long long)(esp_timer_get_time() - t0));
-    snprintf(s_status, sizeof s_status, "Waveshare 2.41 Rev 2.0; %s; RM690B0 ready %dx%d x%d",
-             s_tca_ok ? "TCA9554 ok at 0x20" : "TCA9554 MISSING", DISPLAY_W, DISPLAY_H, SCALE);
+    ESP_LOGI(TAG, "RM690B0 ready: %dx%d native, QSPI %d MHz, full frame %lld us",
+             PANEL_W, PANEL_H, LCD_PCLK_HZ / 1000000, (long long)(esp_timer_get_time() - t0));
+    snprintf(s_status, sizeof s_status, "Waveshare 2.41 Rev 2.0; %s; RM690B0 ready %dx%d native",
+             s_tca_ok ? "TCA9554 ok at 0x20" : "TCA9554 MISSING", PANEL_W, PANEL_H);
     xSemaphoreGive(s_idle);
 }
 
@@ -457,6 +460,13 @@ static void dirty(int x0, int y0, int x1, int y1)
     if (y1 > s_dy1) s_dy1 = y1;
 }
 
+// Copy framebuffer rectangle [x0,x1) x [y0,y1) into a snapshot.
+static void snap_copy(uint16_t *dst, int x0, int y0, int x1, int y1)
+{
+    for (int y = y0; y < y1; y++)
+        memcpy(dst + y * DISPLAY_W + x0, s_fb + y * DISPLAY_W + x0, (x1 - x0) * sizeof(uint16_t));
+}
+
 // Hand the dirty rectangle to the display task. The frame is copied into the
 // snapshot that is not being sent (overlapping the send of the previous frame);
 // that snapshot is two frames old, so the copy covers this frame's and the last
@@ -465,6 +475,14 @@ static void dirty(int x0, int y0, int x1, int y1)
 static void dsp_present(void)
 {
     xSemaphoreTake(s_lock, portMAX_DELAY);
+    // flush() widens every window to even columns and rows; widen here first, so the
+    // snapshot copy covers every pixel that gets sent. (Copying only the odd-edged
+    // rectangle sent a 1 px line from a two-frames-old snapshot along its edges:
+    // stale cursor ring / halo lines around cells after moving, 2026-11-21.)
+    if (s_dx1 > s_dx0 && s_dy1 > s_dy0) {
+        s_dx0 &= ~1; s_dy0 &= ~1;
+        s_dx1 = (s_dx1 + 1) & ~1; s_dy1 = (s_dy1 + 1) & ~1;   // W and H are even: stays on screen
+    }
     if (s_mono_on && s_dx1 > s_dx0 && s_dy1 > s_dy0) {
         uint8_t *dst = s_mono_snap[s_fill_k];
         memcpy(dst, s_mono_draw, MONO_BYTES);
@@ -481,19 +499,17 @@ static void dsp_present(void)
         return;
     }
     if (s_dx1 > s_dx0 && s_dy1 > s_dy0) {
-        int x0 = s_dx0, y0 = s_dy0, x1 = s_dx1, y1 = s_dy1;
-        if (s_qx1 > s_qx0) {                          // union with the previous frame's
-            if (s_qx0 < x0) x0 = s_qx0;
-            if (s_qy0 < y0) y0 = s_qy0;
-            if (s_qx1 > x1) x1 = s_qx1;
-            if (s_qy1 > y1) y1 = s_qy1;
-        }
-        if (s_mono_job) {                             // leaving two-colour mode: snapshots
-            x0 = 0; y0 = 0; x1 = DISPLAY_W; y1 = DISPLAY_H;   // are stale, copy everything
-        }
         uint16_t *dst = s_snapbuf[s_fill_k];
-        for (int y = y0; y < y1; y++)
-            memcpy(dst + y * DISPLAY_W + x0, s_fb + y * DISPLAY_W + x0, (x1 - x0) * sizeof(uint16_t));
+        if (s_mono_job) {                             // leaving two-colour mode: snapshots
+            snap_copy(dst, 0, 0, DISPLAY_W, DISPLAY_H);   // are stale, copy everything
+        } else {
+            // This frame's rectangle and the previous frame's, each on its own: their
+            // bounding box can be most of the screen (the cursor near the top and the
+            // strip at the bottom, during motion), and PSRAM copies cost ~25 us a row.
+            snap_copy(dst, s_dx0, s_dy0, s_dx1, s_dy1);
+            bool inside = s_qx0 >= s_dx0 && s_qy0 >= s_dy0 && s_qx1 <= s_dx1 && s_qy1 <= s_dy1;
+            if (s_qx1 > s_qx0 && !inside) snap_copy(dst, s_qx0, s_qy0, s_qx1, s_qy1);   // (already copied if inside)
+        }
         xSemaphoreTake(s_idle, portMAX_DELAY);       // previous frame fully sent
         s_mono_job = NULL;
         s_snap = dst;
@@ -560,7 +576,11 @@ void board_display_sleep(bool sleep)
 
 const uint16_t *board_framebuffer(void) { return s_fb; }
 void board_fb_lock(bool lock) { if (lock) xSemaphoreTake(s_lock, portMAX_DELAY); else xSemaphoreGive(s_lock); }
-void board_fb_dirty(int x, int y, int w, int h) { dirty(x, y, x + w, y + h); }   // caller holds the lock
+void board_fb_dirty(int x, int y, int w, int h)      // caller holds the lock
+{
+    if (s_mono_on) { x *= MSCALE; y *= MSCALE; w *= MSCALE; h *= MSCALE; }   // saver coordinates
+    dirty(x, y, x + w, y + h);
+}
 
 uint8_t *board_mono_begin(uint16_t fg, uint16_t bg)
 {
@@ -593,7 +613,8 @@ void board_fb_sync(void)
     if (!s_mono_on) return;
     for (int y = 0; y < DISPLAY_H; y++)
         for (int x = 0; x < DISPLAY_W; x++) {
-            uint16_t c = (s_mono_draw[y * MONO_STRIDE + (x >> 3)] >> (x & 7) & 1) ? s_mono_fg : s_mono_bg;
+            int mx = x / MSCALE, my = y / MSCALE;
+            uint16_t c = (s_mono_draw[my * MONO_STRIDE + (mx >> 3)] >> (mx & 7) & 1) ? s_mono_fg : s_mono_bg;
             s_fb[y * DISPLAY_W + x] = (uint16_t)((c >> 8) | (c << 8));
         }
 }

@@ -1,0 +1,45 @@
+# The board before a resize comes back exactly. As grid_cut, then Resize, cut 1
+# (9x9, the (0,7) bead kept at (0,4)); then Grid size > 15 x 15, which now offers
+# "restore"; Restore.
+# Expected: the 15x15 board with both beads, cursor on (14,7).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.2 uart0 k
+2.4 uart0 s
+2.6 uart0 s
+2.8 uart0 k
+3.0 uart0 s
+3.2 uart0 s
+3.4 uart0 k
+3.6 uart0 k
+3.8 uart0 a
+4.0 uart0 a
+4.2 uart0 a
+4.4 uart0 a
+4.6 uart0 a
+4.8 uart0 a
+5.0 uart0 a
+5.2 uart0 p
+5.4 uart0 a
+5.6 uart0 p
+5.8 uart0 m
+6.0 uart0 k
+6.2 uart0 s
+6.4 uart0 s
+6.6 uart0 k
+6.8 uart0 w
+7.0 uart0 w
+7.2 uart0 k
+7.4 uart0 w
+7.6 uart0 k
+7.8 uart0 m
+8.0 uart0 k
+8.2 uart0 s
+8.4 uart0 s
+8.6 uart0 k
+8.8 uart0 s
+9.0 uart0 s
+9.2 uart0 k
+9.4 uart0 k
+10.2 stop

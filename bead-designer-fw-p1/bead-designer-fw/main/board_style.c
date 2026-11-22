@@ -1,6 +1,7 @@
 // Canvas look (see board_style.h). Tones were chosen from mockups:
 //   background    texture #303030 / #606060 over the whole drawing screen
-//   solid cells   checker #505050 / #585858 with a 4x4 peg dot #787878
+//   solid cells   checker #505050 / #585858 with a 4x4 peg dot #787878 (Classic;
+//                 Solid has no peg since 2026-11-21)
 //   open cells    the background texture with a 4x4 peg dot #808080
 // (Kept as an alternative the user liked: light cells #707070/#787878, peg #989898.)
 // Textures are our own fixed 8x8 one-bit tables (bit 7 = leftmost pixel).
@@ -10,14 +11,18 @@
 #include "board_style.h"
 #include "palettes.h"   // RGB565()
 #include "ui.h"
+#include "board.h"
 
 const char *const BOARD_NAMES[BOARD__COUNT] = { "Classic", "Solid", "Pegs", "Big pegs" };
 
-static const struct { uint8_t gap; bool open; } VARIANT[BOARD__COUNT] = {
-    [BOARD_CLASSIC]  = { 2, false },
-    [BOARD_SOLID]    = { 4, false },
-    [BOARD_PEGS]     = { 4, true  },
-    [BOARD_BIG_PEGS] = { 2, true  },
+// Gaps in screen px for 9x9 / 12x12 / 15x15. Native 450x600 (UI_HIRES): spec
+// section 2 (cells 43/32/25 px; Classic and Big pegs 46/34/27). 240x320: cells
+// 22/16/12 (Classic and Big pegs 24/17/13).
+static const struct { uint8_t gap[GRID_SIZES], gap_hires[GRID_SIZES]; bool open; } VARIANT[BOARD__COUNT] = {
+    [BOARD_CLASSIC]  = { { 2, 2, 2 }, { 3, 3, 2 }, false },
+    [BOARD_SOLID]    = { { 4, 3, 3 }, { 6, 5, 4 }, false },
+    [BOARD_PEGS]     = { { 4, 3, 3 }, { 6, 5, 4 }, true  },
+    [BOARD_BIG_PEGS] = { { 2, 2, 2 }, { 3, 3, 2 }, true  },
 };
 
 static const uint8_t TEX[TEXTURE_COUNT][8] = {
@@ -35,10 +40,18 @@ static const uint8_t TEX[TEXTURE_COUNT][8] = {
 
 static int variant(void) { return UI.board < BOARD__COUNT ? UI.board : BOARD_DEFAULT; }
 
-int board_gap(void) { return VARIANT[variant()].gap; }
+int board_gap(int n)
+{
+    int i = grid_size_index(n);
+    return UI_HIRES ? VARIANT[variant()].gap_hires[i] : VARIANT[variant()].gap[i];
+}
+bool board_open(void) { return VARIANT[variant()].open; }
 
 uint16_t board_px(int x, int y)
 {
+#if UI_HIRES
+    x >>= 1; y >>= 1;                                         // texture px = 2 panel px (kept, spec 2)
+#endif
     int bit = (TEX[UI.texture % TEXTURE_COUNT][y & 7] >> (7 - (x & 7))) & 1;
     return bit ? G(0x60) : G(0x30);
 }
@@ -48,7 +61,7 @@ uint16_t slot_px(int x, int y, int cx, int cy, int cell)
     int c0 = cell / 2 - 2;                                    // 4x4 peg in the centre
     bool peg = cx >= c0 && cx < c0 + 4 && cy >= c0 && cy < c0 + 4;
     if (VARIANT[variant()].open) return peg ? G(0x80) : board_px(x, y);
-    if (peg) return G(0x78);
+    if (peg && variant() != BOARD_SOLID) return G(0x78);      // Solid: no peg (user, 2026-11-21)
     return ((x + y) & 1) ? G(0x58) : G(0x50);
 }
 

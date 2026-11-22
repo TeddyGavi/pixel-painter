@@ -51,7 +51,7 @@ static esp_err_t h_grid(httpd_req_t *r)
     const palette_t *p = &PALETTES[UI.palette];
     char buf[128];
     httpd_resp_set_type(r, "application/json");
-    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", GRID_N, p->brand);
+    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", UI.n, p->brand);
     if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     for (int i = 0; i < p->count; i++) {
         uint16_t c = p->colors[i].rgb565;
@@ -61,7 +61,7 @@ static esp_err_t h_grid(httpd_req_t *r)
         if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     }
     if (httpd_resp_sendstr_chunk(r, "],\"cells\":[") != ESP_OK) return ESP_FAIL;
-    for (int i = 0; i < GRID_N * GRID_N; i++) {
+    for (int i = 0; i < UI.n * UI.n; i++) {
         snprintf(buf, sizeof buf, "%s%d", i ? "," : "",
                  UI.cells[i] == CELL_EMPTY ? -1 : UI.cells[i]);
         if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
@@ -113,9 +113,9 @@ int export_url(char *out, size_t cap)
     int used[256];                     // palette index -> list position + 1, 0 = unused
     memset(used, 0, sizeof used);
     int k = 0;
-    for (int i = 0; i < GRID_N * GRID_N; i++)
+    for (int i = 0; i < UI.n * UI.n; i++)
         if (UI.cells[i] != CELL_EMPTY && !used[UI.cells[i]]) used[UI.cells[i]] = -1;
-    size_t n = (size_t)snprintf(out, cap, "%s#1.%s.%d.", CONFIG_BEAD_EXPORT_URL, p->key, GRID_N);
+    size_t n = (size_t)snprintf(out, cap, "%s#1.%s.%d.", CONFIG_BEAD_EXPORT_URL, p->key, UI.n);
     if (n >= cap) return -1;
     for (int idx = 0; idx < p->count; idx++) {       // list in palette order
         if (!used[idx]) continue;
@@ -127,9 +127,9 @@ int export_url(char *out, size_t cap)
                               ((c >> 5) & 0x3F) * 255 / 63, (c & 0x1F) * 255 / 31);
         if (n >= cap) return -1;                                 // truncated
     }
-    if (n + 1 + GRID_N * GRID_N + 1 > cap) return -1;
+    if (n + 1 + (size_t)(UI.n * UI.n) + 1 > cap) return -1;
     out[n++] = '.';
-    for (int i = 0; i < GRID_N * GRID_N; i++)
+    for (int i = 0; i < UI.n * UI.n; i++)
         out[n++] = UI.cells[i] == CELL_EMPTY ? '0' : CELL_CHARS[used[UI.cells[i]]];
     out[n] = 0;
     return (int)n;

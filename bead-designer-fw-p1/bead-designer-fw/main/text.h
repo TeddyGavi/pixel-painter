@@ -2,8 +2,17 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Text in the Chicago bitmap font (proportional) at 2x scale.
+#include "board.h"
+
+// Text in the Chicago bitmap font (proportional): 2x on the 240x320 Freenove, 3x
+// with Scale3x smoothing (rounded corners, filled diagonals) on the native 450x600.
+#if UI_HIRES
+#define TEXT_SCALE 3
+#define TEXT_SMOOTH 1
+#else
 #define TEXT_SCALE 2
+#define TEXT_SMOOTH 0
+#endif
 #define TEXT_H     (13 * TEXT_SCALE)   // CHICAGO_H rows x scale
 
 int text_width(const char *s);

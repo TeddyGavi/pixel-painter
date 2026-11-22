@@ -1,0 +1,16 @@
+# Grid size picker. Place a bead at (4,4) and one to its right, then
+# Menu > Pattern > Grid size.
+# Expected: "Grid size" with three double-height rows: 9 x 9 "current" (highlighted),
+# 12 x 12 and 15 x 15 "more room", each with a preview thumbnail.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 p
+2.2 uart0 d
+2.4 uart0 l
+2.6 uart0 p
+2.8 uart0 m
+3.0 uart0 k
+3.2 uart0 s
+3.4 uart0 s
+3.6 uart0 k
+4.4 stop

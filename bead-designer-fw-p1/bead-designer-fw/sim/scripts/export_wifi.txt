@@ -1,17 +1,11 @@
-# Wi-Fi fallback: Menu > Export, then press on the QR screen.
+# Wi-Fi fallback: Menu > Export (up from the first row), then press on the QR screen.
 # Expected: "Wi-Fi export" with BeadPad / beads1234 / 192.168.4.1 rows. (The emulator
 # has no SoftAP, so this only checks the screen flow, not the network.)
 0   adc 34 1.95
 0   adc 27 3.3
 2.0 uart0 m
-2.10 uart0 s
-2.2 uart0 s
-2.4 uart0 s
-2.6 uart0 s
-2.8 uart0 s
-3.0 uart0 s
-3.2 uart0 s
-3.3 uart0 s
+# Up from Pattern wraps to Export, the last row.
+2.10 uart0 w
 3.4 uart0 k
 3.8 uart0 k
 4.8 stop
