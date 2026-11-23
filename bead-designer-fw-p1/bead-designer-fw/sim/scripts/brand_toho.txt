@@ -1,0 +1,17 @@
+# Toho on the empty board: Menu > Brand > Toho (two below Artkal, the last brand), close,
+# then place slot 2 at (4,4).
+# Expected: the shortlist mapped to Toho's nearest colours; (4,4) has slot 2's Toho
+# colour, info line "<Toho code> <name> 1" with the code exactly as printed on card 111-1.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 s
+2.7 uart0 s
+2.8 uart0 k
+3.0 uart0 m
+3.2 uart0 l
+3.4 uart0 l
+3.6 uart0 p
+4.2 stop

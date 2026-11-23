@@ -312,7 +312,7 @@ void menu_row(int i, menu_row_t *r)
         break;
     }
     case S_BRAND:
-        snprintf(r->left, sizeof r->left, "%s", PALETTES[i].brand);
+        snprintf(r->left, sizeof r->left, "%s", PALETTES[i].full);   // scrolls when selected
         snprintf(r->right, sizeof r->right, "%s%d", i == UI.palette ? "* " : "",
                  PALETTES[i].count);
         break;

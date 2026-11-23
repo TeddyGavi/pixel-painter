@@ -60,7 +60,7 @@ def gen(tsv):
 
 
 # Brand key used in export URLs (palettes.c palette_t.key) for each TSV.
-WEB_KEYS = {'artkal_s': 'artkal', 'hama': 'hama', 'miyuki_delica': 'miyuki'}
+WEB_KEYS = {'artkal_s': 'artkal', 'hama': 'hama', 'miyuki_delica': 'miyuki', 'toho_round': 'toho', 'preciosa_rocailles': 'preciosa'}
 
 
 def gen_web_names(tsvs):

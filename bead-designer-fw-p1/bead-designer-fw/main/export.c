@@ -51,7 +51,7 @@ static esp_err_t h_grid(httpd_req_t *r)
     const palette_t *p = &PALETTES[UI.palette];
     char buf[128];
     httpd_resp_set_type(r, "application/json");
-    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", UI.n, p->brand);
+    snprintf(buf, sizeof buf, "{\"n\":%d,\"brand\":\"%s\",\"palette\":[", UI.n, p->full);
     if (httpd_resp_sendstr_chunk(r, buf) != ESP_OK) return ESP_FAIL;
     for (int i = 0; i < p->count; i++) {
         uint16_t c = p->colors[i].rgb565;

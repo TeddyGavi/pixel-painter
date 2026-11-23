@@ -166,7 +166,127 @@ render the page at 400 dpi (`pdftoppm -r 400 -png chart.pdf hi`), then `tools/ha
 S/work_hama/hama.json S/work_hama/crops`, then `tools/hama_sheet.py S` (contact sheets
 for checking) and `tools/hama_write_tsv.py S/work_hama/hama.json palettes`.
 
+## Toho Round (`toho_round.tsv`): 207 colours, 11/0 and 8/0 seed beads
+
+- **Source:** Toho's "Round Beads 11/0 8/0 Colors" sample card **No.111-1**,
+  `https://www.tohobeads.net/wp-content/uploads/2023/12/111-1.pdf` (retrieved 2026-11-22).
+  The PDF is one 441 ppi photo of the printed card (3649 x 5301 JPEG, Illustrator CS5,
+  2014). It has no text layer, no RGB and no names. The card covers both sizes with one
+  set of codes; the device lists the code only, so say 11/0 or 8/0 when ordering.
+- **Codes are exact:** the card is a ruled table, five columns, each row a code cell and
+  a bead-strip cell. Cells are found from the ruled lines (a thin-line filter, since the
+  rules are only ~30 levels darker than the paper), not from OCR. All 207 cells were
+  found; that matches a hand count of the card. Codes were OCR'd per cell and then
+  **every one was checked by eye** on contact sheets. OCR was wrong on 13: 7BD, 47H, 25B,
+  26B, 29B, 108BD, 116B and the six `S` codes 2151S-2156S. The corrections are listed in
+  `tools/toho_write_tsv.py`. Codes are kept as printed (`2152S`, `23BDA`).
+- **Order and sections:** TSV order is card order, column by column. The card's section
+  headings are in the note column and give the name prefix:
+  Transparent (46, `Clear`), Opaque (26), Ceylon (7), Transparent Silver Lined (65,
+  `Silver-Lined`), Ceylon Silver Lined (28, `Ceylon SL`) and Transparent Luster (35,
+  `Luster`). A table that starts a column without a heading continues the section above.
+- **Colour (`source = photo`, all `approx = 1`):** every strip sits at the same place in
+  its cell, so a fixed band through the middle of the strip is sampled (y0+37..56,
+  m+85..280 in card pixels). Locating it per cell by "differs from paper" failed on
+  white and pale beads, where only the drop shadow differs. The median is taken after
+  dropping the darkest 20% and brightest 10% by L*, as for Hama. White balance is per
+  cell: the paper in the **code** cell beside it is scaled to 245 (Miyuki's target). The
+  strip cell's own paper is tinted by bead bleed, and the card is vignetted toward the
+  bottom (gains 1.02-1.13).
+- **Note column:** section; the care symbols beside the code, as words; and the strip's
+  `uniformity`. Symbols, from the card's legend: `bleach` ● may change by bleach or
+  oxidation; `friction` ★ may come off with friction; `friction+` ☆ with strong or
+  prolonged friction; `solvent` ■ may come off with organic solvent (dry-cleaning,
+  perfume); `solvent+` □ with prolonged exposure; `UV` ▲ may fade in sunlight; `light` ※
+  looks different under different light (1300 only). ◆ (nickel-plated) is in the legend
+  but on no bead on this card. Symbols were read by eye with the codes.
+- **Names:** `colorname.py` with the section prefix, e.g. `Silver-Lined Amber`. They are
+  unofficial: Toho's names are not on the card.
+- **Validation:**
+  - 207 cells, 207 unique codes, same sequence as the card;
+  - contact sheets show the sampled band on every strip, to check its placement;
+  - near-duplicates (dE < 4) are common because the same glass comes in several
+    finishes, e.g. 42D/111B (dE 0.3), 10B/111 (0.7), 49/2205 (0.8). They are distinct
+    products and are all kept;
+  - 20 bright colours clip at 255 in one channel after white balance (5, 5B, 10, 10B,
+    12, 42, 42B, 42D, 50, 50A, 25, 30, 30B, 2216, 2112, 102, 109, 111, 111B, 630).
+- **Caveats:** colour is approximate. Silver-lined beads include their bright lining in
+  the sample. Transparent beads are sampled against the white card. Low-uniformity
+  strips (mixed photo) are 35 (0.35), 36 (0.38), 2156S (0.39) and 2216 (0.43).
+
+Toho tools, in run order (scratch dir `S`): `pdfimages -j 111-1.pdf card` (the embedded
+photo, not a re-render), then `tools/toho_cells.py card-000.jpg S/cells.json S/crops`,
+then `tools/toho_color.py S/cells.json S/crops`, then `tools/toho_sheets.py S/cells.json
+S/crops S/sheets` (contact sheets for checking codes, symbols and the sample band), then
+`tools/toho_write_tsv.py S/cells.json palettes`. The corrections in `toho_write_tsv.py`
+are by cell index, so re-check them if the cell finder changes.
+
+## Preciosa Ornela, Czech beads (`preciosa_rocailles.tsv`): 254 of 667 colours, rocailles
+
+- **Source:** Preciosa Ornela's "Seed Beads - Rocailles" sample cards (June 2013),
+  `https://www.preciosa-ornela.com/content/files/downloads/Rocailles-Sample-Cards.pdf`
+  (retrieved 2026-11-22). The colour pages are 2-6. Each row is a five-digit colour code
+  and a photo of a bead strip, grouped into sections. Each section has an
+  `ART No.` (e.g. `331 19 001`) and a finish title (e.g. "Transparent - Silver Lined").
+  It has no RGB and no names. Sizes (13/0 to 4/0) share one set of codes.
+- **Brand name:** the device shows **"Preciosa Ornela (Czech beads)"** in the Brand list
+  and in exports (`palette_t.full`), since buyers know them as Czech beads. Places that
+  cannot scroll (the main menu's Brand value, the "... locked" title, save slots) use the
+  short `"Preciosa"` (`palette_t.brand`). The selected Brand row scrolls when it is too
+  wide (see the change log).
+- **Codes are exact:** they come from the PDF text layer (`pdftotext -bbox`), with no OCR.
+  There are 667 rows and 613 distinct colour codes. The 54 repeats are all one pair: the
+  shiny bead (ART 3x1 19 001) and the **matt** bead (ART 331 39 001) share a colour code.
+  Matt beads therefore get the device code **`39-<code>`** (e.g. `39-10050`), using the
+  ART group printed on the card. All other codes are exactly as printed. On page 3,
+  `20206*` marks which of "Silver, Gold\*, Special Gold" is the gold. The asterisk is
+  dropped from the code, and the note says "Gold".
+- **Sections:** each row's section is its column's nearest ART header above it, and the
+  title is the header's text lines. Page 6's "New arrivals 2010" block has one ART header
+  (column 1) over four columns, each with its own title. A column with no header of its
+  own uses the nearest header above in any column. All 667 rows have a titled section
+  (59 sections).
+- **Colour (`source = photo`, all `approx = 1`):** pages are rendered at 400 dpi. The
+  strips are cut-outs on digital white, so bead pixels are everything that is not paper.
+  The sample is the middle half of the strip's height, inset 5 px from its ends, after
+  dropping the darkest 20% and brightest 10% by L* (as for Hama). There is no paper in
+  the photos, so one global white balance uses bead **03050** (Natural Opaque, chalk
+  white), mapped to 245 grey. The gain is about 1.10 / 1.03 / 1.04 (R / G / B), and 41
+  bright rows clip at 255. Striped and two-tone beads come out as their average and
+  score low on `uniformity`.
+- **Why 254, and which:** the palette cap. The selection is Miyuki's method
+  (`tools/preciosa_write_tsv.py`): greedy farthest-point in CIE Lab, weighted toward
+  uniform strips, and seeded with black 23980 and white 03050. Every bead on the card
+  is within dE 10.9 of a shipped colour. The median uniformity of the shipped set is
+  0.85. 33 shipped codes are matt (`39-`).
+- **Names:** `colorname.py` with a short finish prefix taken from the section title
+  (`Clear`, `Opaque`, `Lined`, `Matt`, `Rainbow`, `Sfinx`, `Luster`, `Pearl`, `Metallic`,
+  `Dyed`, `Stripe`, `Shell`, `Travertin`, `Cornelian`, `Glow`...). The first keyword
+  found in `PREFIX` wins. They are unofficial. The note keeps the full ART No., section
+  title and page.
+- **`sources/preciosa_rocailles_all.tsv`:** all 667 rows with their device code, card
+  code, ART, section, page, colour, uniformity and `shipped`. Codes there are exact
+  too (text layer), so any row can be moved into the palette as is. It is not read by
+  `gen_palettes.py`.
+
+Preciosa tools, in run order (scratch dir `S`): `pdftotext -bbox chart.pdf S/bbox.html`,
+`pdftoppm -r 400 -f 2 -l 6 -png chart.pdf S/hi`, then `tools/preciosa_extract.py
+S/bbox.html S S/po.json S/crops`, then `tools/preciosa_sheets.py S/po.json S/crops
+S/sheets` (contact sheets: row crop with the sampled band outlined, code, section,
+colour), then `tools/preciosa_write_tsv.py S/po.json palettes`.
+
 ## Change log
+
+- **Preciosa Ornela added (2026-11-22):** brand 5, appended (no store remap). `palette_t`
+  gains `full`, the long brand name for the Brand list and exports; `brand` stays the
+  short name. The **selected menu row now scrolls** when its text is wider than its
+  space, with the same delay, speed and gap as the grid's name line (`render.c`,
+  `menu_marquee_frame`). Previously it ended in "...". The export page gains
+  `preciosa`. Sim scenarios `brand_preciosa` and `menu_marquee` cover it.
+
+- **Toho Round added (2026-11-22):** brand 4 (`"Toho"`, export key `toho`), appended to
+  `PALETTES`, so saved patterns need no remap. The QR export page's names table and
+  brand list gain Toho. Sim scenario `brand_toho` covers picking it.
 
 - **Hama, full chart:** the 6-colour Hama starter in `main/palettes.c` (H01, H18, H08,
   H03, H06, H09) is replaced by the generated 88-colour `hama.tsv` table. Codes are

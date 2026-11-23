@@ -17,6 +17,8 @@ idf_component_register(
         "palette_artkal_s.c"
         "palette_hama.c"
         "palette_miyuki_delica.c"
+        "palette_toho_round.c"
+        "palette_preciosa_rocailles.c"
         "board/board_freenove.c"
         "board/board_ws241.c"
     INCLUDE_DIRS "." "board"

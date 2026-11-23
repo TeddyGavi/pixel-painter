@@ -439,6 +439,16 @@ static bool s_marquee;              // currently scrolling
 static int s_marquee_off;
 static int64_t s_info_since_us;     // label unchanged since
 
+// Selected menu row marquee (e.g. "Preciosa Ornela (Czech beads)" in Brand): the row
+// is drawn shortened, then after MARQUEE_DELAY_US scrolls one full pass and rests.
+static char s_mq_text[56];          // the selected row's line being scrolled
+static int s_mq_row = -1;
+static bool s_mq_long;              // selected row's line is wider than its space
+static bool s_mq_on;                // scrolling now
+static int s_mq_off;
+static int64_t s_mq_since_us;
+static void menu_marquee_frame(void);   // menu section below
+
 // PowerBook-style battery icon, 15 x 8 icon px (body 13 x 8 + terminal nub), 3
 // segments, on a 1 px black margin, each icon px BATT_K x BATT_K screen px.
 // Big-endian pixels into a row buffer; BATT_W/BATT_H are in screen px.
@@ -614,6 +624,12 @@ static void draw_info(void)
 
 int render_tick_ms(void)
 {
+    if (UI.mode == MODE_MENU) {
+        if (!s_mq_long) return -1;
+        if (s_mq_on) return MARQUEE_FRAME_MS;
+        int64_t left = MARQUEE_DELAY_US - (esp_timer_get_time() - s_mq_since_us);
+        return left <= 0 ? 1 : (int)(left / 1000) + 1;
+    }
     if (UI.mode != MODE_DRAW || !s_info_long) return -1;
     if (s_marquee) return MARQUEE_FRAME_MS;
     int64_t left = MARQUEE_DELAY_US - (esp_timer_get_time() - s_info_since_us);
@@ -622,6 +638,7 @@ int render_tick_ms(void)
 
 void render_tick(void)
 {
+    if (UI.mode == MODE_MENU) { menu_marquee_frame(); return; }
     if (UI.mode != MODE_DRAW || !s_info_long) return;
     int64_t now = esp_timer_get_time();
     if (!s_marquee) {
@@ -861,9 +878,27 @@ static void draw_menu_row(const menu_view_t *v, int i)
         }
 #endif
         int rx = re - rw;
-        char fit[52];
-        text_fit(line, rx - x - M_GAP, fit, sizeof fit);    // long names end in "..."
-        band_text(x, fit, rx - x - M_GAP, b == 0 ? COL_TEXT : COL_TEXT_DIM);
+        const int avail = rx - x - M_GAP;
+        // The selected row's main line, if too wide, scrolls like the grid's name line
+        // (same delay, speed and gap); otherwise long names end in "...".
+        bool mq = b == 0 && i == v->sel && text_width(line) > avail;
+        if (mq && (strcmp(line, s_mq_text) != 0 || s_mq_row != i)) {   // new text: rest first
+            snprintf(s_mq_text, sizeof s_mq_text, "%s", line);
+            s_mq_row = i; s_mq_on = false; s_mq_off = 0;
+            s_mq_since_us = esp_timer_get_time();
+        }
+        if (b == 0 && i == v->sel) { s_mq_long = mq; if (!mq) s_mq_row = -1; }
+        if (mq && s_mq_on) {
+            uint16_t *tb = s_strip + TEXT_OFF * DISPLAY_W;
+            int tw = text_width(line);
+            text_render_clip(tb, DISPLAY_W, x - s_mq_off, x, x + avail, line, be16(COL_TEXT), be16(COL_BG));
+            text_render_clip(tb, DISPLAY_W, x - s_mq_off + tw + MARQUEE_GAP, x, x + avail, line,
+                             be16(COL_TEXT), be16(COL_BG));
+        } else {
+            char fit[52];
+            text_fit(line, avail, fit, sizeof fit);
+            band_text(x, fit, avail, b == 0 ? COL_TEXT : COL_TEXT_DIM);
+        }
         if (rw) band_text(rx, right, rw, COL_TEXT_DIM);
         D->blit(0, y + b * ROW_H, DISPLAY_W, ROW_H, s_strip);
     }
@@ -911,6 +946,7 @@ static void render_menu_full(void)
 {
     menu_view_t v;
     menu_view(&v);
+    s_mq_long = false; s_mq_row = -1;                    // selected row restarts its delay
     draw_title(&v);
     if (v.qr) { draw_qr_screen(&v); s_menu_shown = v; return; }
     int y = ROW_H;
@@ -929,6 +965,33 @@ static void render_menu_full(void)
 static bool motion_hilite(const menu_view_t *old, const menu_view_t *now);
 static bool motion_fade_held(void);
 #endif
+
+// Marquee frame for the selected menu row: rest, then one pass, then rest again. Only
+// when the screen is settled (no pending change, no sliding selection frame).
+static void menu_marquee_frame(void)
+{
+    if (!s_mq_long) return;
+    menu_view_t v;
+    menu_view(&v);
+    if (v.qr || v.version != s_menu_shown.version || v.top != s_menu_shown.top ||
+        v.count != s_menu_shown.count || v.sel != s_menu_shown.sel || v.sel != s_mq_row) return;
+#if UI_HIRES
+    if (s_ring_y0 >= 0) return;
+#endif
+    int64_t now = esp_timer_get_time();
+    if (!s_mq_on) {
+        if (now - s_mq_since_us < MARQUEE_DELAY_US) return;
+        s_mq_on = true;
+        s_mq_off = 0;
+    }
+    s_mq_off += MARQUEE_STEP;
+    if (s_mq_off >= text_width(s_mq_text) + MARQUEE_GAP) {
+        s_mq_on = false;                                 // one full pass: rest again
+        s_mq_off = 0;
+        s_mq_since_us = now;
+    }
+    draw_menu_row(&v, v.sel);
+}
 
 static void render_menu_update(void)
 {

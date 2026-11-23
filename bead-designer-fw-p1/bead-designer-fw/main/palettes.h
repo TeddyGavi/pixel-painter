@@ -16,8 +16,9 @@ extern const char *const FAMILY_NAMES[FAMILY_COUNT];
 #define RGB565(r, g, b) ((uint16_t)((((r) >> 3) << 11) | (((g) >> 2) << 5) | ((b) >> 3)))
 
 typedef struct {
-    const char *brand;  // "Hama" / "Artkal" / "Miyuki"
-    const char *key;    // stable id in export URLs: "hama" / "artkal" / "miyuki"
+    const char *brand;  // short: "Hama" / "Artkal" / "Miyuki" / "Toho" / "Preciosa"
+    const char *full;   // Brand list and exports: e.g. "Preciosa Ornela (Czech beads)"
+    const char *key;    // stable id in export URLs: "hama" / "artkal" / "miyuki" / "toho" / "preciosa"
     const bead_color_t *colors;
     int count;
     const uint8_t *order;   // browse order (grouped by family); NULL = table order
