@@ -1,0 +1,15 @@
+# Touch: Browse colours, tap list row 2, then row 8: highlight only (choosing stays on
+# the encoder), then a sideways swipe, which is ignored.
+# Expected: highlight on the 8th visible row; still in Browse colours; slot unchanged.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.10 uart0 s
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.0 uart0 T2
+3.5 uart0 T8
+4.0 uart0 Ts
+4.6 stop

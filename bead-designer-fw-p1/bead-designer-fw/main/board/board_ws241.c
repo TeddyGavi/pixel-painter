@@ -20,11 +20,13 @@
 //   still shown 2x2.
 //
 // I2C (GPIO47 SDA / GPIO48 SCL) carries the TCA9554 at 0x20:
-//   P0 OLED reset (out), P1 touch reset (out, held high: touch not used yet),
+//   P0 OLED reset (out), P1 touch reset (out; pulsed low to wake the touch IC),
 //   P2 RTC_INT, P3/P4 IMU INT (in), P5 MENU, P6 SIDE (in, J8-6/8), P7 USB_PRESENT
 //   (in, J8-10, control PCB D revB4). Inputs have ~100k internal pull-ups.
 //
-// Not yet used: touch (FT6336U), battery ADC (GPIO17), RTC, IMU.
+// Touch: FT6336U at 0x38 on the same bus, used only by the Browse colours list
+//   (input.c). Polled over I2C; its INT (GPIO3) is not used. Hibernated otherwise.
+// Not yet used: RTC, IMU.
 
 #include "board.h"
 #include "driver/gpio.h"
@@ -78,6 +80,10 @@ _Static_assert(SAVER_W * MSCALE == PANEL_W && SAVER_H * MSCALE == PANEL_H && MSC
 
 static i2c_master_bus_handle_t s_i2c;
 static i2c_master_dev_handle_t s_tca;
+static i2c_master_dev_handle_t s_tp;               // FT6336U touch controller
+bool board_touch_power(bool on);
+#define TP_ADDR     0x38
+#define TP_ROT180   DISPLAY_ROT180                  // touch axes follow the panel (Waveshare: same native orientation)
 static uint8_t s_tca_out = 0xFF;
 static bool s_tca_ok;
 
@@ -125,12 +131,19 @@ static void expander_init(void)
     i2c_device_config_t dev = { .dev_addr_length = I2C_ADDR_BIT_LEN_7,
                                 .device_address = TCA_ADDR, .scl_speed_hz = 400000 };
     ESP_ERROR_CHECK(i2c_master_bus_add_device(s_i2c, &dev, &s_tca));
+    i2c_device_config_t tp = { .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+                               .device_address = TP_ADDR, .scl_speed_hz = 400000 };
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(s_i2c, &tp, &s_tp));
     // Outputs first (both resets high), then make only P0/P1 outputs.
     s_tca_ok = tca_write(TCA_OUT, s_tca_out) == ESP_OK &&
                tca_write(TCA_CFG, (uint8_t)~((1u << TCA_P_OLED_RST) | (1u << TCA_P_TP_RST))) == ESP_OK;
     uint8_t in = 0;
     if (s_tca_ok) s_tca_ok = tca_read(TCA_IN, &in) == ESP_OK;
     if (s_tca_ok) ESP_LOGI(TAG, "TCA9554 ok at 0x%02x, inputs 0x%02x", TCA_ADDR, in);
+    // The FT6336U does not answer I2C after power-on until it has been reset
+    // (measured 2026-11-22): pulse EXIO1 now; input.c hibernates it once it is up
+    // (~300 ms, by when the display init is done).
+    if (s_tca_ok) board_touch_power(true);
     else          ESP_LOGE(TAG, "TCA9554 not answering at 0x%02x", TCA_ADDR);
 }
 
@@ -139,6 +152,35 @@ int board_exio_read(void)
     if (!s_tca_ok) return -1;
     uint8_t v;
     return tca_read(TCA_IN, &v) == ESP_OK ? v : -1;
+}
+
+// ---- FT6336U touch ---------------------------------------------------------------
+// Waking needs a reset (EXIO1 low 10 ms); the first report comes ~300 ms later.
+// Hibernate (PMODE 0xA5 = 3) draws ~55 uA against ~4 mA active.
+bool board_touch_power(bool on)
+{
+    if (!s_tca_ok) return false;
+    if (on) {
+        tca_set(TCA_P_TP_RST, 0);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        tca_set(TCA_P_TP_RST, 1);
+        return true;
+    }
+    uint8_t b[2] = { 0xA5, 0x03 };
+    return i2c_master_transmit(s_tp, b, 2, 20) == ESP_OK;
+}
+
+int board_touch_read(int *x, int *y)
+{
+    uint8_t reg = 0x02, b[5];                       // TD_STATUS, P1_XH, P1_XL, P1_YH, P1_YL
+    if (i2c_master_transmit_receive(s_tp, &reg, 1, b, sizeof b, 20) != ESP_OK) return -1;
+    int n = b[0] & 0x0F;
+    if (n == 0 || n > 2 || (b[1] >> 6) == 1) return 0;   // no point, or event "lift up"
+    int tx = (b[1] & 0x0F) << 8 | b[2], ty = (b[3] & 0x0F) << 8 | b[4];
+    if (TP_ROT180) { tx = PANEL_W - 1 - tx; ty = PANEL_H - 1 - ty; }
+    *x = tx < 0 ? 0 : tx >= PANEL_W ? PANEL_W - 1 : tx;
+    *y = ty < 0 ? 0 : ty >= PANEL_H ? PANEL_H - 1 : ty;
+    return 1;
 }
 
 // ---- power -----------------------------------------------------------------------
@@ -194,6 +236,7 @@ void board_power_off(void)
     // Still running: USB keeps the board powered. Soft off: wait for PWR to be
     // released (it would wake us at once), then deep sleep until it is pressed.
     ESP_LOGW(TAG, "still powered (USB): soft off, PWR wakes");
+    board_touch_power(false);
     board_display_sleep(true);
     vTaskDelay(pdMS_TO_TICKS(150));
     while (gpio_get_level(PIN_PWR_KEY) == 0) vTaskDelay(pdMS_TO_TICKS(20));
@@ -575,6 +618,7 @@ void board_display_sleep(bool sleep)
 }
 
 const uint16_t *board_framebuffer(void) { return s_fb; }
+uint16_t *board_fb_draw(void) { return s_mono_on ? NULL : s_fb; }
 void board_fb_lock(bool lock) { if (lock) xSemaphoreTake(s_lock, portMAX_DELAY); else xSemaphoreGive(s_lock); }
 void board_fb_dirty(int x, int y, int w, int h)      // caller holds the lock
 {

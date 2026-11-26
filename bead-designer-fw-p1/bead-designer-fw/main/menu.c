@@ -19,7 +19,8 @@
 //
 // Controls: up/down or encoder turn = move; encoder press or right = select;
 // D-pad centre (or left, except in colour lists) = back; MENU = close.
-// In colour lists left/right jump colour families.
+// In colour lists left/right jump colour families. Browse colours also scrolls by
+// touch (drag / flick move the list, not the highlight; a tap highlights a row).
 #include "menu.h"
 #include "render.h"
 #include "board.h"
@@ -30,6 +31,7 @@
 #include "board_style.h"
 #include "saver.h"
 #include "grid.h"
+#include "input.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -373,6 +375,7 @@ void menu_view(menu_view_t *v)
     v->hint[0] = 0;
     v->top = s_top;
     v->version = s_version;
+    v->bar = s_screen == S_COLORS && v->count > VISIBLE_ROWS;
     switch (s_screen) {
     case S_MAIN:   snprintf(v->title, sizeof v->title, "Menu"); break;
     case S_BRAND:  snprintf(v->title, sizeof v->title, "Brand"); break;
@@ -428,6 +431,31 @@ static void move(int d)
     s_sel = (s_sel + d + n) % n;                      // wrap
     if (s_sel < s_top) s_top = s_sel;
     while (s_sel >= s_top + rows_fitting(s_top)) s_top++;
+}
+
+// Touch: scroll the list itself by d rows (no wrap: stops at the ends) and keep the
+// highlight on its colour, or on the nearest visible row if it scrolled off.
+// Returns false if the list was already at that end.
+static bool scroll_rows(int d)
+{
+    int n = row_count(), max_top = n - VISIBLE_ROWS;
+    if (max_top < 0) max_top = 0;
+    int t = s_top + d;
+    if (t > max_top) t = max_top;
+    if (t < 0) t = 0;
+    if (t == s_top) return false;
+    s_top = t;
+    if (s_sel < s_top) s_sel = s_top;
+    if (s_sel > s_top + VISIBLE_ROWS - 1) s_sel = s_top + VISIBLE_ROWS - 1;
+    return true;
+}
+
+// Touch: a tap highlights the row under the finger (choosing stays on the encoder).
+static void tap_row(int y)
+{
+    if (y < MENU_ROW_H) return;                          // title band
+    int i = s_top + (y - MENU_ROW_H) / MENU_ROW_H;
+    if (i < row_count() && i < s_top + rows_fitting(s_top)) s_sel = i;
 }
 
 static void show_sel_centered(int sel)
@@ -585,6 +613,7 @@ static menu_result_t select(void)
 }
 
 bool menu_saver_allowed(void) { return s_screen != S_EXPORT && s_screen != S_WIFI; }
+bool menu_touch_scroll(void) { return s_screen == S_COLORS; }
 
 void menu_open_main(void) { s_direct = false; go(S_MAIN, s_main_sel); }
 void menu_open_used(void) { count_used(); s_direct = true; go(S_USED, 0); }
@@ -635,6 +664,12 @@ static menu_result_t handle(event_t ev)
         break;
     case EV_ENC_PRESS: return select();
     case EV_CENTER: return back();
+    case EV_SCROLL: {
+        int d = input_take_scroll();
+        if (colors && d && !scroll_rows(d)) input_touch_stop();   // at the end: hard stop
+        break;
+    }
+    case EV_TAP: if (colors) tap_row(input_tap_y()); break;
     default: break;
     }
     return MENU_STAY;

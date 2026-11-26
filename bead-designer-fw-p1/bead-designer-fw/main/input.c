@@ -22,9 +22,13 @@
 //   encoder turned while pressed      -> EV_BROWSE_CW/CCW ..., then EV_BROWSE_END on release
 //   D-pad centre short / held         -> EV_CENTER on release / EV_CENTER_LONG at the threshold
 //   D-pad directions                  -> one event on press, auto-repeat while held
+//   touch (Browse colours list only)  -> EV_SCROLL (drag, flick) / EV_TAP (see touch section)
 
 #include "input.h"
 #include "board.h"
+#include "render.h"      // MENU_ROW_H, DISPLAY_*: touch scrolls in menu rows
+#include <math.h>
+#include <stdlib.h>
 #include "driver/pulse_cnt.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
@@ -64,7 +68,7 @@ static void serial_task(void *arg);
 const char *const EVENT_NAMES[EV__COUNT] = {
     "UP", "DOWN", "LEFT", "RIGHT", "CENTER", "CENTER_LONG",
     "ENC_CW", "ENC_CCW", "ENC_PRESS", "BROWSE_CW", "BROWSE_CCW", "BROWSE_END",
-    "MENU", "SIDE", "TICK", "TEST_BARS", "PAINT", "PWR", "PWR_HOLD",
+    "MENU", "SIDE", "TICK", "TEST_BARS", "PAINT", "PWR", "PWR_HOLD", "SCROLL", "TAP",
 };
 
 static QueueHandle_t s_q;
@@ -107,7 +111,8 @@ static volatile bool s_ser_enc;  // bench: serial '[' holds the encoder push, ']
 static bool s_enc_down;     // encoder switch held
 static bool s_enc_turned;   // ...and turned since it went down
 
-static void emit(event_t e) { xQueueSend(s_q, &e, 0); }
+static bool emit(event_t e) { return xQueueSend(s_q, &e, 0) == pdTRUE; }
+static void touch_cancel(void);
 
 // A D-pad move. With the encoder push held (and not turned: that is browsing) it
 // paints: the start cell first, then each cell the cursor moves onto.
@@ -153,6 +158,7 @@ static pcnt_unit_handle_t make_encoder(int pin_a, int pin_b)
 
 static void detent(int dir)
 {
+    touch_cancel();
     if (s_enc_down) {               // press-and-turn: browse the catalogue
         s_enc_turned = true;
         emit(dir > 0 ? EV_BROWSE_CW : EV_BROWSE_CCW);
@@ -175,6 +181,7 @@ static void poll_encoder(void)
 static void on_press(sw_t *s, int64_t now)
 {
     s->since_us = now;
+    touch_cancel();                 // any physical input stops a coasting list
     switch (s->kind) {
     case K_DIR:    dpad(s->ev); s->next_rep_us = now + REPEAT_DELAY_MS * 1000; break;
     case K_CENTER: s->long_fired = false; break;           // decided on hold/release
@@ -314,14 +321,268 @@ static void poll_switches(void)
     }
 }
 
+// ---- touch: drag and flick scrolling (Browse colours) ------------------------------
+// Sampled every TOUCH_POLL_MS. Distances are in menu rows (R = MENU_ROW_H px: 56 on
+// the Waveshare, 32 on the Freenove), so the feel is the same on both boards.
+//   slop     R*2/7 (16 px): below it a touch is still a tap; past it the axis locks
+//            (vertical = drag; mostly horizontal = ignored until lift)
+//   drag     the list follows the finger one row per R of travel, re-anchored where
+//            the slop was crossed, with R/7 (8 px) hysteresis at each half row
+//   flick    lift moving >= 12.5 rows/s (700 px/s), measured over the last 80 ms,
+//            after at least one row of drag: the list coasts at that rate (cap 30
+//            rows/s, one row per redraw: a step waits until the last one is drawn),
+//            decaying with tau 400 ms, and stops below 8 rows/s. A second flick the same way within 500 ms of catching adds on.
+//   tap      < 300 ms, inside the slop, and not the touch that caught a coast
+// Lift = two polls in a row without a finger (one dropped report is not a lift).
+// Samples come from the board, or from a scripted gesture (serial "T", for tests).
+#define TOUCH_POLL_MS    10
+#define TOUCH_READY_MS   300            // FT6336U: reset to first report
+#define T_R              MENU_ROW_H
+#define T_SLOP           (T_R * 2 / 7)
+#define T_HYST           (T_R / 7)
+#define T_FLICK_RPS      12.5f
+#define T_COAST_MAX_RPS  30.0f
+#define T_COAST_MIN_RPS  8.0f
+#define T_TAU_S          0.4f
+#define T_VEL_WIN_US     80000
+#define T_VEL_FRESH_US   40000
+#define T_TAP_US         300000
+#define T_ADD_US         500000
+#define T_HIST           12
+
+static portMUX_TYPE s_tmux = portMUX_INITIALIZER_UNLOCKED;
+static volatile bool s_touch_want;      // set by the UI
+static bool s_touch_on;                 // what the input task last applied
+static bool s_touch_asleep;             // controller confirmed in hibernate
+static int64_t s_touch_ready_us, s_touch_retry_us;
+static int s_touch_miss;
+static volatile bool s_touch_stop_req, s_touch_cancel_req;
+static int s_scroll_pending;            // under s_tmux
+static bool s_scroll_token;             // an EV_SCROLL is queued and not yet taken
+static volatile int s_tap_y;
+static volatile bool s_busy;
+
+static struct {
+    bool down, dead, dragging, caught;
+    int x0, y0, ya, k, steps;
+    int64_t t_down;
+    int n; int64_t ht[T_HIST]; int hy[T_HIST];   // recent samples (ring)
+} G;
+static struct { bool on; float rate; int64_t last_us, next_us; } C;   // coast (+ = later rows)
+static float s_caught_rate;
+static int64_t s_caught_us;
+
+static void scroll_emit(int d)
+{
+    bool send = false;
+    portENTER_CRITICAL(&s_tmux);
+    s_scroll_pending += d;
+    if (!s_scroll_token) { s_scroll_token = send = true; }
+    portEXIT_CRITICAL(&s_tmux);
+    if (send && !emit(EV_SCROLL)) {                  // queue full: try again next step
+        portENTER_CRITICAL(&s_tmux);
+        s_scroll_token = false;
+        portEXIT_CRITICAL(&s_tmux);
+    }
+}
+
+int input_take_scroll(void)
+{
+    portENTER_CRITICAL(&s_tmux);
+    int d = s_scroll_pending;
+    s_scroll_pending = 0; s_scroll_token = false;
+    portEXIT_CRITICAL(&s_tmux);
+    return d;
+}
+
+int  input_tap_y(void) { return s_tap_y; }
+void input_touch_enable(bool on) { s_touch_want = on; }
+void input_touch_stop(void) { s_touch_stop_req = true; }
+bool input_touch_busy(void) { return s_busy; }
+
+// Physical input: stop coasting. A finger still down keeps dragging from where it is.
+static void touch_cancel(void)
+{
+    C.on = false;
+    if (G.down && G.dragging) { G.ya = G.hy[(G.n - 1 + T_HIST) % T_HIST]; G.k = 0; }
+}
+
+static void touch_down(int64_t now, int x, int y)
+{
+    G.down = true; G.dead = false; G.dragging = false;
+    G.x0 = x; G.y0 = y; G.ya = y; G.k = 0; G.steps = 0; G.t_down = now; G.n = 0;
+    G.caught = C.on;
+    if (C.on) { s_caught_rate = C.rate; s_caught_us = now; C.on = false; }
+}
+
+static void touch_move(int64_t now, int x, int y)
+{
+    G.ht[G.n % T_HIST] = now; G.hy[G.n % T_HIST] = y; G.n++;
+    if (G.dead) return;
+    if (!G.dragging) {
+        int dx = abs(x - G.x0), dy = abs(y - G.y0);
+        if (dx < T_SLOP && dy < T_SLOP) return;
+        if (dy < dx) { G.dead = true; return; }        // sideways: not a scroll
+        G.dragging = true; G.ya = y; G.k = 0;
+    }
+    int d = G.ya - y;                                  // finger up = later rows
+    while (d - G.k * T_R > T_R / 2 + T_HYST)    { G.k++; G.steps++; scroll_emit(+1); }
+    while (d - G.k * T_R < -(T_R / 2 + T_HYST)) { G.k--; G.steps++; scroll_emit(-1); }
+}
+
+static void touch_lift(int64_t now)
+{
+    G.down = false;
+    if (G.dead) return;
+    if (!G.dragging) {
+        if (now - G.t_down < T_TAP_US && !G.caught) { s_tap_y = G.y0; emit(EV_TAP); }
+        return;
+    }
+    if (!G.steps || G.n < 2) return;
+    int last = (G.n - 1) % T_HIST, first = last, cnt = G.n < T_HIST ? G.n : T_HIST;
+    for (int i = 1; i < cnt; i++) {                   // oldest sample inside the window
+        int j = (G.n - 1 - i) % T_HIST;
+        if (G.ht[last] - G.ht[j] > T_VEL_WIN_US) break;
+        first = j;
+    }
+    int64_t dt = G.ht[last] - G.ht[first];
+    if (dt <= 0 || now - G.ht[last] > T_VEL_FRESH_US) return;
+    float rps = (float)(G.hy[first] - G.hy[last]) * 1e6f / (float)dt / T_R;
+    if (fabsf(rps) < T_FLICK_RPS) return;
+    if (G.caught && now - s_caught_us < T_ADD_US && (rps > 0) == (s_caught_rate > 0))
+        rps += s_caught_rate;                          // flicking again: speeds up
+    if (rps > T_COAST_MAX_RPS) rps = T_COAST_MAX_RPS;
+    if (rps < -T_COAST_MAX_RPS) rps = -T_COAST_MAX_RPS;
+    C.on = true; C.rate = rps; C.last_us = now;
+    C.next_us = now + (int64_t)(1e6f / fabsf(rps));
+}
+
+static void coast_tick(int64_t now)
+{
+    if (!C.on || now < C.next_us) return;
+    // One row per redraw, never skipped: wait while the last step is not drawn yet
+    // (a full list redraw takes ~45 ms on the Waveshare, so the coast runs at most
+    // at the redraw rate there).
+    portENTER_CRITICAL(&s_tmux);
+    bool queued = s_scroll_token;
+    portEXIT_CRITICAL(&s_tmux);
+    if (queued) return;
+    scroll_emit(C.rate > 0 ? +1 : -1);
+    C.rate *= expf(-(float)(now - C.last_us) / (T_TAU_S * 1e6f));
+    C.last_us = now;
+    if (fabsf(C.rate) < T_COAST_MIN_RPS) { C.on = false; return; }
+    C.next_us = now + (int64_t)(1e6f / fabsf(C.rate));
+}
+
+// Scripted gestures (serial "T" + a letter; tests and the bench). Positions in rows
+// of the list, from the middle of the screen:
+//   u / d  flick up / down: 5 rows in 100 ms, then lift (coasts on)
+//   U / D  slow drag up / down: 3 rows in 600 ms, rest 100 ms, lift (no coast)
+//   1..9   tap list row n          h  touch and hold 150 ms (catches a coast)
+//   s      sideways swipe (ignored)
+static struct { bool on; int64_t t0; int dur_us, hold_us, x0, x1, y0, y1; } S;
+
+__attribute__((unused)) static void synth_start(char c)
+{
+    const int mid = T_R + T_R * 9 / 2, cx = DISPLAY_W / 2;
+    int x0 = cx, x1 = cx, y0 = mid, y1 = mid, dur = 0, hold = 0;
+    switch (c) {
+    case 'u': y0 = mid + T_R * 5 / 2; y1 = y0 - 5 * T_R; dur = 100000; break;
+    case 'd': y0 = mid - T_R * 5 / 2; y1 = y0 + 5 * T_R; dur = 100000; break;
+    case 'U': y0 = mid + T_R * 3 / 2; y1 = y0 - 3 * T_R; dur = 600000; hold = 100000; break;
+    case 'D': y0 = mid - T_R * 3 / 2; y1 = y0 + 3 * T_R; dur = 600000; hold = 100000; break;
+    case 'h': hold = 150000; break;
+    case 's': x0 = cx - 2 * T_R; x1 = cx + 2 * T_R; dur = 200000; break;
+    default:
+        if (c < '1' || c > '9') return;
+        y0 = y1 = T_R + (c - '1') * T_R + T_R / 2; hold = 60000; break;
+    }
+    portENTER_CRITICAL(&s_tmux);
+    S.x0 = x0; S.x1 = x1; S.y0 = y0; S.y1 = y1; S.dur_us = dur; S.hold_us = hold;
+    S.t0 = esp_timer_get_time(); S.on = true;
+    portEXIT_CRITICAL(&s_tmux);
+}
+
+static int synth_sample(int64_t now, int *x, int *y)
+{
+    portENTER_CRITICAL(&s_tmux);
+    int64_t t = now - S.t0;
+    int r = 0;
+    if (t < S.dur_us) {
+        *x = S.x0 + (int)((S.x1 - S.x0) * t / S.dur_us);
+        *y = S.y0 + (int)((S.y1 - S.y0) * t / S.dur_us); r = 1;
+    } else if (t < S.dur_us + S.hold_us) {
+        *x = S.x1; *y = S.y1; r = 1;
+    } else {
+        S.on = false;
+    }
+    portEXIT_CRITICAL(&s_tmux);
+    return r;
+}
+
+static void touch_poll(int64_t now)
+{
+    bool want = s_touch_want;
+    if (want != s_touch_on) {
+        s_touch_on = want;
+        C.on = false;
+        input_take_scroll();                           // drop steps not yet taken
+        if (want) {
+            board_touch_power(true);
+            ESP_LOGI("touch", "on (Browse colours)");
+            s_touch_asleep = false;
+            s_touch_ready_us = now + TOUCH_READY_MS * 1000LL;
+            G.down = true; G.dead = true;              // a finger already down: ignored until lift
+        } else {
+            G.down = false;
+            s_touch_retry_us = 0;
+        }
+    }
+    if (!s_touch_on) {
+        // Hibernate the controller; retried while it is still starting up (boot).
+        static int tries;
+        if (!s_touch_asleep && now >= s_touch_retry_us && tries < 25) {
+            s_touch_asleep = board_touch_power(false);
+            s_touch_retry_us = now + 200000;
+            if (s_touch_asleep) { ESP_LOGI("touch", "controller hibernated"); tries = 0; }
+            else if (++tries == 25) ESP_LOGW("touch", "controller not answering (hibernate)");
+        }
+        s_busy = false;
+        return;
+    }
+    if (s_touch_cancel_req) { s_touch_cancel_req = false; touch_cancel(); }
+    if (s_touch_stop_req)   { s_touch_stop_req = false; C.on = false; }
+    coast_tick(now);
+    int x = 0, y = 0, r;
+    if (S.on) r = synth_sample(now, &x, &y);
+    else if (now < s_touch_ready_us) r = 0;
+    else {
+        r = board_touch_read(&x, &y);
+        static bool said;
+        if (r < 0 && !said) { said = true; ESP_LOGW("touch", "read failed (no controller?)"); }
+    }
+    if (r > 0) {
+        s_touch_miss = 0;
+        if (!G.down) touch_down(now, x, y);
+        touch_move(now, x, y);
+    } else if (G.down && ++s_touch_miss >= 2) {
+        s_touch_miss = 0;
+        touch_lift(now);
+    }
+    s_busy = (G.down && !G.dead) || C.on;
+}
+
 static void poll_task(void *arg)
 {
     (void)arg;
     // Poll switches before the encoder so a press that starts together with a
     // turn is already "down" when the detent is classified.
+    int64_t next_touch = 0;
     for (;;) {
         poll_switches();
         poll_encoder();
+        int64_t now = esp_timer_get_time();
+        if (now >= next_touch) { next_touch = now + TOUCH_POLL_MS * 1000; touch_poll(now); }
         vTaskDelay(pdMS_TO_TICKS(POLL_MS));
     }
 }
@@ -380,7 +641,8 @@ static const char *KEY_HELP =
     "k|p|space=encoder press(place)  [/]=hold/release encoder (with w/a/s/d: paint brush)  "
     "J/L=press+turn(browse; a/d=family)  "
     "m=menu  o=side  t=colour bars  v=D-pad volts  z=PWR(sleep)  q=PWR hold(shut down)  "
-    "b=simulated battery level  h=battery history  F=screen dump  !Z=factory reset  ?=help";
+    "b=simulated battery level  h=battery history  F=screen dump  !Z=factory reset  "
+    "T+u/d=flick up/down  T+U/D=slow drag  T+1..9=tap row  T+h=touch-hold  T+s=sideways (Browse colours)  ?=help";
 
 static int key_read(uint8_t *c, TickType_t wait)
 {
@@ -474,6 +736,12 @@ static void serial_task(void *arg)
             continue;
         }
         if (c == '\r' || c == '\n') continue;
+        if (c == 'T') {                                       // scripted touch gesture
+            uint8_t g;
+            if (key_read(&g, pdMS_TO_TICKS(1000)) == 1) synth_start((char)g);
+            continue;
+        }
+        s_touch_cancel_req = true;                            // a key = physical input: stop a coast
         if (browsing && c != 'J' && c != 'L' && c != 'a' && c != 'd') {
             browsing = false;
             emit(EV_BROWSE_END);

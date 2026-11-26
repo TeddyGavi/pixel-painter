@@ -1,0 +1,14 @@
+# Touch: Browse colours, flick down twice from near the top: hard stop at row 0 (no
+# wrap to the end of the list), highlight on the bottom visible row only if clamped.
+# Expected: the first 9 colours, position bar at the top.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.10 uart0 s
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.0 uart0 Td
+3.8 uart0 Td
+4.8 stop

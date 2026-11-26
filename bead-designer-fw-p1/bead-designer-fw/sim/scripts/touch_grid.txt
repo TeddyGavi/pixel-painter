@@ -1,0 +1,11 @@
+# Touch is ignored outside Browse colours: flick and tap on the drawing screen and on
+# the main menu do nothing.
+# Expected: identical to the plain menu screen (Menu, first row highlighted).
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 Tu
+2.5 uart0 T3
+3.0 uart0 m
+3.3 uart0 T4
+3.6 uart0 Tu
+4.4 stop

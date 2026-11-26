@@ -105,6 +105,9 @@ const char *board_status(void); // one-line hardware status (reprinted by serial
 // or NULL on boards without one. Hold board_fb_lock(true) while reading it.
 const uint16_t *board_framebuffer(void);
 void board_fb_lock(bool lock);
+// The same framebuffer for drawing into directly (menu rows), or NULL. Hold
+// board_fb_lock(true) while writing and mark the area with board_fb_dirty.
+uint16_t *board_fb_draw(void);
 // After writing into the framebuffer directly (screen saver): mark the area changed.
 void board_fb_dirty(int x, int y, int w, int h);
 // Two-colour bitmap mode (screen saver): returns a cleared 1-bit-per-pixel bitmap
@@ -115,3 +118,9 @@ uint8_t *board_mono_begin(uint16_t fg, uint16_t bg);
 void board_mono_color(uint16_t fg, uint16_t bg);
 void board_mono_end(void);
 void board_fb_sync(void);      // test dump: bring the framebuffer up to date first
+// Touch (FT6336U on the Waveshare; none on the Freenove). board_touch_power(true)
+// resets the controller (first report ~300 ms later); false puts it in hibernate.
+// Returns false if the controller did not answer. board_touch_read: 1 = a finger at
+// (*x, *y) in display coordinates, 0 = no finger, -1 = no controller / read failed.
+bool board_touch_power(bool on);
+int  board_touch_read(int *x, int *y);

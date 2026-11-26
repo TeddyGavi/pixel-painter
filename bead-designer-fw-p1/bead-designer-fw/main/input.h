@@ -20,6 +20,8 @@ typedef enum {
     EV_PAINT,                            // paint brush: place at the cursor (encoder held + D-pad)
     EV_PWR,                              // PWR key short press: sleep / wake
     EV_PWR_HOLD,                         // PWR key held PWR_HOLD_MS: shut down
+    EV_SCROLL,                           // touch drag/flick: scroll the list (input_take_scroll)
+    EV_TAP,                              // touch tap: highlight the row at input_tap_y()
     EV__COUNT
 } event_t;
 
@@ -30,3 +32,15 @@ void input_init(void);
 int input_wait(event_t *ev, uint32_t timeout_ms);
 // Queue an event as if it came from the hardware (serial keys, tests).
 void input_inject(event_t ev);
+
+// Touch scrolling (only the Browse colours list uses it). The UI enables it while
+// that list is on screen; otherwise touches are ignored and the controller sleeps.
+// A drag scrolls one row per row of finger travel; a flick coasts on (at most 30
+// rows/s, one row per redraw) and stops below 8 rows/s. Any button or encoder
+// input stops a coast; a touch catches it.
+#include <stdbool.h>
+void input_touch_enable(bool on);   // cheap when unchanged: call every loop pass
+int  input_take_scroll(void);       // rows to scroll since the last EV_SCROLL (+ = later rows)
+int  input_tap_y(void);             // display y of the last EV_TAP
+void input_touch_stop(void);        // the list hit its end: stop coasting
+bool input_touch_busy(void);        // a finger is down or the list is coasting

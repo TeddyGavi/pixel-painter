@@ -29,6 +29,7 @@ typedef struct {
     unsigned version;      // bumps whenever row contents change (full redraw)
     const uint8_t *qr;     // non-NULL: draw this QR code (qrcodegen) instead of rows
     char hint[40];         // with qr: dim line under the code
+    bool bar;              // draw the position bar (touch-scrolled list)
 } menu_view_t;
 
 typedef enum { MENU_STAY, MENU_CLOSE } menu_result_t;
@@ -39,4 +40,5 @@ menu_result_t menu_event(event_t ev);
 void menu_view(menu_view_t *v);
 void menu_row(int i, menu_row_t *r);
 int menu_row_units(int i);
+bool menu_touch_scroll(void);       // the screen scrolls by touch (Browse colours)
 bool menu_saver_allowed(void);      // false on the export screens (QR, Wi-Fi)          // row height in ROW_H units (slot rows are 2)

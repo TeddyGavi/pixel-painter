@@ -1,0 +1,14 @@
+# Touch: Browse colours, slow drag up 3 rows (Tu = scripted touch, U = slow drag up).
+# The list follows the finger (top moves down the list), the highlight stays on its
+# colour or clamps to the top visible row; no coast after a slow drag.
+# Expected: list scrolled ~3 rows later than colors' start; position bar on the right.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.10 uart0 s
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.0 uart0 TU
+4.5 stop

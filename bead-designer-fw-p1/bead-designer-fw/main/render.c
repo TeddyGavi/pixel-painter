@@ -260,6 +260,10 @@ static uint16_t s_line[DISPLAY_W * LINE_H];
 static void strip_rect(int x0, int y0, int x1, int y1, uint16_t c)
 {
     uint16_t b = be16(c);
+    if (b == 0 && x0 == 0 && x1 == DISPLAY_W && y0 < y1) {          // black full rows: one memset
+        memset(s_strip + y0 * DISPLAY_W, 0, (size_t)(y1 - y0) * DISPLAY_W * sizeof *s_strip);
+        return;
+    }
     for (int y = y0; y < y1; y++)
         for (int x = x0; x < x1; x++) s_strip[y * DISPLAY_W + x] = b;
 }
@@ -626,7 +630,7 @@ int render_tick_ms(void)
 {
     if (UI.mode == MODE_MENU) {
         if (!s_mq_long) return -1;
-        if (s_mq_on) return MARQUEE_FRAME_MS;
+        if (s_mq_on || input_touch_busy()) return MARQUEE_FRAME_MS;   // touching: keep the delay reset
         int64_t left = MARQUEE_DELAY_US - (esp_timer_get_time() - s_mq_since_us);
         return left <= 0 ? 1 : (int)(left / 1000) + 1;
     }
@@ -818,6 +822,28 @@ static void draw_slot_thumb(int b, int rh, const menu_row_t *r)
         }
 }
 
+// Position bar of a touch-scrolled list (Browse colours): a dim #585858 thumb in the
+// strip right of the selection frame, over the list area, no track and not touchable.
+// Its length is the visible share of the list (at least BAR_MIN); it reaching the
+// end of its travel is the only end-of-list cue (no bounce, no flash).
+#define BAR_X    (DISPLAY_W - M_SELX + 1)
+#define BAR_W    (M_SELX - 2 > 1 ? M_SELX - 2 : 1)   // 4 px on 450x600, 1 px on 240x320
+#define BAR_MIN  (UI_HIRES ? 24 : 12)
+#define BAR_COL  0x5ACB
+static void band_bar(const menu_view_t *v, int band_y)
+{
+    if (!v->bar) return;
+    const int y0 = ROW_H, len = MENU_VISIBLE * ROW_H, max_top = v->count - MENU_VISIBLE;
+    int h = len * MENU_VISIBLE / v->count;
+    if (h < BAR_MIN) h = BAR_MIN;
+    int top = v->top < 0 ? 0 : v->top > max_top ? max_top : v->top;
+    int ty = y0 + (len - h) * top / max_top;
+    int a = ty - band_y, b = ty + h - band_y;
+    if (a < 0) a = 0;
+    if (b > ROW_H) b = ROW_H;
+    if (a < b) strip_rect(BAR_X, a, BAR_X + BAR_W, b, BAR_COL);
+}
+
 // Screen y of row i (rows start under the title), or -1 if it is not on screen.
 static int row_y(const menu_view_t *v, int i)
 {
@@ -835,7 +861,15 @@ static void draw_menu_row(const menu_view_t *v, int i)
     menu_row_t r;
     menu_row(i, &r);
     const int units = menu_row_units(i), rh = units * ROW_H;
+#if UI_HIRES
+    // Compose straight into the shadow framebuffer (same stride and byte order as the
+    // strip): no band copy, and the band stays in the data cache while it is drawn.
+    uint16_t *const fb = board_fb_draw(), *const strip = s_strip;
+#endif
     for (int b = 0; b < units; b++) {
+#if UI_HIRES
+        if (fb) { board_fb_lock(true); s_strip = fb + (y + b * ROW_H) * DISPLAY_W; }
+#endif
         strip_rect(0, 0, DISPLAY_W, ROW_H, COL_BG);
 #if UI_HIRES
         if (s_ring_y0 >= 0) {                    // motion: the frame sliding between rows
@@ -900,6 +934,15 @@ static void draw_menu_row(const menu_view_t *v, int i)
             band_text(x, fit, avail, b == 0 ? COL_TEXT : COL_TEXT_DIM);
         }
         if (rw) band_text(rx, right, rw, COL_TEXT_DIM);
+        band_bar(v, y + b * ROW_H);
+#if UI_HIRES
+        if (fb) {
+            board_fb_dirty(0, y + b * ROW_H, DISPLAY_W, ROW_H);
+            board_fb_lock(false);
+            s_strip = strip;
+            continue;
+        }
+#endif
         D->blit(0, y + b * ROW_H, DISPLAY_W, ROW_H, s_strip);
     }
 }
@@ -979,6 +1022,11 @@ static void menu_marquee_frame(void)
     if (s_ring_y0 >= 0) return;
 #endif
     int64_t now = esp_timer_get_time();
+    if (input_touch_busy()) {            // finger down or coasting: rest; 5 s from the lift
+        s_mq_since_us = now;
+        if (s_mq_on) { s_mq_on = false; s_mq_off = 0; draw_menu_row(&v, v.sel); }
+        return;
+    }
     if (!s_mq_on) {
         if (now - s_mq_since_us < MARQUEE_DELAY_US) return;
         s_mq_on = true;

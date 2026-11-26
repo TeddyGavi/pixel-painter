@@ -264,6 +264,9 @@ void ui_run(void)
         event_t ev;
         esp_task_wdt_reset();
         present();                            // show everything drawn in the last pass at once
+        // Touch only while Browse colours is on screen and awake (never wakes anything).
+        input_touch_enable(!s_sleeping && !s_alert && !s_ramp.on && !saver_active() &&
+                           UI.mode == MODE_MENU && menu_touch_scroll());
         int64_t now = esp_timer_get_time();
         if (now >= next_batt_us) {
             next_batt_us = now + BATTERY_POLL_MS * 1000LL;
@@ -342,6 +345,13 @@ void ui_run(void)
 #endif
             render_idle_tick();
             continue;
+        }
+        if (ev == EV_SCROLL || ev == EV_TAP) {   // touch: only on a live Browse colours list
+            if (UI.mode != MODE_MENU || saver_active() || s_ramp.on || s_alert ||
+                esp_timer_get_time() < swallow_us) {
+                if (ev == EV_SCROLL) input_take_scroll();
+                continue;
+            }
         }
         render_anim_finish();                 // input always wins: animations jump to their end
         if (ev == EV_TICK) { battery_policy(); continue; }   // bench battery simulation

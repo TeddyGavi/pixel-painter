@@ -148,12 +148,15 @@ void board_power_off(void)                         // no power latch: soft off
 void board_display_sleep(bool sleep) { gpio_set_level(LCD_BL, sleep ? 0 : 1); }
 const char *board_status(void) { return "Freenove FNK0114A"; }        // no I/O expander
 const uint16_t *board_framebuffer(void) { return NULL; }   // no shadow framebuffer
+uint16_t *board_fb_draw(void) { return NULL; }
 void board_fb_lock(bool lock) { (void)lock; }
 void board_fb_dirty(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; }
 uint8_t *board_mono_begin(uint16_t fg, uint16_t bg) { (void)fg; (void)bg; return NULL; }
 void board_mono_color(uint16_t fg, uint16_t bg) { (void)fg; (void)bg; }
 void board_mono_end(void) {}
 void board_fb_sync(void) {}
+bool board_touch_power(bool on) { (void)on; return true; }     // no touch panel
+int  board_touch_read(int *x, int *y) { (void)x; (void)y; return -1; }
 
 static const display_ops_t OPS = { dsp_init, dsp_fill, dsp_blit, dsp_bright, NULL };
 const display_ops_t *board_display(void) { return &OPS; }
