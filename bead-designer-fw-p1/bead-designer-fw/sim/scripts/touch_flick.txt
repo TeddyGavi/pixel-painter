@@ -1,0 +1,13 @@
+# Touch: Browse colours, flick up: drags ~5 rows, then coasts (cap 30 rows/s, decaying,
+# stops below 8 rows/s), one row per redraw. Highlight clamps to the top visible row.
+# Expected: list well down the palette, settled; position bar lower than touch_drag.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.10 uart0 s
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 k
+2.8 uart0 k
+3.0 uart0 Tu
+5.0 stop

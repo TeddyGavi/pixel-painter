@@ -37,10 +37,10 @@ const char *const SAVER_NAMES[SAVER_CHOICES] = { "Off", "5s", "30s", "1m", "5m" 
 
 __attribute__((weak)) bool saver_tilt(float *gx, float *gy) { (void)gx; (void)gy; return false; }
 
-#define W DISPLAY_W
-#define H DISPLAY_H
+#define W SAVER_W               // the saver's own grid: 225x300 on the 2.41" (shown 2x2), else the screen
+#define H SAVER_H
 #if CONFIG_IDF_TARGET_ESP32S3
-// 2.41" (pixel-doubled 225x300): twice the density (4 px lattice, ~4x the dots) and
+// 2.41" (225x300 bitmap shown 2x2): twice the density (4 px lattice, ~4x the dots) and
 // square dots, each logical px a 2x2 panel block, so dots are 2..8 panel px squares.
 #define PITCH 4                       // lattice step = largest dot
 #define SQUARE_DOTS 1
@@ -320,7 +320,7 @@ static void pick_color(void)
     static bool seen[256];
     int pool[256], n = 0;
     memset(seen, 0, sizeof seen);
-    for (int i = 0; i < GRID_N * GRID_N; i++) {
+    for (int i = 0; i < UI.n * UI.n; i++) {
         int c = UI.cells[i];
         if (c == CELL_EMPTY || c >= p->count || seen[c]) continue;
         seen[c] = true;
@@ -772,6 +772,11 @@ void saver_start(void)
     }
     if (!s_mem) s_mem = calloc(1, sizeof *s_mem);
     if (!s_mem) { ESP_LOGE(TAG, "no memory for the screen saver"); saver_free(); return; }
+#if SAVER_W != DISPLAY_W
+    // The framebuffer and band paths draw at screen size; this board only supports
+    // the (2x2-expanded) bitmap.
+    if (!s_mono) { ESP_LOGE(TAG, "no two-colour bitmap for the screen saver"); saver_free(); return; }
+#endif
     if (!s_mono && board_framebuffer() && !s_erase) {
         s_erase = heap_caps_malloc(ERASE_MAX * sizeof *s_erase, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
         if (!s_erase) s_erase = malloc(ERASE_MAX * sizeof *s_erase);

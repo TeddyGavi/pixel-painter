@@ -2,6 +2,7 @@
 //
 //   Main ── Pattern ─┬─ Save ...... 8 slots (thumbnail rows); occupied: confirm replace
 //        │            ├─ Load ...... 8 slots; unsaved beads on the board: confirm discard
+//        │            ├─ Grid size . 9x9 / 12x12 / 15x15 (previews); always confirm
 //        │            └─ Reset ..... clear the beads (same unsaved warning)
 //        ├─ Brand ............ only while the board is empty (shortlist maps to the
 //        │                      nearest colours); with beads: "locked" + Reset shortcut
@@ -12,13 +13,16 @@
 //        ├─ Texture ........... 1/8 .. 8/8 (press cycles)
 //        ├─ Beads ............. Bevel / Flat (press toggles)
 //        ├─ Screensaver ....... Off / 5s / 30s / 1m / 5m idle (press cycles)
+//        ├─ Motion ............ On / Off (press toggles; Waveshare only)
 //        └─ Export ............ QR code: phone opens the export page (device offline)
 //                └─ Wi-Fi ..... fallback: SoftAP export running while shown
 //
 // Controls: up/down or encoder turn = move; encoder press or right = select;
 // D-pad centre (or left, except in colour lists) = back; MENU = close.
-// In colour lists left/right jump colour families.
+// In colour lists left/right jump colour families. Browse colours also scrolls by
+// touch (drag / flick move the list, not the highlight; a tap highlights a row).
 #include "menu.h"
+#include "render.h"
 #include "board.h"
 #include "ui.h"
 #include "palettes.h"
@@ -26,15 +30,23 @@
 #include "export.h"
 #include "board_style.h"
 #include "saver.h"
+#include "grid.h"
+#include "input.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#define VISIBLE_ROWS ((DISPLAY_H - 32) / 32)  // row units below the title band; = render.c MENU_VISIBLE (9 on 240x320, 17 on 450x600)
+#define VISIBLE_ROWS MENU_VISIBLE_ROWS   // row units below the title band (render.h): 9 on both screens
+// Main menu rows. Motion (animations) exists on the Waveshare only (UI_HIRES).
+enum { M_PATTERN, M_BRAND, M_SHORTLIST, M_USED, M_BOARD, M_TEXTURE, M_BEADS, M_SAVER,
+#if UI_HIRES
+       M_MOTION,
+#endif
+       M_EXPORT, M__COUNT };
 
 typedef enum { S_MAIN, S_BRAND, S_SLOTS, S_SLOT, S_COLORS, S_CODE, S_USED, S_EXPORT, S_WIFI,
-               S_PATTERN, S_SAVE, S_LOAD, S_CONFIRM, S_BRAND_LOCKED } screen_t;
-typedef enum { C_REPLACE, C_LOAD, C_RESET } confirm_t;
+               S_PATTERN, S_SAVE, S_LOAD, S_CONFIRM, S_BRAND_LOCKED, S_GRID } screen_t;
+typedef enum { C_REPLACE, C_LOAD, C_RESET, C_RESIZE } confirm_t;
 
 static const uint8_t *s_qr;   // QR of the pattern while S_EXPORT is shown (NULL = too big)
 
@@ -43,8 +55,10 @@ static int s_sel, s_top;
 static unsigned s_version;
 static int s_edit;                 // slot being edited (S_SLOT / S_COLORS / S_CODE)
 static bool s_direct;              // opened straight into a screen (SIDE): back closes
+static int s_main_sel;             // main-menu row last highlighted: MENU reopens there
 static confirm_t s_confirm;        // what S_CONFIRM is asking about
-static int s_confirm_slot;         // C_REPLACE / C_LOAD: the slot
+static int s_confirm_slot;         // C_REPLACE / C_LOAD: the slot; C_RESIZE: the grid size
+static uint8_t s_preview[GRID_SIZES][GRID_MAX * GRID_MAX];   // S_GRID / C_RESIZE thumbnails
 static bool s_reset_from_brand;    // reset started from the locked Brand screen
 
 // Code entry
@@ -81,7 +95,7 @@ static void go(screen_t sc, int sel)
 static void count_used(void)
 {
     memset(s_count, 0, sizeof s_count);
-    for (int i = 0; i < GRID_N * GRID_N; i++)
+    for (int i = 0; i < UI.n * UI.n; i++)
         if (UI.cells[i] != CELL_EMPTY) s_count[UI.cells[i]]++;
     s_used_n = 0;
     for (int pos = 0; pos < pal()->count; pos++) {          // browse order, then
@@ -97,7 +111,7 @@ static void count_used(void)
 static int total_beads(void)
 {
     int n = 0;
-    for (int i = 0; i < GRID_N * GRID_N; i++) n += UI.cells[i] != CELL_EMPTY;
+    for (int i = 0; i < UI.n * UI.n; i++) n += UI.cells[i] != CELL_EMPTY;
     return n;
 }
 
@@ -106,12 +120,13 @@ static bool unsaved_beads(void) { return UI.unsaved && total_beads() > 0; }
 
 static void slot_row(int i, menu_row_t *r)
 {
-    int p, beads; const uint8_t *cells;
+    int p, n, beads; const uint8_t *cells;
     r->slot = true;
-    if (store_slot_info(i, &p, &cells, &beads)) {
+    if (store_slot_info(i, &p, &cells, &n, &beads)) {
         snprintf(r->left, sizeof r->left, "%d  %s", i + 1, PALETTES[p].brand);
-        snprintf(r->sub, sizeof r->sub, "%d bead%s", beads, beads == 1 ? "" : "s");
-        r->thumb = cells; r->thumb_pal = p;
+        if (n != GRID_MIN) snprintf(r->sub, sizeof r->sub, "%dx%d, %d bead%s", n, n, beads, beads == 1 ? "" : "s");
+        else snprintf(r->sub, sizeof r->sub, "%d bead%s", beads, beads == 1 ? "" : "s");
+        r->thumb = cells; r->thumb_n = n; r->thumb_pal = p;
     } else {
         snprintf(r->left, sizeof r->left, "%d  Empty", i + 1);
     }
@@ -119,9 +134,30 @@ static void slot_row(int i, menu_row_t *r)
 
 static void reset_board(void)
 {
-    for (int i = 0; i < GRID_N * GRID_N; i++) UI.cells[i] = CELL_EMPTY;
+    for (int i = 0; i < UI.n * UI.n; i++) UI.cells[i] = CELL_EMPTY;
     UI.unsaved = false;
     store_mark_dirty();
+}
+
+// Grid size row (S_GRID, and the C_RESIZE confirmation): preview of the pattern at
+// that size, "N x N" and what changing to it does.
+static void grid_row(int k, menu_row_t *r)
+{
+    int n = grid_size(k);
+    grid_plan_t g = grid_plan(n);
+    r->slot = true;
+    r->thumb = s_preview[k]; r->thumb_n = n; r->thumb_pal = UI.palette;
+    snprintf(r->left, sizeof r->left, "%d x %d", n, n);
+    if (n == UI.n) snprintf(r->sub, sizeof r->sub, "current");
+    else if (g.restore) snprintf(r->sub, sizeof r->sub, "restore");
+    else if (g.lost) snprintf(r->sub, sizeof r->sub, "cuts %d bead%s", g.lost, g.lost == 1 ? "" : "s");
+    else if (n > UI.n) snprintf(r->sub, sizeof r->sub, "more room");
+    else snprintf(r->sub, sizeof r->sub, "no beads lost");
+}
+
+static void grid_previews(void)
+{
+    for (int k = 0; k < GRID_SIZES; k++) grid_preview(grid_size(k), s_preview[k]);
 }
 
 static void set_slot_color(int slot, int idx)
@@ -135,7 +171,7 @@ static void set_brand(int b)
 {
     if (b == UI.palette) return;
     const palette_t *from = pal(), *to = &PALETTES[b];
-    for (int i = 0; i < GRID_N * GRID_N; i++)
+    for (int i = 0; i < UI.n * UI.n; i++)
         if (UI.cells[i] != CELL_EMPTY)
             UI.cells[i] = (uint8_t)palette_nearest(to, from->colors[UI.cells[i]].rgb565);
     for (int i = 0; i < SLOTS; i++)
@@ -184,7 +220,7 @@ static int code_match(void)
 static int row_count(void)
 {
     switch (s_screen) {
-    case S_MAIN:   return 9;
+    case S_MAIN:   return M__COUNT;
     case S_BRAND:  return PALETTE_COUNT;
     case S_SLOTS:  return SLOTS;
     case S_SLOT:   return 2;
@@ -198,7 +234,8 @@ static int row_count(void)
     case S_USED:   return s_used_n ? s_used_n : 1;
     case S_EXPORT: return s_qr ? 0 : 2;            // QR drawn by render.c
     case S_WIFI:   return 4;
-    case S_PATTERN: return 3;
+    case S_PATTERN: return 4;
+    case S_GRID:   return GRID_SIZES;
     case S_SAVE: case S_LOAD: return STORE_SLOTS;
     case S_CONFIRM: case S_BRAND_LOCKED: return 3;
     }
@@ -219,36 +256,54 @@ void menu_row(int i, menu_row_t *r)
     r->thumb = NULL;
     r->slot = false;
     r->sub[0] = 0;
+    r->kind = ROW_PLAIN;
     switch (s_screen) {
     case S_MAIN: {
-        static const char *const L[] = { "Pattern", "Brand", "Edit shortlist", "Colours used",
-                                         "Board", "Texture", "Beads", "Screensaver", "Export" };
+        static const char *const L[M__COUNT] = { "Pattern", "Brand", "Edit shortlist", "Colours used",
+                                         "Board", "Texture", "Beads", "Screensaver",
+#if UI_HIRES
+                                         "Motion",
+#endif
+                                         "Export" };
         snprintf(r->left, sizeof r->left, "%s", L[i]);
-        if (i == 0 && unsaved_beads()) snprintf(r->right, sizeof r->right, "unsaved");
-        if (i == 1) snprintf(r->right, sizeof r->right, "%s", pal()->brand);
-        if (i == 3) { count_used(); snprintf(r->right, sizeof r->right, "%d", s_used_n); }
-        if (i == 4) snprintf(r->right, sizeof r->right, "%s", BOARD_NAMES[UI.board]);
-        if (i == 5) snprintf(r->right, sizeof r->right, "%d/%d", UI.texture + 1, TEXTURE_COUNT);
-        if (i == 6) snprintf(r->right, sizeof r->right, "%s", UI.bevel ? "Bevel" : "Flat");
-        if (i == 7) snprintf(r->right, sizeof r->right, "%s", SAVER_NAMES[UI.saver]);
+        if (i == M_PATTERN && unsaved_beads()) snprintf(r->right, sizeof r->right, "unsaved");
+        if (i == M_BRAND) snprintf(r->right, sizeof r->right, "%s", pal()->brand);
+        if (i == M_USED) { count_used(); snprintf(r->right, sizeof r->right, "%d", s_used_n); }
+        if (i == M_BOARD) snprintf(r->right, sizeof r->right, "%s", BOARD_NAMES[UI.board]);
+        if (i == M_TEXTURE) snprintf(r->right, sizeof r->right, "%d/%d", UI.texture + 1, TEXTURE_COUNT);
+        if (i == M_BEADS) snprintf(r->right, sizeof r->right, "%s", UI.bevel ? "Bevel" : "Flat");
+        if (i == M_SAVER) snprintf(r->right, sizeof r->right, "%s", SAVER_NAMES[UI.saver]);
+#if UI_HIRES
+        if (i == M_MOTION) snprintf(r->right, sizeof r->right, "%s", UI.motion ? "On" : "Off");
+#endif
+        if (i <= M_USED || i == M_EXPORT) r->kind = ROW_SUB;   // the rest cycle in place
         break;
     }
     case S_PATTERN: {
-        static const char *const L[] = { "Save", "Load", "Reset board" };
+        static const char *const L[] = { "Save", "Load", "Grid size", "Reset board" };
         snprintf(r->left, sizeof r->left, "%s", L[i]);
         if (i == 0 && unsaved_beads()) snprintf(r->right, sizeof r->right, "unsaved");
+        if (i == 2) snprintf(r->right, sizeof r->right, "%dx%d", UI.n, UI.n);
+        r->kind = i == 2 ? ROW_SUB : ROW_DIALOG;      // Save... Load... Reset board...
         break;
     }
+    case S_GRID:
+        grid_row(i, r);
+        break;
     case S_SAVE: case S_LOAD:
         slot_row(i, r);
         break;
     case S_CONFIRM:
         if (i == 0) {
             if (s_confirm == C_REPLACE) slot_row(s_confirm_slot, r);
+            else if (s_confirm == C_RESIZE) grid_row(grid_size_index(s_confirm_slot), r);
             else snprintf(r->left, sizeof r->left, "Not saved yet");
         } else if (i == 1) {
-            static const char *const A[] = { "Replace", "Discard + load", "Discard + reset" };
-            snprintf(r->left, sizeof r->left, "%s", A[s_confirm]);
+            static const char *const A[] = { "Replace", "Discard + load", "Discard + reset", "Resize" };
+            grid_plan_t g = grid_plan(s_confirm_slot);
+            if (s_confirm == C_RESIZE && g.restore) snprintf(r->left, sizeof r->left, "Restore");
+            else if (s_confirm == C_RESIZE && g.lost) snprintf(r->left, sizeof r->left, "Resize, cut %d", g.lost);
+            else snprintf(r->left, sizeof r->left, "%s", A[s_confirm]);
         } else {
             snprintf(r->left, sizeof r->left, "Cancel");
         }
@@ -259,16 +314,18 @@ void menu_row(int i, menu_row_t *r)
         break;
     }
     case S_BRAND:
-        snprintf(r->left, sizeof r->left, "%s", PALETTES[i].brand);
+        snprintf(r->left, sizeof r->left, "%s", PALETTES[i].full);   // scrolls when selected
         snprintf(r->right, sizeof r->right, "%s%d", i == UI.palette ? "* " : "",
                  PALETTES[i].count);
         break;
     case S_SLOTS:
         color_row(UI.slots[i], r);
         snprintf(r->right, sizeof r->right, "%s%d", i == UI.slot ? "* " : "", i + 1);
+        r->kind = ROW_SUB;
         break;
     case S_SLOT:
         snprintf(r->left, sizeof r->left, "%s", i == 0 ? "Browse colours" : "Enter code");
+        r->kind = ROW_SUB;
         break;
     case S_COLORS: {
         int pos = i, idx = palette_browse_index(pal(), pos);
@@ -318,6 +375,7 @@ void menu_view(menu_view_t *v)
     v->hint[0] = 0;
     v->top = s_top;
     v->version = s_version;
+    v->bar = s_screen == S_COLORS && v->count > VISIBLE_ROWS;
     switch (s_screen) {
     case S_MAIN:   snprintf(v->title, sizeof v->title, "Menu"); break;
     case S_BRAND:  snprintf(v->title, sizeof v->title, "Brand"); break;
@@ -341,9 +399,11 @@ void menu_view(menu_view_t *v)
     case S_LOAD:   snprintf(v->title, sizeof v->title, "Load slot"); break;
     case S_CONFIRM:
         if (s_confirm == C_REPLACE) snprintf(v->title, sizeof v->title, "Replace slot %d?", s_confirm_slot + 1);
+        else if (s_confirm == C_RESIZE) snprintf(v->title, sizeof v->title, "Change grid?");
         else snprintf(v->title, sizeof v->title, "Discard board?");
         break;
     case S_BRAND_LOCKED: snprintf(v->title, sizeof v->title, "%s locked", pal()->brand); break;
+    case S_GRID:   snprintf(v->title, sizeof v->title, "Grid size"); break;
     }
 }
 
@@ -352,8 +412,8 @@ void menu_view(menu_view_t *v)
 // Slot rows (thumbnail + two lines) are double height.
 int menu_row_units(int i)
 {
-    if (s_screen == S_SAVE || s_screen == S_LOAD) return 2;
-    if (s_screen == S_CONFIRM && s_confirm == C_REPLACE && i == 0) return 2;
+    if (s_screen == S_SAVE || s_screen == S_LOAD || s_screen == S_GRID) return 2;
+    if (s_screen == S_CONFIRM && (s_confirm == C_REPLACE || s_confirm == C_RESIZE) && i == 0) return 2;
     return 1;
 }
 
@@ -371,6 +431,31 @@ static void move(int d)
     s_sel = (s_sel + d + n) % n;                      // wrap
     if (s_sel < s_top) s_top = s_sel;
     while (s_sel >= s_top + rows_fitting(s_top)) s_top++;
+}
+
+// Touch: scroll the list itself by d rows (no wrap: stops at the ends) and keep the
+// highlight on its colour, or on the nearest visible row if it scrolled off.
+// Returns false if the list was already at that end.
+static bool scroll_rows(int d)
+{
+    int n = row_count(), max_top = n - VISIBLE_ROWS;
+    if (max_top < 0) max_top = 0;
+    int t = s_top + d;
+    if (t > max_top) t = max_top;
+    if (t < 0) t = 0;
+    if (t == s_top) return false;
+    s_top = t;
+    if (s_sel < s_top) s_sel = s_top;
+    if (s_sel > s_top + VISIBLE_ROWS - 1) s_sel = s_top + VISIBLE_ROWS - 1;
+    return true;
+}
+
+// Touch: a tap highlights the row under the finger (choosing stays on the encoder).
+static void tap_row(int y)
+{
+    if (y < MENU_ROW_H) return;                          // title band
+    int i = s_top + (y - MENU_ROW_H) / MENU_ROW_H;
+    if (i < row_count() && i < s_top + rows_fitting(s_top)) s_sel = i;
 }
 
 static void show_sel_centered(int sel)
@@ -408,15 +493,17 @@ static menu_result_t back(void)
     case S_CONFIRM:
         if (s_confirm == C_REPLACE) go(S_SAVE, s_confirm_slot);
         else if (s_confirm == C_LOAD) go(S_LOAD, s_confirm_slot);
+        else if (s_confirm == C_RESIZE) go(S_GRID, grid_size_index(s_confirm_slot));
         else if (s_reset_from_brand) go(S_BRAND_LOCKED, 1);
-        else go(S_PATTERN, 2);
+        else go(S_PATTERN, 3);
         break;
+    case S_GRID:   go(S_PATTERN, 2); break;
     case S_SLOTS:  go(S_MAIN, 2); break;
     case S_SLOT:   go(S_SLOTS, s_edit); break;
     case S_COLORS: go(S_SLOT, 0); break;
     case S_CODE:   go(S_SLOT, 1); break;
     case S_USED:   if (s_direct) return MENU_CLOSE; go(S_MAIN, 3); break;
-    case S_EXPORT: go(S_MAIN, 8); break;
+    case S_EXPORT: go(S_MAIN, M_EXPORT); break;
     case S_WIFI:   export_stop(); go(S_EXPORT, -1); break;
     }
     return MENU_STAY;
@@ -437,6 +524,9 @@ static menu_result_t select(void)
         else if (s_sel == 5) { UI.texture = (UI.texture + 1) % TEXTURE_COUNT; look_changed(); }
         else if (s_sel == 6) { UI.bevel = !UI.bevel; look_changed(); }
         else if (s_sel == 7) { UI.saver = (UI.saver + 1) % SAVER_CHOICES; look_changed(); }
+#if UI_HIRES
+        else if (s_sel == M_MOTION) { UI.motion = !UI.motion; look_changed(); }
+#endif
         else { s_qr = export_qr(); go(S_EXPORT, -1); }
         break;
     case S_BRAND:
@@ -450,17 +540,25 @@ static menu_result_t select(void)
     case S_PATTERN:
         if (s_sel == 0) go(S_SAVE, 0);
         else if (s_sel == 1) go(S_LOAD, 0);
+        else if (s_sel == 2) { grid_previews(); go(S_GRID, grid_size_index(UI.n)); }
         else return request_reset(false);
         break;
+    case S_GRID: {                     // always confirm; Cancel is the default if beads go
+        int n = grid_size(s_sel);
+        if (n == UI.n) return back();
+        s_confirm = C_RESIZE; s_confirm_slot = n;
+        go(S_CONFIRM, grid_plan(n).lost ? 2 : 1);
+        break;
+    }
     case S_SAVE:
-        if (store_slot_info(s_sel, NULL, NULL, NULL)) {
+        if (store_slot_info(s_sel, NULL, NULL, NULL, NULL)) {
             s_confirm = C_REPLACE; s_confirm_slot = s_sel; go(S_CONFIRM, 1);
         } else if (store_save_slot(s_sel)) {
             return MENU_CLOSE;
         }
         break;
     case S_LOAD:
-        if (!store_slot_info(s_sel, NULL, NULL, NULL)) break;   // empty slot
+        if (!store_slot_info(s_sel, NULL, NULL, NULL, NULL)) break;   // empty slot
         if (unsaved_beads()) { s_confirm = C_LOAD; s_confirm_slot = s_sel; go(S_CONFIRM, 1); }
         else if (store_load_slot(s_sel)) return MENU_CLOSE;
         break;
@@ -469,6 +567,7 @@ static menu_result_t select(void)
         if (s_sel != 1) break;
         if (s_confirm == C_REPLACE) { if (store_save_slot(s_confirm_slot)) return MENU_CLOSE; }
         else if (s_confirm == C_LOAD) { if (store_load_slot(s_confirm_slot)) return MENU_CLOSE; }
+        else if (s_confirm == C_RESIZE) { grid_apply(s_confirm_slot); return MENU_CLOSE; }
         else return do_reset();
         break;
     case S_SLOTS:
@@ -514,11 +613,24 @@ static menu_result_t select(void)
 }
 
 bool menu_saver_allowed(void) { return s_screen != S_EXPORT && s_screen != S_WIFI; }
+bool menu_touch_scroll(void) { return s_screen == S_COLORS; }
 
-void menu_open_main(void) { s_direct = false; go(S_MAIN, 0); }
+void menu_open_main(void) { s_direct = false; go(S_MAIN, s_main_sel); }
 void menu_open_used(void) { count_used(); s_direct = true; go(S_USED, 0); }
 
+static menu_result_t handle(event_t ev);
+
+// Remembers the main-menu row (also the one a submenu was opened from), so MENU
+// reopens where the user left off. Not kept across a restart.
 menu_result_t menu_event(event_t ev)
+{
+    if (s_screen == S_MAIN) s_main_sel = s_sel;
+    menu_result_t r = handle(ev);
+    if (s_screen == S_MAIN) s_main_sel = s_sel;
+    return r;
+}
+
+static menu_result_t handle(event_t ev)
 {
     if (ev == EV_MENU) {                               // close from anywhere
         if (s_screen == S_WIFI) export_stop();
@@ -552,6 +664,12 @@ menu_result_t menu_event(event_t ev)
         break;
     case EV_ENC_PRESS: return select();
     case EV_CENTER: return back();
+    case EV_SCROLL: {
+        int d = input_take_scroll();
+        if (colors && d && !scroll_rows(d)) input_touch_stop();   // at the end: hard stop
+        break;
+    }
+    case EV_TAP: if (colors) tap_row(input_tap_y()); break;
     default: break;
     }
     return MENU_STAY;

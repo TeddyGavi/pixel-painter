@@ -1,0 +1,13 @@
+# A selected menu row that is too wide scrolls like the grid's name line: Menu > Brand,
+# down to "Preciosa Ornela (Czech beads)" and wait. Rests shortened ("Preciosa...") for
+# 5 s, then scrolls one pass at 50 px/s.
+# Expected (at 13 s): the selected row mid-scroll, "...zech beads)" against the count.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 m
+2.2 uart0 s
+2.4 uart0 k
+2.6 uart0 s
+2.7 uart0 s
+2.8 uart0 s
+13.0 stop

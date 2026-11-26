@@ -1,0 +1,10 @@
+# Pattern submenu with unsaved beads. Place a bead, then Menu > Pattern.
+# Expected: "Pattern" with Save (right: "unsaved"), Load, Grid size (right: 9x9) and
+# Reset board; Save highlighted. On the 450x600 Waveshare, rows that open a dialog
+# end in "..." and Grid size ends in a submenu triangle.
+0   adc 34 1.95
+0   adc 27 3.3
+2.0 uart0 p
+2.2 uart0 m
+2.4 uart0 k
+3.2 stop

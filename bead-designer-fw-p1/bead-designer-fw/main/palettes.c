@@ -1,9 +1,12 @@
 // Bead palettes, const data in flash, all generated from palettes/*.tsv (see
-// palettes/README.md): Hama midi (88), Artkal S (225), Miyuki Delica (254 curated).
+// palettes/README.md): Hama midi (88), Artkal S (225), Miyuki Delica (254 curated),
+// Toho Round 11/0 + 8/0 (207, card 111-1), Preciosa Ornela rocailles (254 curated).
 #include "palettes.h"
 #include "palette_hama.h"            // generated: palettes/hama.tsv
 #include "palette_artkal_s.h"        // generated: palettes/artkal_s.tsv
 #include "palette_miyuki_delica.h"   // generated: palettes/miyuki_delica.tsv
+#include "palette_toho_round.h"      // generated: palettes/toho_round.tsv
+#include "palette_preciosa_rocailles.h" // generated: palettes/preciosa_rocailles.tsv
 #include <string.h>
 #include <stddef.h>
 
@@ -16,9 +19,13 @@ const char *const FAMILY_NAMES[FAMILY_COUNT] = {
 // Index order is stored in saved patterns (store.c): append new brands at the end,
 // and bump PATTERN_VERSION with a remap if this order ever changes.
 const palette_t PALETTES[] = {
-    { "Hama",   "hama",   HAMA,          HAMA_COUNT,          HAMA_ORDER },
-    { "Artkal", "artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
-    { "Miyuki", "miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
+    { "Hama",   "Hama",   "hama",   HAMA,          HAMA_COUNT,          HAMA_ORDER },
+    { "Artkal", "Artkal", "artkal", ARTKAL_S,      ARTKAL_S_COUNT,      ARTKAL_S_ORDER },
+    { "Miyuki", "Miyuki", "miyuki", MIYUKI_DELICA, MIYUKI_DELICA_COUNT, MIYUKI_DELICA_ORDER },
+    { "Toho",   "Toho",   "toho",   TOHO_ROUND,    TOHO_ROUND_COUNT,    TOHO_ROUND_ORDER },
+    // Czech seed beads: the common name in brackets, since buyers search for "Czech beads"
+    { "Preciosa", "Preciosa Ornela (Czech beads)", "preciosa",
+      PRECIOSA_ROCAILLES, PRECIOSA_ROCAILLES_COUNT, PRECIOSA_ROCAILLES_ORDER },
 };
 const int PALETTE_COUNT = sizeof PALETTES / sizeof *PALETTES;
 

@@ -19,9 +19,9 @@
 
 static const char *TAG = "ui";   // one log line per input event (BENCH.md)
 #define AUTOSAVE_QUIET_US 1000000   // no input for 1 s before an autosave may run
-ui_state_t UI = { .cur_x = 4, .cur_y = 4, .palette = 1 /* Artkal */,
+ui_state_t UI = { .cur_x = 4, .cur_y = 4, .n = GRID_MIN, .palette = 1 /* Artkal */,
                   .board = BOARD_DEFAULT, .texture = 0, .bevel = true,
-                  .saver = SAVER_DEFAULT };
+                  .saver = SAVER_DEFAULT, .motion = true };
 
 // Default shortlist: white, black, red, yellow, blue where the palette has them.
 static const char *const DEFAULT_SLOTS[SLOTS] = { "S01", "S13", "S05", "S27", "S11" };
@@ -36,12 +36,12 @@ static void default_slots(void)
     UI.slot = 0;
 }
 
-static inline int wrap(int v) { return (v + GRID_N) % GRID_N; }
+static inline int wrap(int v) { return (v + UI.n) % UI.n; }
 
 // Change the cell under the cursor; only a real change schedules an autosave.
 static void set_cell(uint8_t v)
 {
-    uint8_t *c = &UI.cells[UI.cur_y * GRID_N + UI.cur_x];
+    uint8_t *c = &UI.cells[UI.cur_y * UI.n + UI.cur_x];
     if (*c != v) { *c = v; UI.unsaved = true; store_mark_dirty(); }
 }
 
@@ -102,7 +102,7 @@ static void draw_mode(event_t ev)
     case EV_RIGHT: if (UI.browsing) family_jump(+1); else UI.cur_x = wrap(UI.cur_x + 1); break;
     case EV_CENTER: set_cell(CELL_EMPTY); break;                     // erase
     case EV_CENTER_LONG: {                                           // eyedropper
-        uint8_t c = UI.cells[UI.cur_y * GRID_N + UI.cur_x];
+        uint8_t c = UI.cells[UI.cur_y * UI.n + UI.cur_x];
         if (c != CELL_EMPTY) set_slot(c);
         break;
     }
@@ -132,6 +132,52 @@ static int s_batt_segs = -1;
 
 static void present(void) { if (s_disp->present) s_disp->present(); }
 
+// ---- brightness ramps (motion, Waveshare): saver enter / exit ---------------------------
+// Saver enter: the screen fades out over 500 ms, the saver starts dark and fades in
+// over 300 ms. Waking: the board is drawn while dark, then fades in over 150 ms.
+// Input during the fade-out cancels it (the press only wakes). Motion Off: no ramps.
+#define RAMP_OUT_MS   500
+#define RAMP_SAVER_MS 300
+#define RAMP_WAKE_MS  150
+static struct { bool on, then_saver, cubic; int from, to, dur_ms; int64_t t0; } s_ramp;
+
+static int normal_brightness(void) { return s_was_low ? LOW_BRIGHTNESS : 100; }
+static void set_bright(int pct) { if (s_disp->set_brightness) s_disp->set_brightness((uint8_t)pct); }
+static bool ramps(void) { return UI_HIRES && UI.motion && s_disp->set_brightness; }
+
+static void ramp_start(int from, int to, int dur_ms, int delay_ms, bool cubic, bool then_saver)
+{
+    s_ramp.on = true; s_ramp.then_saver = then_saver; s_ramp.cubic = cubic;
+    s_ramp.from = from; s_ramp.to = to; s_ramp.dur_ms = dur_ms;
+    s_ramp.t0 = esp_timer_get_time() + delay_ms * 1000LL;
+    set_bright(from);
+}
+
+static void ramp_cancel(void)
+{
+    if (!s_ramp.on) return;
+    s_ramp.on = false;
+    set_bright(normal_brightness());
+}
+
+static void ramp_step(void)
+{
+    int64_t el = esp_timer_get_time() - s_ramp.t0;
+    if (el < 0) return;                                  // still waiting for the frame
+    float t = (float)el / (s_ramp.dur_ms * 1000.0f);
+    if (t < 1) {
+        if (s_ramp.cubic) { float u = 1 - t; t = 1 - u * u * u; }
+        set_bright(s_ramp.from + (int)((s_ramp.to - s_ramp.from) * t));
+        return;
+    }
+    s_ramp.on = false;
+    set_bright(s_ramp.to);
+    if (!s_ramp.then_saver) return;
+    saver_start();                                       // dark, then fade the saver in
+    if (saver_active()) ramp_start(0, normal_brightness(), RAMP_SAVER_MS, 0, false, false);
+    else set_bright(normal_brightness());
+}
+
 // Sleep: pattern saved, screen off. Any button wakes (see ui_run).
 static void go_sleep(void)
 {
@@ -140,6 +186,7 @@ static void go_sleep(void)
     // a PWR press during the saver flashed the old screen before going dark.
     // Whatever is drawn while asleep only reaches the panel's RAM; wake redraws.
     board_display_sleep(true);
+    ramp_cancel();
     if (saver_active()) saver_stop();
     store_flush();
     s_sleeping = true;
@@ -159,6 +206,8 @@ static void wake_up(void)
 static void shut_down(const char *why)
 {
     ESP_LOGW(TAG, "shut down: %s", why ? why : "PWR held");
+    ramp_cancel();
+    render_anim_finish();
     if (saver_active()) saver_stop();
     if (s_sleeping) { board_display_sleep(false); s_sleeping = false; }
     render_message(why ? why : "Shutting down", "Pattern saved");
@@ -198,9 +247,10 @@ static void battery_policy(void)
 
 void ui_run(void)
 {
-    for (unsigned i = 0; i < GRID_N * GRID_N; i++) UI.cells[i] = CELL_EMPTY;
+    for (unsigned i = 0; i < GRID_MAX * GRID_MAX; i++) UI.cells[i] = CELL_EMPTY;
     default_slots();
     store_load_autosave();
+    UI.cur_x = UI.cur_y = UI.n / 2;          // cursor starts in the middle
     s_disp = board_display();
     battery_init();
     s_was_low = battery_low();
@@ -214,6 +264,9 @@ void ui_run(void)
         event_t ev;
         esp_task_wdt_reset();
         present();                            // show everything drawn in the last pass at once
+        // Touch only while Browse colours is on screen and awake (never wakes anything).
+        input_touch_enable(!s_sleeping && !s_alert && !s_ramp.on && !saver_active() &&
+                           UI.mode == MODE_MENU && menu_touch_scroll());
         int64_t now = esp_timer_get_time();
         if (now >= next_batt_us) {
             next_batt_us = now + BATTERY_POLL_MS * 1000LL;
@@ -235,16 +288,25 @@ void ui_run(void)
         int wait_ms = store_pending() ? 200 : 1000;
         int tick_ms = render_tick_ms();
         if (tick_ms >= 0 && tick_ms < wait_ms) wait_ms = tick_ms;
+        int anim_ms = render_anim_ms();                  // motion: next animation frame
+        if (anim_ms >= 0 && anim_ms < wait_ms) wait_ms = anim_ms;
+        if (s_ramp.on && wait_ms > 16) wait_ms = 16;
         int64_t saver_us = (int64_t)SAVER_TIMEOUT_S[UI.saver] * 1000000;
         bool saver_may = saver_us > 0 && !s_alert && (UI.mode != MODE_MENU || menu_saver_allowed());
         if (saver_active()) {
-            wait_ms = saver_next_ms();
+            int sm = saver_next_ms();
+            if (!s_ramp.on || sm < wait_ms) wait_ms = sm;
+        } else if (s_ramp.on) {
+            // fading out to the saver: the ramp sets the pace
         } else if (saver_may) {
             int64_t left = (last_input_us + saver_us - esp_timer_get_time()) / 1000;
             if (left < wait_ms) wait_ms = left < 0 ? 0 : (int)left;
         }
         if (!input_wait(&ev, wait_ms)) {
             now = esp_timer_get_time();
+            if (s_ramp.on) ramp_step();
+            if (render_anim_ms() >= 0) { render_anim_frame(); continue; }
+            if (s_ramp.on && !saver_active()) continue;  // fading out to the saver
             if (now - last_input_us >= IDLE_SLEEP_US) { go_sleep(); continue; }
             if (saver_active()) {
                 saver_frame();
@@ -259,6 +321,10 @@ void ui_run(void)
                 }
                 ESP_LOGI(TAG, "screen saver after %u s idle", SAVER_TIMEOUT_S[UI.saver]);
                 UI.browsing = false;
+                if (ramps()) {                    // fade out first; ramp_step starts the saver
+                    ramp_start(normal_brightness(), 0, RAMP_OUT_MS, 0, false, true);
+                    continue;
+                }
                 saver_start();
                 if (!saver_active()) last_input_us = esp_timer_get_time();   // retry later
                 continue;
@@ -280,10 +346,24 @@ void ui_run(void)
             render_idle_tick();
             continue;
         }
+        if (ev == EV_SCROLL || ev == EV_TAP) {   // touch: only on a live Browse colours list
+            if (UI.mode != MODE_MENU || saver_active() || s_ramp.on || s_alert ||
+                esp_timer_get_time() < swallow_us) {
+                if (ev == EV_SCROLL) input_take_scroll();
+                continue;
+            }
+        }
+        render_anim_finish();                 // input always wins: animations jump to their end
         if (ev == EV_TICK) { battery_policy(); continue; }   // bench battery simulation
         if (ev == EV_PWR_HOLD) shut_down(NULL);
         if (ev == EV_PWR) { go_sleep(); continue; }
         last_input_us = esp_timer_get_time();
+        if (s_ramp.on && s_ramp.then_saver) {   // fading out to the saver: the press only wakes
+            ramp_cancel();
+            swallow_us = last_input_us + 300000;
+            ESP_LOGI(TAG, "saver fade cancelled (ev=%s ignored)", (unsigned)ev < EV__COUNT ? EVENT_NAMES[ev] : "?");
+            continue;
+        }
         if (s_alert) {                        // the low-battery notice: any button dismisses
             s_alert = false;
             render_full();
@@ -295,7 +375,14 @@ void ui_run(void)
         if (saver_active() || last_input_us < swallow_us) {
             if (saver_active()) {
                 saver_stop();
+                bool fade = ramps();
+                s_ramp.on = false;
+                if (fade) set_bright(0);          // draw the board dark, then fade it in
                 render_full();
+                if (fade) {
+                    present();
+                    ramp_start(0, normal_brightness(), RAMP_WAKE_MS, 20, true, false);
+                }
                 ESP_LOGI(TAG, "wake (ev=%s ignored)", (unsigned)ev < EV__COUNT ? EVENT_NAMES[ev] : "?");
             }
             swallow_us = last_input_us + 300000;
@@ -311,6 +398,7 @@ void ui_run(void)
             render_full();
             continue;
         }
+        render_event(ev);
         switch (UI.mode) {
         case MODE_DRAW:     draw_mode(ev);     break;
         case MODE_MENU:

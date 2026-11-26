@@ -41,6 +41,12 @@ hw/run.sh list                     # list scenarios
   least 30% of the screen black and at least 200 lit pixels.
 - **Marquee:** the name line scrolls in real time. The screen above it must match the golden exactly; the line itself only has to show text.
 - **Boot check:** with the fast `-O2` boot, the first log lines go out while USB re-enumerates. So `boot` also sends `?`, and the board reprints a status line (`board: Waveshare 2.41 Rev 2.0; TCA9554 ok at 0x20; RM690B0 ready ...`), which the check reads.
+- **Motion (UI update stage 4):** animations run in real time but always end on the
+  static screen, and the dump is taken 0.6 s after the last key, so every scenario still
+  matches its golden with Motion on (the default). `motion_menu` and `motion_off`
+  (`hw/scripts/`) check the Menu > Motion row and drawing with Motion off. To look at
+  in-between frames, build with `MOTION_SLOW` (top of `main/render_motion.inc`) set to
+  e.g. 25 and dump while an animation runs.
 - **Battery and power scenarios** (`hw/scripts/`): `batt_menu`, `batt_low`, `batt_alert`, `batt_alert_dismiss` and `sleep_wake`. Shut Down and the critical level put the board into soft off (the USB port goes away), so they are checked by hand: press PWR to wake.
 - **Current result** (2026-11-17, Rev 2.0 board): 40 pass (37 exact, 1 marquee, 2 saver checks) and 4 are skipped as simulator-only (2026-11-18, after battery management).
 
@@ -64,7 +70,7 @@ hw/run.sh list                     # list scenarios
 
 - **Display:**
   - RM690B0 over QSPI at 80 MHz (CS 9, CLK 10, D0–D3 11–14). Reset goes through TCA9554 EXIO0.
-  - **Pixel doubling:** the UI is laid out at 225x300 logical pixels and each one is shown as 2x2 on the 450x600 panel. That gives the same physical pixel size as the 2.4" CYD, with crisp pixels. It also makes every panel window even-aligned, which the controller requires. The `F` dump and the goldens are 225x300.
+  - **Native resolution (since 2026-11-20, UI update stage 1):** the UI is drawn at the panel's 450x600 in the "Soft bead" look (`docs/ui-update-2.41/`). The driver widens every panel window to even columns and rows, which the controller requires. The screen saver keeps its 225x300 bitmap, shown 2x2. The `F` dump and the goldens are 450x600. (Before 2026-11-20 the UI was 225x300, pixel-doubled.)
   - **Mounted upside down** in the case, so the flush rotates by 180° (`DISPLAY_ROT180`).
   - **Column offset:** the panel's visible columns start at RAM column 16 (`LCD_X_GAP`). This was measured with the `G` edge ruler, which shows 8 px coloured stripes at every edge.
 - **Frame pipeline:**

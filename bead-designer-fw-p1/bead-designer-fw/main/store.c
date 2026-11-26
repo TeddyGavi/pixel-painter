@@ -24,38 +24,46 @@
 static const char *TAG = "store";
 static nvs_handle_t s_nvs;
 
-static int count_beads(const uint8_t *cells)
+static int count_beads(const uint8_t *cells, int n)
 {
-    int n = 0;
-    for (int i = 0; i < GRID_N * GRID_N; i++) n += cells[i] != CELL_EMPTY;
-    return n;
+    int k = 0;
+    for (int i = 0; i < n * n; i++) k += cells[i] != CELL_EMPTY;
+    return k;
 }
 
 // ---- record formats ---------------------------------------------------------------
 
-#define PATTERN_VERSION 6   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look;
+#define PATTERN_VERSION 7   // 1 = bare cells; 2 = + brand/shortlist; 3 = + canvas look;
                             // 4 = brand indices after Perler was removed;
                             // 5 = Hama = full 88-colour chart (was 6);
                             // 6 = look moved to its own record; + unsaved flag
+                            // 7 = grid size 9/12/15 (cells up to 15x15, stride n)
 #define PFLAG_UNSAVED 0x01
+#define OLD_N 9             // grid size of every pattern before v7
 
 typedef struct {
     uint8_t version;
     uint8_t palette;                  // index into PALETTES[]
     uint8_t slots[SLOTS];             // shortlist (palette colour indices)
     uint8_t slot;                     // selected slot
-    uint8_t cells[GRID_N * GRID_N];   // palette colour index, CELL_EMPTY = none
+    uint8_t n;                        // grid size: 9, 12 or 15
+    uint8_t cells[GRID_MAX * GRID_MAX]; // n x n, row-major; the rest CELL_EMPTY
     uint8_t flags;                    // PFLAG_UNSAVED (working pattern only)
 } pattern_t;
 
+typedef struct {                      // v6 layout: always 9x9
+    uint8_t version, palette, slots[SLOTS], slot, cells[OLD_N * OLD_N], flags;
+} pattern_v6_t;
+
 typedef struct {                      // v2..v5 layout (v2 ends before `board`)
-    uint8_t version, palette, slots[SLOTS], slot, cells[GRID_N * GRID_N];
+    uint8_t version, palette, slots[SLOTS], slot, cells[OLD_N * OLD_N];
     uint8_t board, texture, flags;    // v3+: canvas look, flags bit0 = bevel
 } pattern_old_t;
 #define PATTERN_V2_SIZE offsetof(pattern_old_t, board)
 
 #define LOOK_VERSION 2   // 2 = + screen saver timeout
 #define LFLAG_BEVEL 0x01
+#define LFLAG_STILL 0x02            // Motion: Off (a clear bit = On, the default, also for older records)
 typedef struct { uint8_t version, board, texture, flags, saver; } look_t;
 #define LOOK_V1_SIZE offsetof(look_t, saver)
 
@@ -63,13 +71,16 @@ typedef struct { uint8_t version, board, texture, flags, saver; } look_t;
 static bool s_old_look_valid;
 static look_t s_old_look;
 
-static bool valid(const pattern_t *pt)
+static bool valid(pattern_t *pt)   // also clears cells outside the grid
 {
     if (pt->palette >= PALETTE_COUNT || pt->slot >= SLOTS) return false;
+    if (grid_size(grid_size_index(pt->n)) != pt->n) return false;
     int n = PALETTES[pt->palette].count;
     for (int i = 0; i < SLOTS; i++) if (pt->slots[i] >= n) return false;
-    for (int i = 0; i < GRID_N * GRID_N; i++)
-        if (pt->cells[i] != CELL_EMPTY && pt->cells[i] >= n) return false;
+    for (int i = 0; i < GRID_MAX * GRID_MAX; i++) {
+        if (i >= pt->n * pt->n) pt->cells[i] = CELL_EMPTY;     // outside the grid
+        else if (pt->cells[i] != CELL_EMPTY && pt->cells[i] >= n) return false;
+    }
     return true;
 }
 
@@ -85,7 +96,7 @@ static bool remap_old_hama(pattern_t *pt)
         if (pt->slots[i] >= 6) return false;
         pt->slots[i] = (uint8_t)map[pt->slots[i]];
     }
-    for (int i = 0; i < GRID_N * GRID_N; i++) {
+    for (int i = 0; i < pt->n * pt->n; i++) {
         if (pt->cells[i] == CELL_EMPTY) continue;
         if (pt->cells[i] >= 6) return false;
         pt->cells[i] = (uint8_t)map[pt->cells[i]];
@@ -96,23 +107,33 @@ static bool remap_old_hama(pattern_t *pt)
 // Read and migrate any known version into the current pattern_t.
 static bool read_pattern(const char *key, pattern_t *pt)
 {
-    union { pattern_t now; pattern_old_t old; } b;
+    union { pattern_t now; pattern_v6_t v6; pattern_old_t old; } b;
     size_t len = sizeof b;
     if (nvs_get_blob(s_nvs, key, &b, &len) != ESP_OK) return false;
     if (b.now.version == PATTERN_VERSION && len == sizeof(pattern_t)) {
         *pt = b.now;
         return valid(pt);
     }
+    memset(pt, 0, sizeof *pt);
+    memset(pt->cells, CELL_EMPTY, sizeof pt->cells);
+    pt->version = PATTERN_VERSION;
+    pt->n = OLD_N;
+    if (b.v6.version == 6 && len == sizeof(pattern_v6_t)) {      // v6: 9x9, same fields
+        pt->palette = b.v6.palette;
+        pt->slot = b.v6.slot;
+        memcpy(pt->slots, b.v6.slots, sizeof pt->slots);
+        memcpy(pt->cells, b.v6.cells, sizeof b.v6.cells);
+        pt->flags = b.v6.flags;
+        return valid(pt);
+    }
     const pattern_old_t *o = &b.old;
     bool v2 = o->version == 2 && len == PATTERN_V2_SIZE;
     bool v35 = o->version >= 3 && o->version <= 5 && len == sizeof(pattern_old_t);
     if (!v2 && !v35) return false;
-    memset(pt, 0, sizeof *pt);
-    pt->version = PATTERN_VERSION;
     pt->palette = o->palette;
     pt->slot = o->slot;
     memcpy(pt->slots, o->slots, sizeof pt->slots);
-    memcpy(pt->cells, o->cells, sizeof pt->cells);
+    memcpy(pt->cells, o->cells, sizeof o->cells);
     if (o->version < 4) {          // v2/v3 brands: 0 Perler (removed), 1 Hama, 2 Artkal
         if (pt->palette == 0) return false;
         pt->palette -= 1;
@@ -120,7 +141,7 @@ static bool read_pattern(const char *key, pattern_t *pt)
     if (o->version < 5 && pt->palette == 0 && !remap_old_hama(pt)) return false;
     if (!valid(pt)) return false;
     // Older working patterns: beads count as unsaved (nothing was ever in a slot).
-    if (count_beads(pt->cells)) pt->flags |= PFLAG_UNSAVED;
+    if (count_beads(pt->cells, pt->n)) pt->flags |= PFLAG_UNSAVED;
     if (v35 && strcmp(key, "auto") == 0 && o->board < BOARD__COUNT && o->texture < TEXTURE_COUNT) {
         s_old_look = (look_t){ LOOK_VERSION, o->board, o->texture, (uint8_t)(o->flags & 1), 0 };
         s_old_look_valid = true;
@@ -140,6 +161,7 @@ static void from_ui(pattern_t *pt)
     pt->version = PATTERN_VERSION;
     pt->palette = (uint8_t)UI.palette;
     pt->slot = (uint8_t)UI.slot;
+    pt->n = (uint8_t)UI.n;
     memcpy(pt->slots, UI.slots, sizeof pt->slots);
     memcpy(pt->cells, UI.cells, sizeof pt->cells);
     pt->flags = UI.unsaved ? PFLAG_UNSAVED : 0;
@@ -151,6 +173,9 @@ static void to_ui(const pattern_t *pt)
     UI.slot = pt->slot;
     memcpy(UI.slots, pt->slots, sizeof UI.slots);
     memcpy(UI.cells, pt->cells, sizeof UI.cells);
+    UI.n = pt->n;
+    if (UI.cur_x >= UI.n) UI.cur_x = UI.n - 1;          // a smaller pattern loaded
+    if (UI.cur_y >= UI.n) UI.cur_y = UI.n - 1;
     UI.unsaved = (pt->flags & PFLAG_UNSAVED) != 0;
 }
 
@@ -161,12 +186,13 @@ static bool s_slot_used[STORE_SLOTS];
 
 static void slot_key(int i, char *k) { snprintf(k, 8, "s%d", i); }
 
-bool store_slot_info(int i, int *palette, const uint8_t **cells, int *beads)
+bool store_slot_info(int i, int *palette, const uint8_t **cells, int *n, int *beads)
 {
     if (i < 0 || i >= STORE_SLOTS || !s_slot_used[i]) return false;
     if (palette) *palette = s_slot[i].palette;
     if (cells) *cells = s_slot[i].cells;
-    if (beads) *beads = count_beads(s_slot[i].cells);
+    if (n) *n = s_slot[i].n;
+    if (beads) *beads = count_beads(s_slot[i].cells, s_slot[i].n);
     return true;
 }
 
@@ -181,7 +207,7 @@ bool store_save_slot(int i)
     s_slot[i] = pt; s_slot_used[i] = true;
     UI.unsaved = false;
     store_mark_dirty();                // persist the cleared flag with the working copy
-    ESP_LOGI(TAG, "saved slot %d: %s, %d beads", i + 1, PALETTES[pt.palette].brand, count_beads(pt.cells));
+    ESP_LOGI(TAG, "saved slot %d: %s, %d beads", i + 1, PALETTES[pt.palette].brand, count_beads(pt.cells, pt.n));
     return true;
 }
 
@@ -192,7 +218,7 @@ bool store_load_slot(int i)
     pt.flags = 0;
     to_ui(&pt);
     store_mark_dirty();
-    ESP_LOGI(TAG, "loaded slot %d: %s, %d beads", i + 1, PALETTES[pt.palette].brand, count_beads(pt.cells));
+    ESP_LOGI(TAG, "loaded slot %d: %s, %d beads", i + 1, PALETTES[pt.palette].brand, count_beads(pt.cells, pt.n));
     return true;
 }
 
@@ -214,7 +240,8 @@ void store_init(void)
 
 static bool save_look(void)
 {
-    look_t l = { LOOK_VERSION, UI.board, UI.texture, (uint8_t)(UI.bevel ? LFLAG_BEVEL : 0), UI.saver };
+    look_t l = { LOOK_VERSION, UI.board, UI.texture,
+                 (uint8_t)((UI.bevel ? LFLAG_BEVEL : 0) | (UI.motion ? 0 : LFLAG_STILL)), UI.saver };
     return write_blob("look", &l, sizeof l);
 }
 
@@ -224,7 +251,7 @@ void store_load_autosave(void)
     if (read_pattern("auto", &pt)) {
         to_ui(&pt);
         ESP_LOGI(TAG, "pattern restored: %s, %d beads, slot %d%s", PALETTES[UI.palette].brand,
-                 count_beads(UI.cells), UI.slot, UI.unsaved ? ", unsaved" : "");
+                 count_beads(UI.cells, UI.n), UI.slot, UI.unsaved ? ", unsaved" : "");
     } else {
         ESP_LOGI(TAG, "no valid saved pattern (new, or an unknown format): defaults");
     }
@@ -236,6 +263,7 @@ void store_load_autosave(void)
     }
     if ((v1 || v2) && l.board < BOARD__COUNT && l.texture < TEXTURE_COUNT) {
         UI.board = l.board; UI.texture = l.texture; UI.bevel = (l.flags & LFLAG_BEVEL) != 0;
+        UI.motion = (l.flags & LFLAG_STILL) == 0;
         if (v2) UI.saver = l.saver;
         else save_look();                           // v1: add the saver default
     } else if (s_old_look_valid) {                  // migrate from a pre-v6 autosave

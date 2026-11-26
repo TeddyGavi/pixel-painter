@@ -11,7 +11,8 @@ void store_load_autosave(void);   // restore working pattern + display look at b
 bool store_save_slot(int slot);   // working pattern -> slot; clears UI.unsaved
 bool store_load_slot(int slot);   // slot -> working pattern; clears UI.unsaved
 // Slot contents for the slot lists; false = empty slot. Any out pointer may be NULL.
-bool store_slot_info(int slot, int *palette, const uint8_t **cells, int *beads);
+// cells: n x n, row-major.
+bool store_slot_info(int slot, int *palette, const uint8_t **cells, int *n, int *beads);
 
 // Autosave of the working pattern. Edits only mark it dirty; the write happens
 // once the user has paused (store_autosave_if_idle, called while no input is

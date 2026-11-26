@@ -1,0 +1,14 @@
+# The main menu reopens on the row last highlighted: Menu, down to Screensaver
+# (8th row), MENU closes, MENU again.
+# Expected: main menu with Screensaver highlighted.
+2.0 key m
+2.4 key s
+2.6 key s
+2.8 key s
+3.0 key s
+3.2 key s
+3.4 key s
+3.6 key s
+4.2 key m
+4.8 key m
+5.6 stop

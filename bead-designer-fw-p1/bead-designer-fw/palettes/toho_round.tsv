@@ -1,0 +1,211 @@
+# Toho Round seed beads 11/0 and 8/0 (sample card 111-1), 207 colours.
+# Order = card order, column by column. Codes eye-verified against the card;
+# colour from the bead-strip photo, white-balanced per cell. See README.md.
+code	r	g	b	name	source	note
+1	237	236	236	Clear Light Grey	photo	Transparent; uniformity 1.00
+2A	242	224	195	Clear Pale Orange	photo	Transparent; uniformity 1.00
+2	243	208	153	Clear Light Orange	photo	Transparent; uniformity 0.80
+2B	250	211	145	Clear Light Orange	photo	Transparent; uniformity 0.81
+2C	243	174	57	Clear Orange	photo	Transparent; uniformity 0.76
+3L	168	206	238	Clear Light Sky	photo	Transparent; uniformity 1.00
+3	188	229	245	Clear Pale Cyan	photo	Transparent; uniformity 1.00
+3B	76	202	246	Clear Cyan	photo	Transparent; uniformity 0.81
+3C	2	183	235	Clear Cyan	photo	Transparent; uniformity 0.97
+4	221	224	68	Clear Yellow	photo	Transparent; uniformity 0.70
+5	255	63	37	Clear Red	photo	Transparent; uniformity 0.86
+5B	255	4	45	Clear Rose	photo	Transparent; uniformity 0.96
+5C	236	1	31	Clear Red	photo	Transparent; uniformity 0.99
+5D	192	2	30	Clear Rose	photo	Transparent; uniformity 0.77
+6	208	167	190	Clear Light Pink	photo	Transparent; uniformity 0.91
+6B	166	106	139	Clear Dusty Pink	photo	Transparent; uniformity 0.83
+6C	117	60	87	Clear Dark Pink	photo	Transparent; uniformity 0.75
+7	113	208	80	Clear Green	photo	Transparent; uniformity 0.62
+7B	11	205	70	Clear Green	photo	Transparent; uniformity 0.56
+7BD	1	153	177	Clear Dark Cyan	photo	Transparent; uniformity 0.71
+8	4	82	222	Clear Blue	photo	Transparent; uniformity 0.64
+8D	23	47	188	Clear Blue	photo	Transparent; uniformity 0.82
+9A	195	200	212	Clear Light Blue	photo	Transparent; uniformity 1.00
+9	188	194	202	Clear Light Blue	photo	Transparent; uniformity 0.97
+9B	169	158	157	Clear Grey	photo	Transparent; uniformity 0.84
+10	255	188	2	Clear Amber	photo	Transparent; uniformity 0.83
+10B	255	157	1	Clear Orange	photo	Transparent; uniformity 0.78
+11	245	220	206	Clear Pale Vermilion	photo	Transparent; uniformity 1.00
+12	255	244	2	Clear Yellow	photo	Transparent; uniformity 0.93
+13	194	211	229	Clear Pale Sky	photo	Transparent; uniformity 0.78
+14	32	22	20	Clear Charcoal	photo	Transparent; uniformity 0.96
+15	223	227	214	Clear Light Grey	photo	Transparent; uniformity 1.00
+16	4	173	236	Clear Cyan	photo	Transparent; uniformity 0.68
+19	158	152	192	Clear Light Indigo	photo	Transparent; uniformity 0.84
+72	82	210	178	Clear Mint	photo	Transparent; uniformity 0.73
+939	1	132	57	Clear Dark Green	photo	Transparent; uniformity 0.50
+940	82	103	28	Clear Dark Chartreuse	photo	Transparent; uniformity 0.65
+941	204	98	3	Clear Brown	photo	Transparent; uniformity 0.60
+942	124	167	240	Clear Light Blue	photo	Transparent; uniformity 0.64
+1300	216	212	232	Clear Pale Violet	photo	Transparent; light; uniformity 1.00
+2151	245	228	196	Clear Pale Amber	photo	Transparent; uniformity 1.00
+2152	195	106	4	Clear Brown	photo	Transparent; uniformity 0.58
+2153	146	29	26	Clear Dark Red	photo	Transparent; uniformity 0.69
+2154	227	95	1	Clear Orange	photo	Transparent; uniformity 0.96
+2155	244	176	2	Clear Amber	photo	Transparent; uniformity 0.86
+2156	234	164	38	Clear Amber	photo	Transparent; uniformity 0.64
+41	241	239	230	Opaque Light Grey	photo	Opaque; uniformity 1.00
+42	255	226	1	Opaque Yellow	photo	Opaque; uniformity 1.00
+42B	255	197	1	Opaque Amber	photo	Opaque; uniformity 1.00
+42D	255	145	1	Opaque Orange	photo	Opaque; uniformity 0.94
+43	146	214	238	Opaque Light Cyan	photo	Opaque; uniformity 1.00
+43D	22	163	228	Opaque Sky	photo	Opaque; uniformity 0.95
+44	191	217	82	Opaque Chartreuse	photo	Opaque; uniformity 0.92
+45A	246	1	36	Opaque Rose	photo	Opaque; uniformity 0.99
+45	195	2	25	Opaque Red	photo	Opaque; uniformity 0.71
+46L	138	53	13	Opaque Brown	photo	Opaque; uniformity 0.64
+46	109	33	33	Opaque Dark Red	photo	Opaque; uniformity 0.89
+46D	77	36	30	Opaque Deep Red	photo	Opaque; uniformity 0.97
+47	50	142	19	Opaque Dark Green	photo	Opaque; uniformity 0.83
+47D	3	138	55	Opaque Dark Green	photo	Opaque; uniformity 0.72
+47H	35	109	55	Opaque Dark Green	photo	Opaque; uniformity 0.83
+48L	81	136	226	Opaque Blue	photo	Opaque; uniformity 0.82
+48	27	48	165	Opaque Blue	photo	Opaque; uniformity 0.77
+49	27	18	18	Opaque Black	photo	Opaque; uniformity 0.94
+50A	255	72	16	Opaque Vermilion	photo	Opaque; uniformity 0.93
+50	255	46	37	Opaque Red	photo	Opaque; uniformity 0.99
+51	233	209	177	Opaque Light Orange	photo	Opaque; uniformity 1.00
+52	150	106	115	Opaque Dusty Rose	photo	Opaque; uniformity 0.97
+53	181	179	175	Opaque Light Grey	photo	Opaque; uniformity 1.00
+53D	118	116	110	Opaque Grey	photo	Opaque; uniformity 1.00
+55	98	218	213	Opaque Teal	photo	Opaque; uniformity 0.99
+55D	28	202	170	Opaque Teal	photo	Opaque; uniformity 0.89
+1141	250	250	246	Ceylon White	photo	Ceylon; uniformity 1.00
+1143	209	236	238	Ceylon Pale Teal	photo	Ceylon; uniformity 1.00
+1144	200	235	211	Ceylon Pale Green	photo	Ceylon; uniformity 1.00
+156	188	229	204	Ceylon Light Green	photo	Ceylon; uniformity 1.00
+1146	208	224	240	Ceylon Pale Sky	photo	Ceylon; uniformity 1.00
+1150	200	196	190	Ceylon Light Grey	photo	Ceylon; uniformity 1.00
+1151	221	196	199	Ceylon Light Red	photo	Ceylon; uniformity 1.00
+21	231	224	213	Silver-Lined Beige	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.92
+22A	218	183	138	Silver-Lined Sand	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.69
+22	244	206	147	Silver-Lined Light Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.74
+22B	243	185	102	Silver-Lined Light Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.60
+22C	228	160	69	Silver-Lined Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.78
+23L	161	205	230	Silver-Lined Light Sky	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.62
+23	113	198	227	Silver-Lined Light Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.83
+23B	2	176	230	Silver-Lined Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.83
+23C	2	162	223	Silver-Lined Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.65
+23BD	1	146	193	Silver-Lined Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.74
+23BDA	4	185	199	Silver-Lined Teal	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.59
+24L	214	221	187	Silver-Lined Light Chartreuse	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.89
+24	180	204	43	Silver-Lined Chartreuse	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.73
+24B	87	173	129	Silver-Lined Dusty Green	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.80
+25	255	9	32	Silver-Lined Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.91
+25B	235	3	26	Silver-Lined Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.73
+25C	203	1	23	Silver-Lined Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.71
+25D	150	23	35	Silver-Lined Dark Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.72
+26	173	128	143	Silver-Lined Dusty Rose	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.85
+26B	125	74	93	Silver-Lined Dusty Pink	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.88
+26C	87	51	53	Silver-Lined Dark Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.93
+27	47	168	29	Silver-Lined Green	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.74
+27B	3	136	29	Silver-Lined Dark Green	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.60
+27BD	1	89	107	Silver-Lined Deep Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.86
+28	10	56	173	Silver-Lined Dark Blue	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.72
+28D	30	37	116	Silver-Lined Dark Indigo	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.69
+29A	173	173	174	Silver-Lined Light Grey	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.93
+29	154	157	157	Silver-Lined Grey	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.75
+29B	145	146	143	Silver-Lined Grey	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.57
+29C	98	76	56	Silver-Lined Brown	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.64
+30	255	132	2	Silver-Lined Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.68
+30B	255	109	2	Silver-Lined Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.72
+31	234	201	164	Silver-Lined Light Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.51
+32	238	210	2	Silver-Lined Yellow	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.70
+33	145	160	192	Silver-Lined Light Blue	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.67
+34	149	71	8	Silver-Lined Brown	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.52
+35	48	112	187	Silver-Lined Blue	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.35
+36	2	112	62	Silver-Lined Dark Green	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.38
+37	64	76	23	Silver-Lined Dark Olive	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.74
+39	122	107	132	Silver-Lined Dusty Purple	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.60
+2205	28	19	18	Silver-Lined Black	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.91
+2206	6	153	216	Silver-Lined Cyan	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.48
+2206C	2	65	155	Silver-Lined Dark Blue	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.46
+2210	21	18	16	Silver-Lined Black	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.96
+2151S	208	185	139	Silver-Lined Sand	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.72
+2152S	180	102	39	Silver-Lined Orange	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.48
+2153S	94	24	19	Silver-Lined Dark Red	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.59
+2154S	209	79	2	Silver-Lined Brown	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.63
+2155S	229	154	2	Silver-Lined Amber	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.74
+2156S	231	156	24	Silver-Lined Amber	photo	Transparent Silver Lined; bleach, solvent+; uniformity 0.39
+38	235	199	209	Silver-Lined Pale Rose	photo	Transparent Silver Lined; bleach, solvent, friction, UV; uniformity 0.92
+2202	125	153	157	Silver-Lined Dusty Cyan	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.49
+2203	11	61	134	Silver-Lined Dark Blue	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.61
+2208	197	65	5	Silver-Lined Brown	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.49
+2209	59	66	52	Silver-Lined Dark Lime	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.85
+2212	236	190	223	Silver-Lined Pale Magenta	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.68
+2214	240	129	211	Silver-Lined Light Magenta	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.85
+2215	249	200	220	Silver-Lined Pale Pink	photo	Transparent Silver Lined; bleach, solvent, friction, UV; uniformity 0.89
+2216	255	163	218	Silver-Lined Light Pink	photo	Transparent Silver Lined; bleach, solvent, friction, UV; uniformity 0.43
+2217	238	63	196	Silver-Lined Magenta	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.52
+2218	220	102	159	Silver-Lined Pink	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.60
+2219	206	155	205	Silver-Lined Light Magenta	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.53
+2223	163	42	117	Silver-Lined Pink	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.66
+2224	130	99	179	Silver-Lined Dusty Violet	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.52
+2226	133	36	81	Silver-Lined Dark Pink	photo	Transparent Silver Lined; bleach, solvent, friction; uniformity 0.75
+2100	238	238	232	Ceylon SL Light Grey	photo	Ceylon Silver Lined; bleach, solvent+; uniformity 1.00
+2101	211	214	212	Ceylon SL Light Grey	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2102	136	173	201	Ceylon SL Light Sky	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.84
+2103	174	225	191	Ceylon SL Light Green	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.94
+2104	101	197	197	Ceylon SL Teal	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.94
+2105	244	210	230	Ceylon SL Pale Pink	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.98
+2106	242	144	191	Ceylon SL Light Pink	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.82
+2107	232	112	201	Ceylon SL Light Magenta	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.78
+2108	211	168	210	Ceylon SL Light Magenta	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.88
+2109	244	224	177	Ceylon SL Pale Amber	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.93
+2110	254	216	158	Ceylon SL Light Orange	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.94
+2111	253	201	178	Ceylon SL Pale Vermilion	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.97
+2112	255	149	96	Ceylon SL Light Vermilion	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.65
+2113	220	84	90	Ceylon SL Red	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.63
+2114	157	113	121	Ceylon SL Dusty Rose	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.72
+2115	184	187	186	Ceylon SL Light Grey	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.95
+2116	205	231	231	Ceylon SL Pale Teal	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.99
+2117	159	216	227	Ceylon SL Light Cyan	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.88
+2118	204	231	222	Ceylon SL Pale Mint	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.98
+2119	141	198	181	Ceylon SL Light Mint	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.88
+2120	245	236	237	Ceylon SL Light Grey	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2121	209	205	221	Ceylon SL Pale Violet	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.93
+2122	208	205	219	Ceylon SL Pale Violet	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2123	147	168	220	Ceylon SL Light Blue	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2124	171	153	181	Ceylon SL Dusty Purple	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 0.85
+2125	235	225	202	Ceylon SL Cream	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2126	237	207	195	Ceylon SL Beige	photo	Ceylon Silver Lined; bleach, solvent, friction; uniformity 1.00
+2251	211	181	182	Ceylon SL Light Red	photo	Ceylon Silver Lined; bleach, solvent+; uniformity 1.00
+101	236	233	225	Luster Light Grey	photo	Transparent Luster; uniformity 1.00
+102	255	232	2	Luster Yellow	photo	Transparent Luster; uniformity 0.93
+103	239	199	148	Luster Light Orange	photo	Transparent Luster; uniformity 0.99
+103B	244	180	100	Luster Light Orange	photo	Transparent Luster; uniformity 0.59
+103C	238	168	80	Luster Orange	photo	Transparent Luster; uniformity 0.62
+104	139	207	233	Luster Light Cyan	photo	Transparent Luster; uniformity 0.98
+104B	25	185	226	Luster Cyan	photo	Transparent Luster; uniformity 0.94
+105	208	215	78	Luster Chartreuse	photo	Transparent Luster; uniformity 0.77
+106	228	209	204	Luster Pale Vermilion	photo	Transparent Luster; uniformity 1.00
+107	169	196	229	Luster Light Blue	photo	Transparent Luster; uniformity 0.91
+108	85	183	77	Luster Green	photo	Transparent Luster; uniformity 0.82
+108B	4	158	49	Luster Dark Green	photo	Transparent Luster; uniformity 0.54
+108BD	7	110	122	Luster Dark Cyan	photo	Transparent Luster; uniformity 0.79
+109	255	47	43	Luster Red	photo	Transparent Luster; uniformity 0.79
+109B	244	26	47	Luster Red	photo	Transparent Luster; uniformity 0.73
+109C	211	26	54	Luster Rose	photo	Transparent Luster; uniformity 0.48
+110	191	148	165	Luster Light Pink	photo	Transparent Luster; uniformity 1.00
+110B	168	108	124	Luster Dusty Rose	photo	Transparent Luster; uniformity 0.96
+111	255	156	3	Luster Orange	photo	Transparent Luster; uniformity 0.83
+111B	255	145	3	Luster Orange	photo	Transparent Luster; uniformity 0.80
+112	193	186	188	Luster Light Grey	photo	Transparent Luster; uniformity 1.00
+113	140	139	141	Luster Grey	photo	Transparent Luster; uniformity 0.92
+114	163	80	38	Luster Brown	photo	Transparent Luster; uniformity 0.48
+115	122	73	104	Luster Dusty Pink	photo	Transparent Luster; uniformity 0.99
+116	39	79	200	Luster Blue	photo	Transparent Luster; uniformity 0.90
+116B	29	79	202	Luster Blue	photo	Transparent Luster; uniformity 0.79
+117	58	122	222	Luster Blue	photo	Transparent Luster; uniformity 0.70
+118	3	105	63	Luster Deep Green	photo	Transparent Luster; uniformity 0.86
+119	81	103	56	Luster Dark Lime	photo	Transparent Luster; uniformity 0.64
+120	162	150	137	Luster Tan	photo	Transparent Luster; friction+; uniformity 0.89
+289	235	207	211	Luster Pale Rose	photo	Transparent Luster; solvent+, UV; uniformity 1.00
+290	245	208	199	Luster Pale Red	photo	Transparent Luster; solvent+, UV; uniformity 0.95
+629	243	213	185	Luster Pale Orange	photo	Transparent Luster; friction+; uniformity 0.99
+630	255	241	229	Luster Pale Orange	photo	Transparent Luster; uniformity 1.00
+631	244	198	185	Luster Pale Vermilion	photo	Transparent Luster; solvent+, UV; uniformity 0.93

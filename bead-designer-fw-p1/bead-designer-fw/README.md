@@ -35,7 +35,7 @@ idf.py build flash monitor
 
 The board file is selected automatically by target (`#if CONFIG_IDF_TARGET_*`).
 
-## Patterns: Save, Load, Reset
+## Patterns: Save, Load, Grid size, Reset
 
 Menu > Pattern. The working board autosaves as before; **Save** copies it (brand,
 shortlist, beads) into one of 8 slots, shown with a thumbnail, brand and bead count.
@@ -44,11 +44,19 @@ with a slot. **Reset board** clears the beads. Both ask "Discard board?" when th
 has beads that are not saved in any slot (`UI.unsaved`, kept in the autosave across
 power-off).
 
+**Grid size** (9x9, 12x12 or 15x15) belongs to the pattern and is saved with it; new
+patterns and a factory reset start at 9x9. The list previews the pattern at each size,
+and a change always asks "Change grid?". Growing centres the beads; shrinking keeps the
+window with the most beads (Cancel is the default when beads would be cut). The board
+from before the last resize can be restored exactly until the next bead change. See
+`main/grid.c`.
+
 The brand can only change while the board is empty; the shortlist then maps to the new
 brand's nearest colours. With beads on the board, Menu > Brand shows "<brand> locked"
-with a Reset shortcut that leads back to the brand list. Board / Texture / Beads are a
-device-wide display setting (NVS key `look`), not part of a pattern. The pattern format is
-v6, and v2-v5 autosaves are migrated (their look moves to `look`). See `main/store.c`.
+with a Reset shortcut that leads back to the brand list. Board / Texture / Beads (and
+Motion on the Waveshare) are a device-wide display setting (NVS key `look`), not part of a pattern. The pattern format is
+v7 (adds the grid size); v6 records load as 9x9, and v2-v5 autosaves are migrated
+(their look moves to `look`). See `main/store.c`.
 
 ## Screen saver
 
@@ -61,6 +69,18 @@ dots flow from the old image into the new one. Any input wakes it and is ignored
 input that follows within 300 ms. The origin will follow device tilt once a sensor
 overrides `saver_tilt()`; until then it is random. Its ~55 KB of buffers are allocated
 only while it runs. Each cycle logs its frame rate (`saver: cycle N: ... fps`).
+On the Waveshare with Motion on, the screen fades out (500 ms) before the saver, the saver
+fades in (300 ms), and waking fades the board in (150 ms); input during the fade-out
+cancels it and only wakes.
+
+## Motion (Waveshare)
+
+Menu > Motion (On / Off, default On; stored in `look`) turns the micro-animations of UI
+update stage 4 on or off: cursor glide, bead drop and pop, chip lift, focus fade,
+eyedropper and the sliding menu frame, all at 60 fps. Screen changes (menus) are instant.
+`main/render_motion.inc` lists them with their timings.
+Any input jumps the running animation to its end first, and every animation ends on
+exactly the static screen. The Freenove has no Motion row and no animations.
 
 ## Export (QR)
 

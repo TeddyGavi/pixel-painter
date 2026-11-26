@@ -36,9 +36,12 @@
 #define PIN_PWR_LATCH   16  // BAT_Control: drive HIGH at boot or battery power drops
 #define PIN_BAT_ADC     17  // battery voltage / 3 (200k/100k divider)
 #define HAVE_PWR_LATCH  1
-#define DISPLAY_W       225 // logical px, shown 2x2 each on the 450x600 RM690B0 panel (pixel doubling: CYD-sized UI)
+#define DISPLAY_W       450 // native RM690B0 panel px (UI update stage 1, 2026-11-20; was 225 logical px doubled)
 #define DISPLAY_ROT180  1   // panel is mounted upside down relative to the case (USB-C left): flip in the flush (checked on the board 2026-11-17)
-#define DISPLAY_H       300
+#define DISPLAY_H       600
+#define SAVER_W         225 // the screen saver keeps its 225x300 bitmap, each px shown 2x2
+#define SAVER_H         300
+#define UI_HIRES        1   // native-resolution UI: Soft-bead art, Chicago 3x Scale3x (docs/ui-update-2.41)
 #elif CONFIG_IDF_TARGET_ESP32
 // ---- Freenove FNK0114A 2.4" ST7789 (ESP32-WROOM-32E), from Freenove's
 //      2.4inch_ESP32-32E_Display_Schematic.pdf. Only 2 free GPIOs exist. ----
@@ -70,6 +73,9 @@
 #define HAVE_PWR_LATCH  0
 #define DISPLAY_W       240 // portrait
 #define DISPLAY_H       320
+#define SAVER_W         DISPLAY_W
+#define SAVER_H         DISPLAY_H
+#define UI_HIRES        0
 #endif
 
 // Display operations each board implements.
@@ -99,12 +105,22 @@ const char *board_status(void); // one-line hardware status (reprinted by serial
 // or NULL on boards without one. Hold board_fb_lock(true) while reading it.
 const uint16_t *board_framebuffer(void);
 void board_fb_lock(bool lock);
+// The same framebuffer for drawing into directly (menu rows), or NULL. Hold
+// board_fb_lock(true) while writing and mark the area with board_fb_dirty.
+uint16_t *board_fb_draw(void);
 // After writing into the framebuffer directly (screen saver): mark the area changed.
 void board_fb_dirty(int x, int y, int w, int h);
 // Two-colour bitmap mode (screen saver): returns a cleared 1-bit-per-pixel bitmap
-// ((DISPLAY_W+7)/8 bytes per row, bit x&7 of byte x>>3) shown in fg/bg, or NULL if
-// the board has none. Mark changes with board_fb_dirty (under board_fb_lock).
+// (SAVER_W x SAVER_H, (SAVER_W+7)/8 bytes per row, bit x&7 of byte x>>3) shown in
+// fg/bg, or NULL if the board has none. Mark changes with board_fb_dirty (under
+// board_fb_lock); while the bitmap is on, board_fb_dirty takes SAVER coordinates.
 uint8_t *board_mono_begin(uint16_t fg, uint16_t bg);
 void board_mono_color(uint16_t fg, uint16_t bg);
 void board_mono_end(void);
 void board_fb_sync(void);      // test dump: bring the framebuffer up to date first
+// Touch (FT6336U on the Waveshare; none on the Freenove). board_touch_power(true)
+// resets the controller (first report ~300 ms later); false puts it in hibernate.
+// Returns false if the controller did not answer. board_touch_read: 1 = a finger at
+// (*x, *y) in display coordinates, 0 = no finger, -1 = no controller / read failed.
+bool board_touch_power(bool on);
+int  board_touch_read(int *x, int *y);
